@@ -1,0 +1,563 @@
+/**
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**
+ * mod/reader/styles.css
+ *
+ * @package    mod
+ * @subpackage reader
+ * @copyright  2013 Gordon Bateson (gordon.bateson@gmail.com)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since      Moodle 2.0
+ */
+
+/** course page (recent activity block) **/
+.block_recent_activity .reader_recent_activity ul,
+.block_recent_activity .reader_recent_activity ul li {
+    margin  : 0px;
+    padding : 0px;
+}
+.block .content .reader_recent_activity h3 {
+    padding-left: 15px;
+    margin-bottom: 0px;
+}
+.block_recent_activity .reader_recent_activity ul.readerlist {
+    list-style   : none;
+    margin-left  : 12px;
+}
+.block_recent_activity .reader_recent_activity ul.userlist {
+    list-style   : none;
+    margin-left  : 18px;
+}
+.block_recent_activity .reader_recent_activity ul.booklist {
+    margin-left  : 18px;
+}
+.block_recent_activity .reader_recent_activity ul.booklist li {
+    font-size    : smaller;
+}
+
+/** reader mod settings page **/
+#page-admin-setting-modsettingreader div.form-textarea { float: left; }
+#page-admin-setting-modsettingreader div.form-setting { max-width: 520px; }
+#page-admin-setting-modsettingreader div#admin-cheatedmessage div.form-defaultinfo,
+#page-admin-setting-modsettingreader div#admin-clearedmessage div.form-defaultinfo { clear: both; display: block; }
+
+/** reader mod edit **/
+#page-mod-reader-mod .mform .fitem .fitemtitle {min-width: 190px; margin-right: 8px;}
+#page-mod-reader-mod .mform .fitem fieldset.felement {padding-left: 0%;}
+
+/** reader view **/
+#page-mod-reader-view h2 {
+    text-align: left;
+}
+#page-mod-reader-view h2.BooksRead,
+#page-mod-reader-view h2.ReadingReportTitle {
+    margin           : 0px;
+    padding          : 6px 12px;
+}
+#page-mod-reader-view h2.ReadingReportTitle {
+    background-color : #FFCC80; /* gentle orange */
+    max-width        : 800px;
+    width            : 100%;
+    /* cross-browser rounded corners (Note: Safari and Chrome use Webkit) */
+    /* css3    */ border-top-left-radius: 8px; border-top-right-radius: 8px;
+    /* Opera   */ -o-border-top-left-radius: 8px; -o-border-top-right-radius: 8px;
+    /* Firefox */ -moz-border-top-left-radius: 8px; -moz-border-top-right-radius: 8px;
+    /* Webkit  */ -webkit-border-top-left-radius: 8px; -webkit-border-top-right-radius: 8px;
+}
+#page-mod-reader-view div.returntoreports {
+    float        : right;
+    font-size    : small;
+    font-weight  : normal;
+    margin-right : 40px;
+}
+#page-mod-reader-view div.getstarted {
+    max-width    : 800px;
+    padding      : 12px;
+    text-align   : justify;;
+    width        : 100%;
+}
+#page-mod-reader-view table.RatesTable,
+#page-mod-reader-view table.PromotionTable {
+    width        : 824px;
+}
+#page-mod-reader-view table.RatesTable tr.r0 td.c0,
+#page-mod-reader-view table.PromotionTable tr.r0 td.c0 {
+    height       : 36px;
+    font-size    : 28px;
+    font-weight  : bold;
+    padding-left : 12px;
+    padding-top  : 18px;
+}
+#page-mod-reader-view table.PromotionTable tr.r0 td.lastcol {
+    width    : 124px;
+    vertical-align: middle;
+}
+#page-mod-reader-view table.RatesTable tr.r1 td.c0 p,
+#page-mod-reader-view table.RatesTable tr.r1 td.c0 li,
+#page-mod-reader-view table.PromotionTable tr.r1 td.c0 li {
+    font-size    : 16px;
+}
+#page-mod-reader-view table.RatesTable tr.r1 td.c0 li {
+    margin       : 6px 0px;
+}
+#page-mod-reader-view table.PromotionTable tr.r1 td.c0 li {
+    margin       : 12px 0px 6px 0px;
+    max-width    : 520px;
+}
+#page-mod-reader-view table.PromotionTable div.PromotionGraphTitle {
+    margin       : 6px auto;
+    padding      : 6px auto;
+    text-align   : center;
+}
+#page-mod-reader-view table.PromotionTable div.PromotionGraphSquares {
+    line-height  : normal;
+    text-align   : center;
+}
+#page-mod-reader-view table.PromotionTable div.PromotionGraphSquares div.squarebase {
+    border-width : 1px;
+    border-style : solid;
+    display      : -moz-inline-stack;
+    display      : inline-block;
+    font-size    : 9px;
+    margin       : 0px 6px 1px 6px;
+    height       : 20px;
+    padding      : 0px;
+    text-align   : center;
+    vertical-align: top;
+    width        : 20px;
+    /*********************
+    The following lines were originally intended to mimic inline blocks on IE6 and IE7.
+    (see http://blog.mozilla.org/webdev/2009/02/20/cross-browser-inline-block/)
+
+    However, they have been disabled because they were identified
+    as a possible cause of problems with Boost them in Moodle >=3.2
+    (see https://moodle.org/mod/forum/discuss.php?d=343884#p1427254)
+
+    Anyway, IE8 has been the minimum required IE browser since Moodle 2.3
+
+    zoom         : 1;
+    *display     : inline;
+    _height      : 20px;
+    *********************/
+}
+#page-mod-reader-view table.PromotionTable div.PromotionGraphSquares div.squarelevel {
+    /*
+    background-color  : #B2F0FF;
+    border-color      : #007A99;
+    */
+    background-color  : transparent;
+    border-color      : transparent;
+}
+#page-mod-reader-view table.PromotionTable div.PromotionGraphSquares div.squaredone {
+    background-color  : #009933;
+    border-color      : #336600;
+}
+#page-mod-reader-view table.PromotionTable div.PromotionGraphSquares div.squarespacer {
+    background-color  : transparent;
+    border-color      : transparent;
+}
+#page-mod-reader-view table.PromotionTable div.PromotionGraphSquares div.squarenotyet {
+    background-color  : #CCCCCC;
+    border-color      : #800000;
+}
+#page-mod-reader-view table.AttemptsTable {
+    max-width : 824px;
+    width     : 100%;
+}
+#page-mod-reader-view  div#ProgressBar {
+    border    : 4px solid #999999; /* overridden in renderer.php */
+    height    : 50px;
+    max-width : 808px;
+    padding   : 2px 4px;
+    width     : 100%;
+}
+#page-mod-reader-view  div#ProgressBarImages {
+    border-color : #FFFFFF;
+    border-style : solid;
+    border-width : 2px 4px;
+    height    : 46px;
+    margin    : 0px;
+    max-width : 800px;
+    padding   : 0px;
+    position  : relative;
+    width     : 100%;
+    z-index   : 10;
+}
+#page-mod-reader-view div#ProgressBarImages img.grey {
+    position  : absolute;
+    height    : 46px;
+    left      : 0px;
+    max-width : 800px;
+    top       : 0px;
+    width     : 100%;
+    z-index   : 20;
+}
+#page-mod-reader-view div#ProgressBarImages img.color {
+    position  : absolute;
+    height    : 46px;
+    left      : 0px;
+    max-width : 800px;
+    top       : 0px;
+    width     : 100%;
+    z-index   : 30;
+}
+#page-mod-reader-view div#ProgressBarImages img.now {
+    position  : absolute;
+    left      : 0px; /* overridden in renderer.php */
+    top       : 2px;
+    z-index   : 40;
+}
+#page-mod-reader-view div#ProgressBarImages div.goal {
+    position  : absolute;
+    left      : 0px; /* overridden in renderer.php */
+    margin    : 0px;
+    padding   : 0px;
+    top       : 0px;
+    z-index   : 50;
+}
+#page-mod-reader-view div#ProgressBarImages div.goal img {
+    position  : absolute;
+    left      : -16px; /* may be overridden in renderer.php */
+    top       : -18px;
+    z-index   : 60;
+}
+#page-mod-reader-view div#ProgressBarFootnote {
+    float        : right;
+    font-size    : small;
+    font-weight  : bold;
+    margin-right : -8px;
+    margin-top   : 6px;
+    padding      : 0px 12px 4px 0px;
+    text-align   : right;
+    width        : 120px;
+    /* cross-browser rounded corners (Note: Safari and Chrome use Webkit) */
+    /* css3    */ border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
+    /* Opera   */ -o-border-bottom-left-radius: 8px; -o-border-bottom-right-radius: 8px;
+    /* Firefox */ -moz-border-bottom-left-radius: 8px; -moz-border-bottom-right-radius: 8px;
+    /* Webkit  */ -webkit-border-bottom-left-radius: 8px; -webkit-border-bottom-right-radius: 8px;
+}
+
+#page-mod-reader-view div.readermessage {
+    background-color: #FFFFFF;
+    border      : 1px #CCCCCC solid;
+    margin-bottom : 12px;
+    padding     : 6px 20px;
+    max-width   : 782px;
+    /* cross-browser rounded corners (Note: Safari and Chrome use Webkit) */
+    /* css3    */ border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
+    /* Opera   */ -o-border-bottom-left-radius: 8px; -o-border-bottom-right-radius: 8px;
+    /* Firefox */ -moz-border-bottom-left-radius: 8px; -moz-border-bottom-right-radius: 8px;
+    /* Webkit  */ -webkit-border-bottom-left-radius: 8px; -webkit-border-bottom-right-radius: 8px;
+}
+#page-mod-reader-view div.readermessage.recentmessage {
+    background-color: #F0FFF0;
+}
+#page-mod-reader-view div.readermessagetitle {
+}
+#page-mod-reader-view div.readermessageteacher {
+    text-align  : right;
+    padding-right: 20px;
+}
+#page-mod-reader-view div#searchresultsdiv table.generaltable {
+    width       : 824px;
+}
+
+#page-mod-reader-view div.tabtree { margin-bottom: 0px; }
+#page-mod-reader-view .readersearchform { max-width: 480px; }
+#page-mod-reader-view .readersearchform tr.advanced { display: none; }
+#page-mod-reader-view div span.delayoff { background-color: #ccff99; padding: 2px 6px; }
+#page-mod-reader-view div span.delayon  { background-color: #ff7373; padding: 2px 6px; }
+#page-mod-reader-view h3 { text-align: left; }
+
+img.readercredits { margin-left: auto; margin-right: auto; width: 225px; height: 40px; }
+
+/** reader admin menu **/
+#page-mod-reader-admin div.tabtree { margin-bottom: 0px; }
+#page-mod-reader-admin div.readermenu {}
+#page-mod-reader-admin div.readermenu ul.readermenusections { list-style-type: none; }
+#page-mod-reader-admin div.readermenu li.readermenusection { float: left; margin: auto 6px; padding: 4px;
+                                                             min-height: 260px; width: 18%; min-width: 180px; max-width: 300px;
+                                                             background-color: #efefef; border: solid 1px #ddddff;
+                                                             -webkit-border-radius: 8px; /* Safari and Chrome */
+                                                             -moz-border-radius: 8px;   /* Firefox */
+                                                             -o-border-radius: 8px;    /* Opera */
+                                                             border-radius: 8px;      /* CSS3 */}
+#page-mod-reader-admin div.readermenu ul.readermenuitems { margin: 4px 4px; padding: auto 2px; }
+#page-mod-reader-admin div.readermenu li.readermenuitem { margin: 4px 12px; padding: auto 2px; }
+
+#page-mod-reader-admin div.readermenu a:hover { background-color: #eeeeee; }
+
+/** reader admin books **/
+#page-mod-reader-admin-books div.getstarted {
+    max-width    : 640px;
+    padding      : 12px;
+    text-align   : justify;;
+    width        : 100%;
+}
+#page-mod-reader-admin-books div.readerreportaction { min-height: 32px; }
+#page-mod-reader-admin-books div.readerreportaction div.actionsettings { margin-left: 20px; display: inline-block; }
+#page-mod-reader-admin-books div#readerreportaction_changequiz div.actionsettings { vertical-align: top; }
+#page-mod-reader-admin-books div.readerreportaction div.actionsettings select.menusetgenre { vertical-align: top; }
+#page-mod-reader-admin-books form.mform div.filemanager { max-width: 360px;}
+
+/** reader download **/
+#page-mod-reader-admin-books div.generalbox { margin-top: 15px; margin-bottom: 15px; }
+
+#page-mod-reader-admin-books ul.remotesites,
+#page-mod-reader-admin-books ul.publishers,
+#page-mod-reader-admin-books ul.levels,
+#page-mod-reader-admin-books ul.items { list-style-type: none; margin: 6px 0px; padding: 6px; max-width: 600px; text-align: left; }
+
+#page-mod-reader-admin-books ul.remotesites li,
+#page-mod-reader-admin-books ul.publishers li,
+#page-mod-reader-admin-books ul.levels li,
+#page-mod-reader-admin-books ul.items li { list-style-type: none; margin-left: 6px; padding-left: 6px; }
+
+/** for Moodle 2.0 **
+#page-mod-reader-admin-books ul li span.downloadeditems,
+#page-mod-reader-admin-books ul li input[type=checkbox],
+#page-mod-reader-admin-books ul li span.downloadeditems,
+#page-mod-reader-admin-books ul li input[type=radio] { margin-right: 7px; }
+*/
+
+#page-mod-reader-admin-books span.publishername { font-weight: bold; }
+#page-mod-reader-admin-books span.itemcount { font-style: italic; font-size: 0.9em; }
+#page-mod-reader-admin-books span.levelname { font-weight: bold; }
+
+#page-mod-reader-admin-books ul.remotesites { background-color: #eeeeff; border: 2px solid #ddddff; }
+#page-mod-reader-admin-books ul.publishers { background-color: #eeffee; border: 2px solid #ddffdd; }
+#page-mod-reader-admin-books ul.levels { background-color: #ffeeee; border: 2px solid #ffdddd; }
+#page-mod-reader-admin-books ul.items { background-color: #eeeeee; border: 2px solid #dddddd; }
+
+#page-mod-reader-admin-books li.downloaditem { margin-top: 6px; margin-bottom: 6px; }
+
+#page-mod-reader-admin-books span.itemname span.matchedtext { font-weight: bold; font-size: 1.2em; text-decoration: underline; background-color: #ffffcc; }
+
+#page-mod-reader-admin-books h3.formheader { margin: 6px; }
+#page-mod-reader-admin-books div.formitem { line-height: 30px; }
+#page-mod-reader-admin-books #formitemshow,
+#page-mod-reader-admin-books #formitemselect { line-height: 16px; }
+#page-mod-reader-admin-books div.formitem div.formlabel,
+#page-mod-reader-admin-books div.formitem div.formelement,
+#page-mod-reader-admin-books div.formitem div.formbutton { float: left; margin: 4px 8px; }
+#page-mod-reader-admin-books div.formitem div.formlabel { text-align: right; width: 15%; min-width: 4.5em; max-width: 8.0em; font-weight: bold; }
+#page-mod-reader-admin-books div.formitem div.formelement select { margin: 0px; }
+#page-mod-reader-admin-books form input.downloadbutton,
+#page-mod-reader-admin-books form input.showbutton {
+    background : #dddddd;
+    color      : #000000;
+    font-size  : 250%;
+    margin     : 12px 48px;
+    padding    : 12px;
+    /* cross-browser rounded corners (Note: Safari and Chrome use Webkit) */
+    /* css3    */ border-top-left-radius: 12px; border-top-right-radius: 12px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
+    /* Opera   */ -o-border-top-left-radius: 12px; -o-border-top-right-radius: 12px; -o-border-bottom-left-radius: 12px; -o-border-bottom-right-radius: 12px;
+    /* Firefox */ -moz-border-top-left-radius: 12px; -moz-border-top-right-radius: 12px; -moz-border-bottom-left-radius: 12px; -moz-border-bottom-right-radius: 12px;
+    /* Webkit  */ -webkit-border-top-left-radius: 12px; -webkit-border-top-right-radius: 12px; -webkit-border-bottom-left-radius: 12px; -webkit-border-bottom-right-radius: 12px;
+}
+#page-mod-reader-admin-books form input.downloadbutton:hover,
+#page-mod-reader-admin-books form input.showbutton:hover {background-color: #cc3333; color: #eeeeee; }
+
+/** reader admin reports **/
+#page-mod-reader-admin-reports .mform .fitem .fitemtitle {white-space: nowrap;}
+#page-mod-reader-admin-reports div.tabtree { margin-bottom: 2.5em; }
+#page-mod-reader-admin-reports table.flexible th { white-space: normal; }
+#page-mod-reader-admin-reports table.flexible th span.nowrap { white-space: nowrap; }
+#page-mod-reader-admin-reports table.flexible td span.passed { color: #00CC00; }
+#page-mod-reader-admin-reports table.flexible td span.failed { color: #CC0000; }
+#page-mod-reader-admin-reports table.flexible td span.cheated { color: #FF6600; }
+#page-mod-reader-admin-reports table.flexible tr.emptyrow { display: none; }
+
+/* hide the javascript static just after this (hidden) submit button in the display options */
+#page-mod-reader-admin-reports div#fitem_id_submitoptions + div { display: none; }
+
+#page-mod-reader-admin-reports div.readerreportaction div.actionsettings { margin-left: 20px; }
+#page-mod-reader-admin-reports div.readerreportaction div.actionsettings input,
+#page-mod-reader-admin-reports div.readerreportaction div.actionsettings select,
+#page-mod-reader-admin-reports div.readerreportaction div.actionsettings textarea { vertical-align: top; }
+
+#page-mod-reader-admin-reports .mform fieldset div.readerreportaction div#publishers { margin-top: 6px; }
+
+#page-mod-reader-admin-reports div.readerreportaction div#publishers select,
+#page-mod-reader-admin-reports div.readerreportaction div#levels     select,
+#page-mod-reader-admin-reports div.readerreportaction div#bookids    select { float: left; margin: 0px 9px 6px 3px; }
+#page-mod-reader-admin-reports div.readerreportaction div#bookid,
+#page-mod-reader-admin-reports div.readerreportsubmit { clear: both; }
+
+#page-mod-reader-admin-reports div.readerreportaction div.selecteditemhdr { float: left; margin: 0px 3px 6px 0px; font-weight: bold; }
+#page-mod-reader-admin-reports div.readerreportaction div.selecteditemhdr:after { content: ":" }
+#page-mod-reader-admin-reports div.readerreportaction div.selecteditemtxt { float: left; margin: 0px 12px 6px 3px; }
+
+#page-mod-reader-admin-reports div.readerreportaction ul.levels { margin-top: 0px; margin-bottom: 0px; float: left; }
+
+/** reader admin users **/
+#page-mod-reader-admin-users fieldset div.fitem.femptylabel div.fitemtitle {display: none;}
+#page-mod-reader-admin-users fieldset div.fitem.femptylabel div.fstatic {margin-left: 40px; margin-right: 40px; text-align: justify;}
+
+#page-mod-reader-admin-users li.message { background-color: #CCFFCC;
+                                          margin-top: px; margin-bottom: 6px;
+                                         -webkit-border-radius: 8px; /* Safari and Chrome */
+                                         -moz-border-radius: 8px;   /* Firefox */
+                                         -o-border-radius: 8px;    /* Opera */
+                                         border-radius: 8px;      /* CSS3 */}
+#page-mod-reader-admin-users ul.details { list-style-type: none; margin: 0px; padding: 12px; }
+#page-mod-reader-admin-users li.messagetext { background-color: #EEFFEE;
+                                         margin-top: 6px; margin-bottom: 6px; padding: 8px;
+                                         -webkit-border-radius: 6px; /* Safari and Chrome */
+                                         -moz-border-radius: 6px;   /* Firefox */
+                                         -o-border-radius: 6px;    /* Opera */
+                                         border-radius: 6px;      /* CSS3 */}
+#page-mod-reader-admin-users ul.importusers {}
+#page-mod-reader-admin-users li.importuser {}
+#page-mod-reader-admin-users span.importusername { font-size: 1.2em; }
+#page-mod-reader-admin-users ul.importbooks {}
+#page-mod-reader-admin-users li.importbook { font-weight: bold; margin-top: 6px; margin-bottom: 6px; }
+#page-mod-reader-admin-users ul.importattempts { list-style-type: none; margin: 0px; }
+#page-mod-reader-admin-users li.importattempt { font-weight: normal; }
+
+#page-mod-reader-admin-users fieldset select { margin-bottom: 0px; vertical-align: top; }
+
+#page-mod-reader-admin-users #id_levelratessection .fcontainer,
+#page-mod-reader-admin-users #id_groupratessection .fcontainer {
+    max-width        : 640px;
+}
+
+#page-mod-reader-admin-users #id_levelratessection .fcontainer div.fitem:nth-child(4n + 1) {
+    background-color : #e5ffe5; /* pale green */
+    border-bottom    : 1px solid #99ff99;
+    border-top       : 1px solid #99ff99;
+}
+#page-mod-reader-admin-users #id_levelratessection .fcontainer div.fitem {
+    background-color : #f9fff9; /* faint green */
+    border-left      : 1px solid #99ff99;
+    border-right     : 1px solid #99ff99;
+}
+#page-mod-reader-admin-users #id_levelratessection .fcontainer div.fitem:nth-child(4n + 4) {
+    border-bottom    : 1px solid #99ff99;
+}
+
+#page-mod-reader-admin-users #id_groupratessection .fcontainer div.fitem:nth-child(5n + 1) {
+    background-color : #e5e5ff; /* pale blue */
+    border-bottom    : 1px solid #9999ff;
+    border-top       : 1px solid #9999ff;
+}
+#page-mod-reader-admin-users #id_groupratessection .fcontainer div.fitem {
+    background-color : #f9f9ff; /* faint blue */
+    border-left      : 1px solid #9999ff;
+    border-right     : 1px solid #9999ff;
+}
+#page-mod-reader-admin-users #id_groupratessection .fcontainer div.fitem:nth-child(5n + 5) {
+    border-bottom    : 1px solid #9999ff;
+}
+
+#page-mod-reader-admin-users #id_levelratessection .fcontainer div.fitem,
+#page-mod-reader-admin-users #id_groupratessection .fcontainer div.fitem {
+    margin-bottom    : 0px;
+    margin-top       : 0px;
+    padding-bottom   : 6px;
+    padding-top      : 6px;
+}
+
+#page-mod-reader-admin-users #id_levelratessection .fcontainer div.fitem:nth-child(4n + 1),
+#page-mod-reader-admin-users #id_groupratessection .fcontainer div.fitem:nth-child(5n + 1) {
+    margin-top       : 12px;
+    padding-top      : 6px;
+    /* cross-browser rounded corners (Note: Safari and Chrome use Webkit) */
+    /* css3    */ border-top-left-radius: 8px; border-top-right-radius: 8px;
+    /* Opera   */ -o-border-top-left-radius: 8px; -o-border-top-right-radius: 8px;
+    /* Firefox */ -moz-border-top-left-radius: 8px; -moz-border-top-right-radius: 8px;
+    /* Webkit  */ -webkit-border-top-left-radius: 8px; -webkit-border-top-right-radius: 8px;
+}
+
+#page-mod-reader-admin-users #id_levelratessection .fcontainer div.fitem:nth-child(4n + 4),
+#page-mod-reader-admin-users #id_groupratessection .fcontainer div.fitem:nth-child(5n + 5) {
+    /* cross-browser rounded corners (Note: Safari and Chrome use Webkit) */
+    /* css3    */ border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
+    /* Opera   */ -o-border-bottom-left-radius: 8px; -o-border-bottom-right-radius: 8px;
+    /* Firefox */ -moz-border-bottom-left-radius: 8px; -moz-border-bottom-right-radius: 8px;
+    /* Webkit  */ -webkit-border-bottom-left-radius: 8px; -webkit-border-bottom-right-radius: 8px;
+}
+
+#page-mod-reader-admin-users #id_levelratessection .fcontainer div.fitem:last-child,
+#page-mod-reader-admin-users #id_groupratessection .fcontainer div.fitem:last-child {
+    background-color : initial;
+    border           : initial;
+}
+
+
+/** reader admin tools **/
+#page-mod-reader-admin-tools div.tabtree { margin-bottom: 0px; }
+#page-mod-reader-admin-tools div.generalbox { }
+#page-mod-reader-admin-tools ol.readertools { min-width: 200px; max-width: 1200px; }
+#page-mod-reader-admin-tools li.readertool { float: left; font-size: 12px; margin: 12px 18px; padding: 4px;
+                                             height: 150px; width: 18%; min-width: 180px; max-width: 300px;
+                                             overflow: scroll; background-color: #efefef; border: solid 1px #ddddff;
+                                             -webkit-border-radius: 8px; /* Safari and Chrome */
+                                             -moz-border-radius: 8px;   /* Firefox */
+                                             -o-border-radius: 8px;    /* Opera */
+                                             border-radius: 8px;      /* CSS3 */}
+
+#page-mod-reader-admin-tools li.readertool p { margin: 3px 0px;}
+#page-mod-reader-admin-tools li.readertool ul { margin: 3px 0px 0px 18px; }
+
+#page-mod-reader-admin-tools-detect_cheating div.fitemtitle { display: inline-block;
+                                                              max-width: 240px;
+                                                              padding: 6px 12px;
+                                                              text-align: right;
+                                                              vertical-align: top;
+                                                              width: 20%; }
+
+#page-mod-reader-admin-tools-detect_cheating input[type="checkbox"] { margin: 0px; }
+
+#page-mod-reader-admin-tools-detect_cheating th { vertical-align: bottom; }
+#page-mod-reader-admin-tools-detect_cheating td { vertical-align: top; }
+
+#page-mod-reader-admin-tools-detect_cheating td.odd { background-color: #e4ecfc; } /* light matt blue */
+#page-mod-reader-admin-tools-detect_cheating td.even { background-color: #fce4ec; } /* light matt red */
+
+#page-mod-reader-admin-tools-detect_cheating #attempts td { border-left: 1px dotted #999999; }
+#page-mod-reader-admin-tools-detect_cheating #attempts .book { border-left: 4px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #attempts .checkbox { border-left: 2px solid #999999; text-align: center;}
+#page-mod-reader-admin-tools-detect_cheating #attempts .date { border-left: 1px solid #999999; text-align: center;}
+
+#page-mod-reader-admin-tools-detect_cheating #attempts .book { border-top: 4px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #attempts .attempt1 { border-top: 2px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #attempts .attempt2 { border-top: 1px dotted #999999; }
+
+#page-mod-reader-admin-tools-detect_cheating #users .user1 { border-top: 4px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #users .user2 { border-top: 2px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #users .attempt1 { border-top: 2px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #users .attempt2 { border-top: 1px dotted #999999; }
+
+#page-mod-reader-admin-tools-detect_cheating #users .user1 { border-top: 4px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #users .user2 { border-top: 2px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #users .attempt1 { border-top: 2px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #users .attempt2 { border-top: 1px dotted #999999; }
+
+#page-mod-reader-admin-tools-detect_cheating #users td { border-left: 1px dotted #999999; }
+#page-mod-reader-admin-tools-detect_cheating #users .userlink1 { border-left: 4px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #users .userlink2 { border-left: 3px solid #999999; }
+#page-mod-reader-admin-tools-detect_cheating #users .checkbox { border-left: 2px solid #999999; text-align: center;}
+#page-mod-reader-admin-tools-detect_cheating #users .time1 { border-left: 1px solid #999999; text-align: center;}
+#page-mod-reader-admin-tools-detect_cheating #users .time2 { border-left: 1px solid #999999; text-align: center;}
+
+#page-mod-reader-admin-tools-detect_cheating div.actionsettings { margin-left: 20px; }
+#page-mod-reader-admin-tools-detect_cheating div.actionsettings input,
+#page-mod-reader-admin-tools-detect_cheating div.actionsettings select,
+#page-mod-reader-admin-tools-detect_cheating div.actionsettings textarea { vertical-align: top; }
+
