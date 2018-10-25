@@ -1,0 +1,50 @@
+
+Version 2.0.0 (Build 2018101200)
+-Release version of ReadAloud with CloudPoodll and AI integration
+
+Version 1.1.08 (Build 2018090701)
+--added support for HTML5 fallback tag (actually made sure we never fallback .. just show a warning)
+
+Version 1.1.04 (Build 2018082402)
+-added accadjustmethod and errorcount fields
+-implemented auto error estimation
+
+Version 1.1.03 (Build 2018071300)
+-added accadjust field
+
+Version 1.1.02 (Build 2018062600)
+-AI
+-Cloud Poodll integration
+-Backup and Restore
+-General refactor
+
+Version 1.1.1(Build 2018060902)
+-HTML5 version of ReadAloud
+
+Version 1.1.0(Build 2018041000)
+-Implemented new Moodle Privacy API
+
+Version 1.0.7(Build 2016111901)
+tightened up some non-moodle code in audiohelper.php and poodllfilelib.php to use Moodle APIs.
+More secure etc.
+
+Version 1.0.6(Build 2016090201)
+unnecessary break statement caused error on php7
+
+Version 1.0.5(Build 2016031001)
+The logic to determine the number of completed attempts by a student was wrong. fixed it
+
+Version 1.0.4(Build 2016031000)
+Added a settings to turn off the loading of bootstrap and fontawesom. Where a theme already has it, this can cause issues.
+
+Version 1.0.3(Build 2016022500)
+This fixes an issue with the renderer on later PHP versions where the trim function
+can't be used to return a value to another function. It caused a white page/500 error when viewing the assignment
+
+Version 1.0.2(Build 2016022102)
+Added fix for incorrectly named field fedbackformat
+
+
+Version 1.0.1(Build 2016022101)
+Added fix for failure to set form TTSLANGUAGE field type
+(https://github.com/justinhunt/moodle-mod_readaloud/issues/6)
