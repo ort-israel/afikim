@@ -257,7 +257,7 @@ if (!isloggedin() || isguestuser()) {
     } else if ($PAGE->theme->settings->displaylogin == 'button') {
 ?>
         <form action="<?php p($wwwroot) ?>/login/index.php" method="post">
-            <input type="hidden" name="logintoken" value="<?php echo s(\core\session\manager::get_login_token()); ?>" />
+            <!--<input type="hidden" name="logintoken" value="<?php /*echo s(\core\session\manager::get_login_token());*/ ?>" />-->
             <button class="btn-login" type="submit">
                 <?php echo get_string('logintextbutton', 'theme_adaptable'); ?>
             </button>
