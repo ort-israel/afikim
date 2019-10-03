@@ -53,23 +53,23 @@ $THEME->prescsscallback = 'theme_klass_get_pre_scss';
 
 $THEME->extrascsscallback = 'theme_klass_get_extra_scss';
 
-$THEME->scss = function($theme) {
+$THEME->scss = function ($theme) {
     return theme_klass_get_main_scss_content($theme);
 };
 
 $THEME->layouts = array(
-        // The site home page.
-        'frontpage' => array(
-                'file' => 'frontpage.php',
-                'regions' => array('side-pre'),
-                'defaultregion' => 'side-pre',
-                'options' => array('nonavbar' => true),
-        ),
-        'login' => array(
-                'file' => 'login.php',
-                'regions' => array('side-pre'),
-                'defaultregion' => 'side-pre',
-                'options' => array('nonavbar' => true),
-        ),
+    // The site home page.
+    'frontpage' => array(
+        'file' => 'frontpage.php',
+        'regions' => array('side-pre', 'above-content'),
+        'defaultregion' => 'side-pre',
+        'options' => array('nonavbar' => true),
+    ),
+    'login' => array(
+        'file' => 'login.php',
+        'regions' => array('side-pre'),
+        'defaultregion' => 'side-pre',
+        'options' => array('nonavbar' => true),
+    ),
 
 );

@@ -65,6 +65,11 @@ function theme_klass_get_main_scss_content($theme) {
     if ( file_exists($themescssfile) ) {
         $scss .= file_get_contents($themescssfile);
     }
+    // add scss for feqatured courses block
+    $featuredcoursesscssfile = $CFG->dirroot.'/theme/klass/scss/preset/featuredcourses.scss';
+    if ( file_exists($featuredcoursesscssfile) ) {
+        $scss .= file_get_contents($featuredcoursesscssfile);
+    }
     return $scss;
 }
 

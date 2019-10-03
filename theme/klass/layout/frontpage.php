@@ -38,7 +38,7 @@ echo $OUTPUT->doctype() ?>
 <html <?php echo $OUTPUT->htmlattributes(); ?>>
 <head>
     <title><?php echo $OUTPUT->page_title(); ?></title>
-    <link rel="shortcut icon" href="<?php echo $OUTPUT->favicon(); ?>" />
+    <link rel="shortcut icon" href="<?php echo $OUTPUT->favicon(); ?>"/>
     <?php echo $OUTPUT->standard_head_html() ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -50,32 +50,32 @@ echo $OUTPUT->doctype() ?>
 <?php
 require_once(dirname(__FILE__) . '/includes/header.php');
 echo $headerlayout;
- ?>
+?>
 <!--Custom theme header-->
 <div class="">
     <?php
-        $toggleslideshow = theme_klass_get_setting('toggleslideshow');
+    $toggleslideshow = theme_klass_get_setting('toggleslideshow');
     if ($toggleslideshow == 1) {
-            require_once(dirname(__FILE__) . '/includes/slideshow.php');
+        require_once(dirname(__FILE__) . '/includes/slideshow.php');
     }
     ?>
 </div>
+<?php
+$whotitle = theme_klass_get_setting('whoweare_title');
+$whodesc = theme_klass_get_setting('whoweare_description');
+if (!empty($whotitle) || !empty($whodesc)) {
+    ?>
+    <!--Custom theme slider-->
+    <div class="fp-site-customdesc">
+        <div class="container">
+            <h2><?php echo $whotitle; ?></h2>
+            <?php if ($whodesc) { ?>
+                <p><?php echo $whodesc; ?></p>
+            <?php } ?>
+        </div>
+    </div>
     <?php
-    $whotitle = theme_klass_get_setting('whoweare_title');
-    $whodesc = theme_klass_get_setting('whoweare_description');
-    if (!empty($whotitle) || !empty($whodesc)) {
-?>
-<!--Custom theme slider-->
-<div class="fp-site-customdesc">
-    <div class="container">
-    <h2><?php echo $whotitle; ?></h2>
-    <?php if ($whodesc) { ?>
-        <p><?php echo $whodesc; ?></p>
-        <?php } ?>
-  </div>
-</div>
-    <?php
-    } ?>
+} ?>
 <!--Custom theme Who We Are block-->
 <div id="page" class="container">
     <header id="page-header" class="clearfix">
@@ -89,29 +89,29 @@ echo $headerlayout;
         </div>
     </header>
     <div id="page-content" class="row">
-    <?php
-    if (!empty($OUTPUT->blocks_for_region('side-pre'))) {
-        $class = "col-md-9";
-    } else {
-        $class = "col-md-12";
-    }
-    ?>
-        <div id="<?php echo $regionbsid ?>"  class="<?php echo $class; ?>">
-                    <?php
-                     echo $courserenderer->new_courses();
-                        echo $OUTPUT->course_content_header();
-                        echo $OUTPUT->main_content();
-                        echo $OUTPUT->course_content_footer();
+        <?php
+        if (!empty($OUTPUT->blocks_for_region('side-pre'))) {
+            $class = "col-md-9";
+        } else {
+            $class = "col-md-12";
+        }
+        ?>
+        <div id="<?php echo $regionbsid ?>" class="<?php echo $class; ?>">
+            <?php
+            echo $OUTPUT->blocks('above-content');
+            echo $OUTPUT->course_content_header();
+            echo $OUTPUT->main_content();
+            echo $OUTPUT->course_content_footer();
             ?>
         </div>
 
-                <?php echo $OUTPUT->blocks('side-pre', 'col-md-3'); ?>
+        <?php echo $OUTPUT->blocks('side-pre', 'col-md-3'); ?>
     </div>
     <?php echo (isset($flatnavbar)) ? $flatnavbar : ""; ?>
 </div>
 <?php
-    require_once(dirname(__FILE__) . '/includes/footer.php');
-    echo $footerlayout;
+require_once(dirname(__FILE__) . '/includes/footer.php');
+echo $footerlayout;
 
 ?>
 <!--Custom theme footer-->
