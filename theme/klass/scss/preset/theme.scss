@@ -4382,16 +4382,19 @@ table {
       .summary .no-overflow {
         color: $color_boston_blue_approx;
         line-height: 24px;
-        background: $color_link_water_approx;
+        background: $color_mercury_approx;
         padding: 10px 20px;
         border: 1px solid $color_charlotte_approx;
         border-radius: 5px;
         margin-bottom: 25px;
 
         p {
-          color: $color_boston_blue_approx;
+          color: $color_tuna_approx;
           line-height: 24px;
           margin-bottom: 0;
+        }
+        a{
+          color: $color_allports_approx;
         }
       }
     }
