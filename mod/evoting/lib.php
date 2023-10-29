@@ -135,7 +135,7 @@ function evoting_delete_history($time, $questionid)
     // Select options.
     $sql = "SELECT o.id
               FROM {evoting_options} o
-             WHERE o.evotingquestionid = ?";
+             WHERE o.evotingquestionid = ? ORDER BY o.id ASC";
     $options = $DB->get_records_sql($sql, array('id' => $questionid));
     if (count(array_keys($options))) {
         list($insql, $params) = $DB->get_in_or_equal(array_keys($options));
@@ -157,14 +157,14 @@ function evoting_get_options_poll($idPoll, $idUser) {
               FROM {evoting} e, {evoting_questions} q, {evoting_options} op
          WHERE  e.id = q.evotingid
          AND op.evotingquestionid = q.id
- 	     AND q.activ = 1 AND e.id = ? ";
+ 	     AND q.activ = 1 AND e.id = ? ORDER BY op.id ASC";
 
     $sql2 = "SELECT op.id
               FROM {evoting} e, {evoting_questions} q, {evoting_options} op, {evoting_answers} a
          WHERE  e.id = q.evotingid
          AND op.evotingquestionid = q.id
          AND op.id = a.optionid
- 	     AND q.activ = 1 AND e.id = ? AND a.uservoteid = ?";
+ 	     AND q.activ = 1 AND e.id = ? AND a.uservoteid = ? ORDER BY op.id ASC";
 
     $result = $DB->get_records_sql($sql1, array($idPoll));
     $result2 = $DB->get_records_sql($sql2, array( $idPoll, $idUser));
@@ -201,7 +201,7 @@ function evoting_delete_question($idquestion) {
     // Select and Delete options.
     $sql = "SELECT o.id
               FROM {evoting_options} o
-             WHERE o.evotingquestionid = ?";
+             WHERE o.evotingquestionid = ? ORDER BY o.id ASC";
     $options = $DB->get_records_sql($sql, array('id' => $idquestion));
     if (count(array_keys($options))) {
         list($insql, $params) = $DB->get_in_or_equal(array_keys($options));
@@ -498,7 +498,7 @@ FROM
 WHERE
 evotingid=?
 AND
-activ=?", array($idPoll, $activ));
+activ=? ORDER BY number ASC", array($idPoll, $activ));
 
 // Get array values form object [0,1,2,...]
     $questions = array_values($questions);
@@ -585,7 +585,7 @@ function evoting_get_questions($idPoll)
 	FROM
 	{evoting_questions}
 	WHERE
-	evotingid=?", array($idPoll));
+	evotingid=? ORDER BY number ASC", array($idPoll));
 
     return $questionList;
 }
@@ -739,7 +739,7 @@ function evoting_vote($userVoteId, $optionId, $idPoll, $lang)
         $optionsId = $DB->get_records_sql("
 		SELECT o.id FROM {evoting_options} o, {evoting_questions} q
 		WHERE o.evotingquestionid = q.id
-		AND q.id = ?", array($idQuestion));
+		AND q.id = ? ORDER BY o.id ASC", array($idQuestion));
 
         // Get array values form object [0,1,2,...]
         $optionsId = array_values($optionsId);
@@ -768,7 +768,7 @@ function evoting_vote($userVoteId, $optionId, $idPoll, $lang)
 		WHERE o.id = a.optionid
 		AND o.evotingquestionid = q.id
 		AND a.optionid = ?
-		AND a.uservoteid = ?", array('optionid' => $optionId, 'uservoteid' => $userVoteId));
+		AND a.uservoteid = ? ORDER BY o.id ASC", array('optionid' => $optionId, 'uservoteid' => $userVoteId));
 
         if(!empty($option->id)){
             $DB->delete_records("evoting_answers", array('optionid'=>$option->id, 'uservoteid' =>$userVoteId));
@@ -1087,7 +1087,7 @@ function evoting_delete_instance($id)
     // Select and Delete options.
     $sql = "SELECT o.id
               FROM {evoting_options} o, {evoting_questions} q, {evoting} p
-             WHERE o.evotingquestionid = q.id AND p.id = q.evotingid AND q.evotingid = ?";
+             WHERE o.evotingquestionid = q.id AND p.id = q.evotingid AND q.evotingid = ? ORDER BY o.id ASC";
     $options = $DB->get_records_sql($sql, array('id' => $evoting->id));
     if (count(array_keys($options))) {
         list($insql, $params) = $DB->get_in_or_equal(array_keys($options));

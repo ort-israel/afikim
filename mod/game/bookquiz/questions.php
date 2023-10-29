@@ -21,15 +21,15 @@
  * @copyright 2007 Vasilis Daloukas
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  **/
-
-defined('MOODLE_INTERNAL') || die();
-
+require_once( "../../../config.php");
 require_once( "../headergame.php");
 require_once("../locallib.php");
 
+require_login($course->id, false, $cm);
+
 $attempt = game_getattempt( $game, $detail);
 if ($game->bookid == 0) {
-    print_error( get_string( 'bookquiz_not_select_book', 'game'));
+    throw new moodle_exception( 'bookquiz_not_select_book', 'game');
 }
 
 if ($form = data_submitted()) {   // Filename.
@@ -160,7 +160,7 @@ function game_bookquiz_save( $gameid, $bookid, $ids, $form) {
             $rec->questioncategoryid = $categoryid;
 
             if (($newid = $DB->insert_record('game_bookquiz_questions', $rec)) == false) {
-                print_error( "Can't insert to game_bookquiz_questions");
+                throw new moodle_exception( 'bookquiz_error', 'game', 'Can\'t insert to game_bookquiz_questions');
             }
             continue;
         }
@@ -173,14 +173,14 @@ function game_bookquiz_save( $gameid, $bookid, $ids, $form) {
 
         if ($categoryid == 0) {
             if (!delete_records( 'game_bookquiz_questions', 'id', $recids[ $chapterid])) {
-                print_error( "Can't delete game_bookquiz_questions");
+                throw new moodle_exception( 'bookquiz_error', 'game', 'Can\'t delete game_bookquiz_questions');
             }
         } else {
             $updrec = new StdClass;
             $updrec->id = $recids[ $chapterid];
             $updrec->questioncategoryid = $categoryid;
             if (($DB->update_record( 'game_bookquiz_questions', $updrec)) == false) {
-                print_error( "Can't update game_bookquiz_questions");
+                throw new moodle_exception( 'bookquiz_error', 'game', 'Can\'t update game_bookquiz_questions');
             }
         }
 

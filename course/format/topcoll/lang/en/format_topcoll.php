@@ -22,8 +22,7 @@
  * Toggles are persistent on a per browser session per course basis but can be made to persist longer by a small
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.md' file.
  *
- * @package    course/format
- * @subpackage topcoll
+ * @package    format_topcoll
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2009-onwards G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
@@ -31,11 +30,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU Public License
  *
  */
-// Used by the Moodle Core for identifing the format and displaying in the list of formats for a course in its settings.
-// Possibly legacy to be removed after Moodle 2.0 is stable.
-$string['nametopcoll'] = 'Collapsed Topics';
-$string['formattopcoll'] = 'Collapsed Topics';
-
 // Used in format.php.
 $string['topcolltoggle'] = 'Toggle';
 $string['topcollsidewidthlang'] = 'en-28px';
@@ -44,6 +38,13 @@ $string['topcollsidewidthlang'] = 'en-28px';
 $string['topcollall'] = 'sections.';  // Leave as AMOS maintains only the latest translation - so previous versions are still supported.
 $string['topcollopened'] = 'Open all';
 $string['topcollclosed'] = 'Close all';
+$string['sctopenall'] = 'Open all {$a}';
+$string['sctcloseall'] = 'Close all {$a}';
+
+$string['settoggleallenabled'] = 'Toggle all enabled';
+$string['settoggleallenabled_help'] = 'Toggle all functionality enabled.';
+$string['defaulttoggleallenabled'] = 'Toggle all enabled';
+$string['defaulttoggleallenabled_desc'] = 'States if the toggle all functionality should be enabled.';
 
 // Moodle 2.0 Enhancement - Moodle Tracker MDL-15252, MDL-21693 & MDL-22056 - http://docs.moodle.org/en/Development:Languages.
 $string['sectionname'] = 'Section';
@@ -63,7 +64,13 @@ $string['deletesection'] = 'Delete section';
 // These are 'sections' as they are only shown in 'section' based structures.
 $string['markedthissection'] = 'This section is highlighted as the current section';
 $string['markthissection'] = 'Highlight this section as the current section';
+
+// View single section.
 $string['viewonly'] = 'View only \'{$a->sectionname}\'';
+$string['setviewsinglesectionenabled'] = 'View single section enabled';
+$string['setviewsinglesectionenabled_help'] = 'View single section functionality enabled.';
+$string['defaultviewsinglesectionenabled'] = 'View single section enabled';
+$string['defaultviewsinglesectionenabled_desc'] = 'States if the view single section functionality should be enabled.';
 
 // MDL-51802.
 $string['editsectionname'] = 'Edit section name';
@@ -105,10 +112,19 @@ $string['setlayoutstructurecurrenttopicfirst'] = 'Current topic first';
 $string['setlayoutstructureday'] = 'Day';
 $string['resetlayout'] = 'Layout'; // CONTRIB-3529.
 $string['resetalllayout'] = 'Layouts';
+$string['layoutstructuretopics'] = 'topics';
+$string['layoutstructureweeks'] = 'weeks';
+$string['layoutstructuredays'] = 'days';
+
+// Coursesetting - Show addtional data for modules
+$string['showadditionalmoddata'] = 'Show additional information for: {$a} in the course';
+$string['showadditionalmoddata_help'] = 'Allow all users to see the activity deadline and users with grading permission to see the number of submissions on the course page for activities.';
+$string['defaultshowadditionalmoddata'] = 'Default course \'Show additional information\' if not already set';
+$string['defaultshowadditionalmoddatadesc'] = 'If an activity is set at site level (below) to show additional information then this setting states the default state of the course specific instance of it.';
 
 // Colour enhancement - Moodle Tracker CONTRIB-3529.
 $string['setcolour'] = 'Colour';
-$string['colourrule'] = "Please enter a valid RGB colour, six hexadecimal digits.";
+$string['colourrule'] = "Please enter a valid RGB colour, six hexadecimal digits or '-' for default.";
 $string['settoggleforegroundcolour'] = 'Toggle foreground';
 $string['settoggleforegroundhovercolour'] = 'Toggle foreground hover';
 $string['settogglebackgroundcolour'] = 'Toggle background';
@@ -133,16 +149,16 @@ $string['maincoursepage'] = 'Main course page';
 $string['setlayoutelements_help'] = 'How much information about the toggles / sections you wish to be displayed.';
 $string['setlayoutstructure_help'] = "The layout structure of the course.  You can choose between:<br />'Topics' - where each section is presented as a topic in section number order.<br />'Weeks' - where each section is presented as a week in ascending week order from the start date of the course.<br />'Current week first' - which is the same as weeks but the current week is shown at the top and preceding weeks in descending order are displayed below except in editing mode where the structure is the same as 'Weeks'.<br />'Current topic first' - which is the same as 'Topics' except that the current topic is shown at the top if it has been set.<br />'Day' - where each section is presented as a day in ascending day order from the start date of the course.";
 $string['setlayout_help'] = 'Contains the settings to do with the layout of the format within the course.';
-$string['resetlayout_help'] = 'Resets the layout element, structure, columns, icon position, one section and shown section summary to the default values so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
-$string['resetalllayout_help'] = 'Resets the layout element, structure, columns, icon position, one section and shown section summary to the default values for all courses so it will be the same as a course the first time it is in the \'Collapsed Topics \'format.';
+$string['resetlayout_help'] = 'Resets the layout element, structure, columns, toggle all, view single section, icon position, one section and shown section summary to follow the site default value.';
+$string['resetalllayout_help'] = 'Resets the layout element, structure, columns, toggle all, view single section, icon position, one section and shown section summary to follow the site default value.';
 // Moodle Tracker CONTRIB-3529.
 $string['setcolour_help'] = 'Contains the settings to do with the colour of the format within the course.';
 $string['settoggleforegroundcolour_help'] = 'Sets the colour of the text on the toggle.';
 $string['settoggleforegroundhovercolour_help'] = 'Sets the colour of the text on the toggle when the mouse moves over it.';
 $string['settogglebackgroundcolour_help'] = 'Sets the background colour of the toggle.';
 $string['settogglebackgroundhovercolour_help'] = 'Sets the background colour of the toggle when the mouse moves over it.';
-$string['resetcolour_help'] = 'Resets the colours and opacities to the default values so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
-$string['resetallcolour_help'] = 'Resets the colours and opacities to the default values for all courses so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
+$string['resetcolour_help'] = 'Resets the colours and opacities to follow the site default value.';
+$string['resetallcolour_help'] = 'Resets the colours and opacities to follow the site default value.';
 // Columns enhancement.
 $string['setlayoutcolumns_help'] = 'How many columns to use.';
 $string['setlayoutcolumnorientation_help'] = 'Vertical - Sections go top to bottom.<br />Horizontal - Sections go left to right.';
@@ -160,8 +176,8 @@ $string['center'] = 'Centre';
 $string['right'] = 'Right';
 $string['resettogglealignment'] = 'Toggle alignment';
 $string['resetalltogglealignment'] = 'Toggle alignments';
-$string['resettogglealignment_help'] = 'Resets the toggle alignment to the default values so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
-$string['resetalltogglealignment_help'] = 'Resets the toggle alignment to the default values for all courses so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
+$string['resettogglealignment_help'] = 'Resets the toggle alignment to follow the site default value.';
+$string['resetalltogglealignment_help'] = 'Resets the toggle alignment to follow the site default value.';
 
 // Icon position - CONTRIB-4470.
 $string['settoggleiconposition'] = 'Icon position';
@@ -190,8 +206,8 @@ $string['sunmoon'] = 'Sun / Moon';
 $string['switch'] = 'Switch';
 $string['resettoggleiconset'] = 'Toggle icon set';
 $string['resetalltoggleiconset'] = 'Toggle icon sets';
-$string['resettoggleiconset_help'] = 'Resets the toggle icon set and toggle all hover to the default values so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
-$string['resetalltoggleiconset_help'] = 'Resets the toggle icon set and toggle all hover to the default values for all courses so it will be the same as a course the first time it is in the \'Collapsed Topics\' format.';
+$string['resettoggleiconset_help'] = 'Resets the toggle icon set and toggle all hover to follow the site default value.';
+$string['resetalltoggleiconset_help'] = 'Resets the toggle icon set and toggle all hover to follow the site default value.';
 
 // One section enhancement.
 $string['onesection'] = 'One section';
@@ -207,6 +223,9 @@ $string['configurationheadingsubdesc'] = 'Configuration settings';
 
 $string['off'] = 'Off';
 $string['on'] = 'On';
+
+$string['default'] = 'Default - {$a}';
+
 $string['defaultlayoutelement'] = 'Layout';
 // Negative view of layout, kept for previous versions until such time as they are updated.
 $string['defaultlayoutelement_desc'] = "The layout setting can be one of:<br />'Default' with everything displayed.<br />No 'Topic x' / 'Week x' / 'Day x'.<br />No section number.<br />No 'Topic x' / 'Week x' / 'Day x' and no section number.<br />No 'Toggle' word.<br />No 'Toggle' word and no 'Topic x' / 'Week x' / 'Day x'.<br />No 'Toggle' word, no 'Topic x' / 'Week x' / 'Day x' and no section number.";
@@ -238,7 +257,7 @@ $string['defaulttogglealignment'] = 'Toggle text alignment';
 $string['defaulttogglealignment_desc'] = "'Left', 'Centre' or 'Right'.";
 
 $string['defaulttoggleiconset'] = 'Toggle icon set';
-$string['defaulttoggleiconset_desc'] = "'Arrow'                => Arrow icon set.<br />'Bulb'                 => Bulb icon set.<br />'Cloud'                => Cloud icon set.<br />'Eye'                  => Eye icon set.<br />'Light Emitting Diode' => LED icon set.<br />'Point'                => Point icon set.<br />'Power'                => Power icon set.<br />'Radio'                => Radio icon set.<br />'Smiley'               => Smiley icon set.<br />'Square'               => Square icon set.<br />'Sun / Moon'           => Sun / Moon icon set.<br />'Switch'               => Switch icon set.";
+$string['defaulttoggleiconset_desc'] = '<table><tbody><tr><td>Arrow</td><td>{$a->arrow}</td></tr><tr><td>Bulb</td><td>{$a->bulb}</td></tr><tr><td>Cloud</td><td>{$a->cloud}</td></tr><tr><td>Eye</td><td>{$a->eye}</td></tr><tr><td>Folder</td><td>{$a->folder}</td></tr><tr><td>Ground Signal</td><td>{$a->groundsignal}</td></tr><tr><td>Light Emitting Diode</td><td>{$a->led}</td></tr><tr><td>Point</td><td>{$a->point}</td></tr><tr><td>Power</td><td>{$a->power}</td></tr><tr><td>Radio</td><td>{$a->radio}</td></tr><tr><td>Smiley</td><td>{$a->smiley}</td></tr><tr><td>Square</td><td>{$a->square}</td></tr><tr><td>Sun / Moon</td><td>{$a->sunmoon}</td></tr><tr><td>Switch</td><td>{$a->switch}</td></tr></tbody></table>';
 
 $string['defaulttoggleallhover'] = 'Toggle all icon hovers';
 $string['defaulttoggleallhover_desc'] = "'No' or 'Yes'.";
@@ -355,8 +374,62 @@ $string['defaultdisplayinstructions'] = 'Display instructions to users';
 $string['defaultdisplayinstructions_desc'] = "Display instructions to users informing them how to use the toggles.  Can be yes or no.";
 $string['resetdisplayinstructions'] = 'Display instructions';
 $string['resetalldisplayinstructions'] = 'Display instructions';
-$string['resetdisplayinstructions_help'] = 'Resets the display instructions to the default value so it will be the same as a course the first time it is in the Collapsed Topics format.';
-$string['resetalldisplayinstructions_help'] = 'Resets the display instructions to the default value for all courses so it will be the same as a course the first time it is in the Collapsed Topics format.';
+$string['resetdisplayinstructions_help'] = 'Resets the display instructions to follow the site default value.';
+$string['resetalldisplayinstructions_help'] = 'Resets the display instructions to follow the site default value.';
+
+// Activity display *********************************.
+$string['answered'] = 'Answered';
+$string['attempted'] = 'Attempted';
+$string['contributed'] = 'Contributed';
+$string['draft'] = 'Not published to students';
+$string['due'] = 'Due {$a}';
+$string['expired'] = 'Expired';
+$string['feedbackavailable'] = 'Feedback available';
+$string['notanswered'] = 'Not answered';
+$string['notattempted'] = 'Not attempted';
+$string['notcontributed'] = 'Not contributed';
+$string['notopen'] = 'Not open';
+$string['notsubmitted'] = 'Not submitted';
+$string['overdue'] = 'Overdue';
+$string['reopened'] = 'Reopened';
+$string['submitted'] = 'Submitted';
+
+$string['xofyanswered'] = '{$a->completed} of {$a->participants} answered';
+$string['xofyattempted'] = '{$a->completed} of {$a->participants} attempted';
+$string['xofycontributed'] = '{$a->completed} of {$a->participants} contributed';
+$string['xofysubmitted'] = '{$a->completed} of {$a->participants} submitted';
+$string['xanswered'] = '{$a->completed} answered';
+$string['xattempted'] = '{$a->completed} attempted';
+$string['xcontributed'] = '{$a->completed} contributed';
+$string['xsubmitted'] = '{$a->completed} submitted';
+$string['xungraded'] = '{$a} ungraded';
+
+$string['checked'] = 'Checked';
+$string['warning'] = 'Warning';
+
+$string['coursesectionactivityfurtherinformation'] = 'Course page further information';
+$string['coursesectionactivityfurtherinformationassign'] = 'Show assignment information';
+$string['coursesectionactivityfurtherinformationassigndesc'] = 'Show assignment information, such as due date, submission status.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationquiz'] = 'Show quiz information';
+$string['coursesectionactivityfurtherinformationquizdesc'] = 'Show quiz information, such as submission status.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationchoice'] = 'Show choice information';
+$string['coursesectionactivityfurtherinformationchoicedesc'] = 'Show choice information, such as submission status.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationfeedback'] = 'Show feedback information';
+$string['coursesectionactivityfurtherinformationfeedbackdesc'] = 'Show feedback information, such as submission status.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationlesson'] = 'Show lesson information';
+$string['coursesectionactivityfurtherinformationlessondesc'] = 'Show lesson information, such as submission status.  For teachers / admins, show number of submissions.';
+$string['coursesectionactivityfurtherinformationdata'] = 'Show database information';
+$string['coursesectionactivityfurtherinformationdatadesc'] = 'Show data information, such as submission status.  For teachers / admins, show number of submissions.';
+
+// Duplicate section.
+$string['creatingsection'] = 'Creating new section';
+$string['duplicate'] = 'Duplicate';
+$string['duplicateconfirm'] = 'Are you sure you want to duplicate the current section?  This can take a while depending on the amount of resources.';
+$string['duplicating'] = 'Duplicating';
+$string['errornosectioninfo'] = 'The indicated topic have not information';
+$string['progresscounter'] = 'Duplicating activities ({$a->current}/{$a->size})';
+$string['progressfull'] = 'Duplicating topic';
+$string['rebuildcoursecache'] = 'Rebuild course cache';
 
 // Privacy.
 $string['privacy:metadata:preference:toggle'] = 'The state of the toggles on a course.';
@@ -366,6 +439,10 @@ $string['privacy:request:preference:toggle'] = 'The course id "{$a->name}" has t
 $string['readme_title'] = 'Collapsed Topics read-me';
 $string['readme_desc'] = 'Please click on \'{$a->url}\' for lots more information about Collapsed Topics.';
 
-// Depreciated.  Remove in M3.4 version.
-$string['defaultcoursedisplay'] = 'Course display';
-$string['defaultcoursedisplay_desc'] = "Either show all the sections on a single page or section zero and the chosen section on page.";
+// Toggle Display Blocks.
+$string['defaultdisplayblocks'] = 'Blocks to display';
+$string['defaultdisplayblocks_desc'] = "Choose the blocks to display in the course.  Use the 'Ctrl' key in combination with the mouse to select more than one or none.";
+$string['defaultdisplayblocksloc'] = 'Block location for display';
+$string['defaultdisplayblocksloc_desc'] = "Choose the location for the blocks chosen above to display, pre or post side.";
+$string['sidepost'] = 'Post';
+$string['sidepre'] = 'Pre';

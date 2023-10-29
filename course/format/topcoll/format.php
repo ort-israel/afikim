@@ -22,8 +22,7 @@
  * Toggles are persistent on a per browser session per course basis but can be made to persist longer by a small
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.txt' file.
  *
- * @package    course/format
- * @subpackage topcoll
+ * @package    format_topcoll
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2009-onwards G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
@@ -132,7 +131,8 @@ if (!empty($displaysection)) {
     echo '}';
 
     echo '/* Toggle icon position. */';
-    echo '.course-content ul.ctopics li.section .content .toggle span, #toggle-all .content h4 span {';
+    echo '.course-content ul.ctopics li.section .content .toggle span,';
+    echo '#toggle-all .content h4 span {';
     echo 'background-position: ';
     switch ($tcsettings['toggleiconposition']) {
         case 2:
@@ -146,13 +146,16 @@ if (!empty($displaysection)) {
 
     echo '/* -- What happens when a toggle is hovered over -- */';
     echo '.course-content ul.ctopics li.section .content .toggle span:hover,';
-    echo '.course-content ul.ctopics li.section .content.sectionhidden .toggle span:hover {';
+    echo '.course-content ul.ctopics li.section .content.sectionhidden .toggle span:hover,';
+    echo '.course-content ul.ctopics li.section .content .toggle span:focus,';
+    echo '.course-content ul.ctopics li.section .content.sectionhidden .toggle span:focus {';
     echo 'color: ';
     echo \format_topcoll\toolbox::hex2rgba($tcsettings['toggleforegroundhovercolour'], $tcsettings['toggleforegroundhoveropacity']);
     echo ';';
     echo '}';
 
-    echo '.course-content ul.ctopics li.section .content div.toggle:hover {';
+    echo '.course-content ul.ctopics li.section .content div.toggle:hover,';
+    echo '.course-content ul.ctopics li.section .content div.toggle:focus {';
     echo 'background-color: ';
     echo \format_topcoll\toolbox::hex2rgba($tcsettings['togglebackgroundhovercolour'], $tcsettings['togglebackgroundhoveropacity']);
     echo ';';

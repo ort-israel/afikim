@@ -27,25 +27,26 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Plays the millionaire
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $millionaire
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_millionaire_continue( $id, $game, $attempt, $millionaire, $context) {
+function game_millionaire_continue( $cm, $game, $attempt, $millionaire, $context, $course) {
     // User must select quiz or question as a source module.
     if (($game->quizid == 0) and ($game->questioncategoryid == 0)) {
         if ($game->sourcemodule == 'quiz') {
-            print_error( get_string( 'millionaire_must_select_quiz', 'game'));
+            throw new moodle_exception( 'millionaire_must_select_quiz', 'game');
         } else {
-            print_error( get_string( 'millionaire_must_select_questioncategory', 'game'));
+            throw new moodle_exception( 'millionaire_must_select_questioncategory', 'game');
         }
     }
 
     if ($attempt != false and $millionaire != false) {
         // Continue an existing game.
-        return game_millionaire_play( $id, $game, $attempt, $millionaire, $context);
+        return game_millionaire_play( $cm, $game, $attempt, $millionaire, $context, $course);
     }
 
     if ($attempt == false) {
@@ -59,22 +60,23 @@ function game_millionaire_continue( $id, $game, $attempt, $millionaire, $context
     $newrec->state = 0;
 
     if (!game_insert_record(  'game_millionaire', $newrec)) {
-        print_error( 'error inserting in game_millionaire');
+        throw new moodle_exception( 'millionaire_error', 'game', 'error inserting in game_millionaire');
     }
 
-    game_millionaire_play( $id, $game, $attempt, $newrec, $context);
+    game_millionaire_play( $cm, $game, $attempt, $newrec, $context, $course);
 }
 
 /**
  * Plays the millionaire
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $millionaire
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_millionaire_play( $id, $game, $attempt, $millionaire, $context) {
+function game_millionaire_play( $cm, $game, $attempt, $millionaire, $context, $course) {
     global $DB;
 
     $buttons = optional_param('buttons', 0, PARAM_INT);
@@ -94,7 +96,7 @@ function game_millionaire_play( $id, $game, $attempt, $millionaire, $context) {
         $name = 'btAnswer'.$i;
         $answer = optional_param($name, '', PARAM_RAW);
         if (!empty($answer)) {
-            game_millionaire_OnAnswer( $id, $game, $attempt, $millionaire, $query, $i, $context);
+            game_millionaire_OnAnswer( $cm, $game, $attempt, $millionaire, $query, $i, $context, $course);
             $found = 1;
         }
     }
@@ -102,15 +104,15 @@ function game_millionaire_play( $id, $game, $attempt, $millionaire, $context) {
     if ($found == 1) {
         $found = $found; // Nothing.
     } else if (!empty($help5050x)) {
-        game_millionaire_OnHelp5050( $game, $id,  $millionaire, $game, $query, $context);
+        game_millionaire_OnHelp5050( $game, $cm->id,  $millionaire, $game, $query, $context);
     } else if (!empty($helptelephonex)) {
-        game_millionaire_OnHelpTelephone( $game, $id, $millionaire, $query, $context);
+        game_millionaire_OnHelpTelephone( $game, $cm->id, $millionaire, $query, $context);
     } else if (!empty($helppeoplex)) {
-        game_millionaire_OnHelpPeople( $game, $id, $millionaire, $query, $context);
+        game_millionaire_OnHelpPeople( $game, $cm->id, $millionaire, $query, $context);
     } else if (!empty($quitx)) {
-        game_millionaire_OnQuit( $id,  $game, $attempt, $query, $context);
+        game_millionaire_OnQuit( $cm,  $game, $attempt, $query, $course);
     } else {
-        game_millionaire_ShowNextQuestion( $id, $game, $attempt, $millionaire, $context);
+        game_millionaire_ShowNextQuestion( $cm, $game, $attempt, $millionaire, $context, $course);
     }
 }
 
@@ -317,20 +319,21 @@ function game_millionaire_showgrid( $game, $millionaire, $id, $query, $aanswer, 
 /**
  * Show next question
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $millionaire
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_millionaire_shownextquestion( $id, $game, $attempt, $millionaire, $context) {
-    game_millionaire_selectquestion( $aanswer, $game, $attempt, $millionaire, $query, $context);
+function game_millionaire_shownextquestion( $cm, $game, $attempt, $millionaire, $context, $course) {
+    game_millionaire_selectquestion( $aanswer, $game, $attempt, $millionaire, $query, $context, $cm, $course);
 
     if ($game->toptext != '') {
         echo $game->toptext.'<br><br>';
     }
 
-    game_millionaire_showgrid( $game, $millionaire, $id, $query, $aanswer, "", $context);
+    game_millionaire_showgrid( $game, $millionaire, $cm->id, $query, $aanswer, "", $context, $course);
 
     if ($game->bottomtext != '') {
         echo '<br>'.$game->bottomtext;
@@ -346,13 +349,15 @@ function game_millionaire_shownextquestion( $id, $game, $attempt, $millionaire, 
  * @param stdClass $millionaire
  * @param stdClass $query
  * @param stdClass $context
+ * @param stdClass $cm
+ * @param stdClass $course
  */
-function game_millionaire_selectquestion( &$aanswer, $game, $attempt, &$millionaire, &$query, $context) {
+function game_millionaire_selectquestion( &$aanswer, $game, $attempt, &$millionaire, &$query, $context, $cm, $course) {
     global $DB, $USER;
 
     if (($game->sourcemodule != 'quiz') and ($game->sourcemodule != 'question')) {
-        print_error( get_string('millionaire_sourcemodule_must_quiz_question', 'game',
-            get_string( 'modulename', 'quiz')).' '.get_string( 'modulename', $attempt->sourcemodule));
+        throw new moodle_exception( 'millionaire_sourcemodule_must_quiz_question', 'game',
+            get_string( 'modulename', 'quiz').' '.get_string( 'modulename', $attempt->sourcemodule));
     }
 
     if ($millionaire->queryid != 0) {
@@ -362,7 +367,7 @@ function game_millionaire_selectquestion( &$aanswer, $game, $attempt, &$milliona
 
     if ($game->sourcemodule == 'quiz') {
         if ($game->quizid == 0) {
-            print_error( get_string( 'must_select_quiz', 'game'));
+            throw new moodle_exception( 'must_select_quiz', 'game');
         }
         if (game_get_moodle_version() < '02.06') {
             $select = "qtype='multichoice' AND quiz='$game->quizid' AND qmo.question=q.id".
@@ -383,7 +388,7 @@ function game_millionaire_selectquestion( &$aanswer, $game, $attempt, &$milliona
     } else {
         // Source is questions.
         if ($game->questioncategoryid == 0) {
-            print_error( get_string( 'must_select_questioncategory', 'game'));
+            throw new moodle_exception( 'must_select_questioncategory', 'game');
         }
 
         // Include subcategories.
@@ -411,7 +416,7 @@ function game_millionaire_selectquestion( &$aanswer, $game, $attempt, &$milliona
     }
 
     if ($questionid == 0) {
-        print_error( get_string( 'no_questions', 'game'));
+        throw new moodle_exception( 'no_questions', 'game');
     }
 
     $q = $DB->get_record( 'question', array( 'id' => $questionid), 'id,questiontext');
@@ -419,7 +424,7 @@ function game_millionaire_selectquestion( &$aanswer, $game, $attempt, &$milliona
     $recs = $DB->get_records( 'question_answers', array( 'question' => $questionid));
 
     if ($recs === false) {
-        print_error( get_string( 'no_questions', 'game'));
+        throw new moodle_exception( 'no_questions', 'game');
     }
 
     $correct = 0;
@@ -452,11 +457,11 @@ function game_millionaire_selectquestion( &$aanswer, $game, $attempt, &$milliona
     $query->sourcemodule = $game->sourcemodule;
     $query->glossaryentryid = 0;
     $query->questionid = $questionid;
-    $query->questiontext = addslashes( $q->questiontext);
+    $query->questiontext = $q->questiontext;
     $query->answertext = implode( ',', $ids);
     $query->correct = array_search( $correct, $ids) + 1;
     if (!$query->id = $DB->insert_record(  'game_queries', $query)) {
-        print_error( 'error inserting to game_queries');
+        throw new moodle_exception( 'millionaire_error', 'game', 'error inserting to game_queries');
     }
 
     $updrec = new StdClass;
@@ -464,11 +469,10 @@ function game_millionaire_selectquestion( &$aanswer, $game, $attempt, &$milliona
     $updrec->queryid = $query->id;
 
     if (!$newid = $DB->update_record(  'game_millionaire', $updrec)) {
-        print_error( 'error updating in game_millionaire');
+        throw new moodle_exception( 'millionaire_error', 'game', 'error updating in game_millionaire');
     }
 
     $score = $millionaire->level / 15;
-    game_updateattempts( $game, $attempt, $score, 0);
     game_update_queries( $game, $attempt, $query, $score, '');
 }
 
@@ -551,7 +555,7 @@ function game_millionaire_setstate( &$millionaire, $mask) {
     $updrec->id = $millionaire->id;
     $updrec->state = $millionaire->state;
     if (!$DB->update_record(  'game_millionaire', $updrec)) {
-        print_error( 'error updating in game_millionaire');
+        throw new moodle_exception( 'millionaire_error', 'game', 'error updating in game_millionaire');
     }
 }
 
@@ -687,15 +691,16 @@ function game_millionaire_onhelppeople( $game, $id,  &$millionaire, $query, $con
 /**
  * Millionaire on answer
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $millionaire
  * @param stdClass $query
  * @param string $answer
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_millionaire_onanswer( $id, $game, $attempt, &$millionaire, $query, $answer, $context) {
+function game_millionaire_onanswer( $cm, $game, $attempt, &$millionaire, $query, $answer, $context, $course) {
     global $DB;
 
     game_millionaire_loadquestions( $game, $millionaire, $query, $aanswer, $context);
@@ -713,54 +718,53 @@ function game_millionaire_onanswer( $id, $game, $attempt, &$millionaire, $query,
     $score = $millionaire->level / 15;
 
     game_update_queries( $game, $attempt, $query, $scorequestion, $answer);
-    game_updateattempts( $game, $attempt, $score, $finish);
+    game_updateattempts( $game, $attempt, $score, $finish, $cm, $course);
 
     $updrec = new stdClass();
     $updrec->id = $millionaire->id;
     $updrec->level = $millionaire->level;
     $updrec->queryid = 0;
     if (!$DB->update_record(  'game_millionaire', $updrec)) {
-        print_error( 'error updating in game_millionaire');
+        throw new moodle_exception( 'millionaire_error', 'game', 'error updating in game_millionaire');
     }
 
     if ($answer == $query->correct) {
         // Correct.
         if ($finish) {
             echo get_string( 'win', 'game');
-            game_millionaire_OnQuit( $id, $game, $attempt, $query);
+            game_millionaire_OnQuit( $cm, $game, $attempt, $query, $course);
         } else {
             $millionaire->queryid = 0;  // So the next function select a new question.
         }
-        game_millionaire_ShowNextQuestion( $id, $game, $attempt, $millionaire, $context);
+        if (!$finish) {
+            game_millionaire_ShowNextQuestion( $cm, $game, $attempt, $millionaire, $context, $course);
+        }
     } else {
         // Wrong answer.
         $info = get_string( 'millionaire_info_wrong_answer', 'game').
             '<br><br><b><center>'.$aanswer[ $query->correct - 1].'</b>';
 
         $millionaire->state = 15;
-        game_millionaire_ShowGrid( $game, $millionaire, $id, $query, $aanswer, $info, $context);
+        game_millionaire_ShowGrid( $game, $millionaire, $cm->id, $query, $aanswer, $info, $context);
     }
 }
 
 /**
  * Millionaire on quit
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $query
+ * @param stdClass $course
  */
-function game_millionaire_onquit( $id, $game, $attempt, $query) {
+function game_millionaire_onquit( $cm, $game, $attempt, $query, $course) {
     global $CFG, $DB;
 
-    game_updateattempts( $game, $attempt, -1, true);
-
-    if (! $cm = $DB->get_record( 'course_modules', array( 'id' => $id))) {
-        print_error( "Course Module ID was incorrect id=$id");
-    }
+    game_updateattempts( $game, $attempt, -1, true, $cm, $course);
 
     echo '<br>';
-    echo "<a href=\"{$CFG->wwwroot}/mod/game/attempt.php?id=$id\">".
+    echo "<a href=\"{$CFG->wwwroot}/mod/game/attempt.php?id={$cm->id}\">".
         get_string( 'nextgame', 'game').'</a> &nbsp; &nbsp; &nbsp; &nbsp; ';
     echo "<a href=\"{$CFG->wwwroot}/course/view.php?id=$cm->course\">".get_string( 'finish', 'game').'</a> ';
 }

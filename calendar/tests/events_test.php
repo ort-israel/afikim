@@ -223,7 +223,8 @@ class core_calendar_events_testcase extends advanced_testcase {
      * Tests for calendar_event_updated event.
      */
     public function test_calendar_event_updated_toggle_visibility() {
-        global $DB, $SITE;
+        global $DB;
+        $siteid = 0;
 
         $this->resetAfterTest();
 
@@ -242,10 +243,9 @@ class core_calendar_events_testcase extends advanced_testcase {
         $event = $events[0];
         $this->assertInstanceOf('\core\event\calendar_event_updated', $event);
         $this->assertEquals('event', $event->objecttable);
-        $this->assertEquals($SITE->id, $event->courseid);
+        $this->assertEquals($siteid, $event->courseid);
         $this->assertEquals($calevent->context, $event->get_context());
-        $expectedlog = array($SITE->id, 'calendar', 'edit', 'event.php?action=edit&amp;id=' . $calevent->id ,
-            $calevent->name);
+        $expectedlog = [$siteid, 'calendar', 'edit', 'event.php?action=edit&amp;id=' . $calevent->id , $calevent->name];
         $this->assertEventLegacyLogData($expectedlog, $event);
         $other = array('repeatid' => 0, 'timestart' => $time, 'name' => 'Some wickedly awesome event yo!');
         $this->assertEquals($other, $event->other);
@@ -533,7 +533,8 @@ class core_calendar_events_testcase extends advanced_testcase {
         $subscription = new stdClass();
         $subscription->eventtype = 'group';
         $subscription->name = 'test';
-        $subscription->groupid = "{$courseid}-{$groupid}";
+        $subscription->courseid = $courseid;
+        $subscription->groupid = $groupid;
 
         // Trigger and capture the event.
         $sink = $this->redirectEvents();
@@ -668,7 +669,9 @@ class core_calendar_events_testcase extends advanced_testcase {
         $subscription = new stdClass();
         $subscription->eventtype = 'group';
         $subscription->name = 'test';
-        $subscription->groupid = "{$courseid}-{$groupid}";
+        $subscription->courseid = $courseid;
+        $subscription->groupid = $groupid;
+
         $subscription->id = calendar_add_subscription($subscription);
         // Now edit it.
         $subscription->name = 'awesome';
@@ -797,7 +800,8 @@ class core_calendar_events_testcase extends advanced_testcase {
         $subscription = new stdClass();
         $subscription->eventtype = 'group';
         $subscription->name = 'test';
-        $subscription->groupid = "{$courseid}-{$groupid}";
+        $subscription->groupid = $groupid;
+        $subscription->courseid = $courseid;
         $subscription->id = calendar_add_subscription($subscription);
 
         // Trigger and capture the event.

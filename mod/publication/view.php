@@ -27,6 +27,7 @@
 require_once('../../config.php');
 require_once($CFG->dirroot . '/mod/publication/locallib.php');
 require_once($CFG->dirroot . '/mod/publication/mod_publication_files_form.php');
+require_once($CFG->dirroot . '/mod/publication/mod_publication_allfiles_form.php');
 
 $id = required_param('id', PARAM_INT); // Course Module ID.
 
@@ -44,8 +45,8 @@ require_capability('mod/publication:view', $context);
 $publication = new publication($cm, $course, $context);
 
 $event = \mod_publication\event\course_module_viewed::create([
-        'objectid' => $PAGE->cm->instance,
-        'context' => $PAGE->context,
+    'objectid' => $PAGE->cm->instance,
+    'context' => $PAGE->context,
 ]);
 $event->add_record_snapshot('course', $PAGE->course);
 $event->trigger();
@@ -69,12 +70,57 @@ if ($savevisibility) {
     $params['pubid'] = $publication->get_instance()->id;
 
     foreach ($files as $fileid => $val) {
-        $val = $val - 1;
-        if ($val == -1) {
-            $val = null;
-        }
+        $x = $DB->get_record('publication_file', array('fileid' => $fileid), $fields = "fileid,userid,teacherapproval,filename");
 
-        $DB->set_field('publication_file', 'teacherapproval', $val, ['fileid' => $fileid]);
+        $oldval = $x->teacherapproval;
+
+        if ($val != $oldval) {
+            $newstatus = ($val == 2 || ($val == 3 && !$publication->get_instance()->obtainteacherapproval)) ? '' : 'not';
+            $logstatus = $newstatus;
+            $user = $DB->get_record('user', array('id' => $x->userid));
+            $group = false;
+
+            if (($publication->get_instance()->mode == PUBLICATION_MODE_IMPORT)
+                && $DB->get_field('assign', 'teamsubmission', ['id' => $publication->get_instance()->importfrom])) {
+                $logstatus = $newstatus." (Teacher) ";
+                $group = $x->userid;
+            }
+
+            $dataforlog = new stdClass();
+            $dataforlog->publication = $params['pubid'];
+            $dataforlog->approval = $logstatus." approved";
+            $dataforlog->userid = $USER->id;
+            if ($user && !empty($user->id)) {
+                $dataforlog->reluser = $user->id;
+            } else {
+                $dataforlog->reluser = 0;
+            }
+            $dataforlog->fileid = $fileid;
+
+            try {
+                \mod_publication\event\publication_approval_changed::approval_changed($cm, $dataforlog)->trigger();
+            } catch (coding_exception $e) {
+                throw new Exception("Coding exception while sending notification: " . $e->getMessage());
+            }
+
+            $DB->set_field('publication_file', 'teacherapproval', $val, ['fileid' => $fileid]);
+
+            if ($publication->get_instance()->notifystudents) {
+                $strsubmitted = get_string('approvalchange', 'publication');
+
+                if ($group) {
+                    $select = 'groupid = :id';
+                    $params = array('id' => $group);
+                    $usersingroup = $DB->get_records_select('groups_members', $select, $params, '', 'userid');
+                    foreach ($usersingroup as $u) {
+                        $user = $DB->get_record('user', array('id' => $u->userid));
+                        $publication::send_student_notification_approval_changed($cm, $u, $USER, $newstatus, $x, $id, $publication);
+                    }
+                } else {
+                    $publication::send_student_notification_approval_changed($cm, $user, $USER, $newstatus, $x, $id, $publication);
+                }
+            }
+        }
     }
 
 } else if ($action == "zip") {
@@ -131,7 +177,6 @@ if ($savevisibility) {
         $approval = ($action == "approveusers") ? 1 : 0;
         $params['pubid'] = $publication->get_instance()->id;
         $select = ' publication=:pubid AND userid ' . $usersql;
-
         $DB->set_field_select('publication_file', 'teacherapproval', $approval, $select, $params);
     }
 } else if ($action == "resetstudentapproval") {
@@ -149,7 +194,7 @@ if ($savevisibility) {
         $DB->set_field_select('publication_file', 'studentapproval', null, $select, $params);
 
         if (($publication->get_instance()->mode == PUBLICATION_MODE_IMPORT)
-                && $DB->get_field('assign', 'teamsubmission', ['id' => $publication->get_instance()->importfrom])) {
+            && $DB->get_field('assign', 'teamsubmission', ['id' => $publication->get_instance()->importfrom])) {
             $fileids = $DB->get_fieldset_select('publication_file', 'id', $select, $params);
             if (count($fileids) == 0) {
                 $fileids = [-1];
@@ -175,14 +220,14 @@ if ($savevisibility) {
 $submissionid = $USER->id;
 
 $filesform = new mod_publication_files_form(null,
-        ['publication' => $publication, 'sid' => $submissionid, 'filearea' => 'attachment']);
+    ['publication' => $publication, 'sid' => $submissionid, 'filearea' => 'attachment']);
 
 if ($data = $filesform->get_data() && $publication->is_open()) {
     $datasubmitted = $filesform->get_submitted_data();
 
     if (isset($datasubmitted->gotoupload)) {
         redirect(new moodle_url('/mod/publication/upload.php',
-                ['id' => $publication->get_instance()->id, 'cmid' => $cm->id]));
+            ['id' => $publication->get_instance()->id, 'cmid' => $cm->id]));
     }
 
     $studentapproval = optional_param_array('studentapproval', [], PARAM_INT);
@@ -192,7 +237,7 @@ if ($data = $filesform->get_data() && $publication->is_open()) {
     $conditions['userid'] = $USER->id;
 
     $pubfileids = $DB->get_records_menu('publication_file', ['publication' => $publication->get_instance()->id],
-            'id ASC', 'fileid, id');
+        'id ASC', 'fileid, id');
 
     // Update records.
     foreach ($studentapproval as $idx => $approval) {
@@ -200,19 +245,30 @@ if ($data = $filesform->get_data() && $publication->is_open()) {
 
         $approval = ($approval >= 1) ? $approval - 1 : null;
 
+        $dataforlog->approval = $approval == 1 ? 'approved' : 'rejected';
+
         if (($publication->get_instance()->mode == PUBLICATION_MODE_IMPORT)
-                && $DB->get_field('assign', 'teamsubmission', ['id' => $publication->get_instance()->importfrom])) {
+            && $DB->get_field('assign', 'teamsubmission', ['id' => $publication->get_instance()->importfrom])) {
             /* We have to deal with group approval! The method sets group approval for the specified user
              * and returns current cumulated group approval (and it also sets it in publication_file table)! */
-            $publication->set_group_approval($approval, $pubfileids[$idx], $USER->id);
+            $stats = $publication->set_group_approval($approval, $pubfileids[$idx], $USER->id);
+
+            $dataforlog->approval = '(Students '.$stats['approving'].' out of '.$stats['needed'].') '.$dataforlog->approval;
         } else {
             $DB->set_field('publication_file', 'studentapproval', $approval, $conditions);
         }
+
+        $dataforlog->publication = $conditions['publication'];
+        $dataforlog->userid = $USER->id;
+        $dataforlog->reluser = $USER->id;
+        $dataforlog->fileid = $idx;
+
+        \mod_publication\event\publication_approval_changed::approval_changed($cm, $dataforlog)->trigger();
     }
 }
 
 $filesform = new mod_publication_files_form(null,
-        ['publication' => $publication, 'sid' => $submissionid, 'filearea' => 'attachment']);
+    ['publication' => $publication, 'sid' => $submissionid, 'filearea' => 'attachment']);
 
 // Print the page header.
 $PAGE->set_title($pagetitle);

@@ -115,6 +115,24 @@ if ($ADMIN->fulltree) {
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
 
+    // Variable $navbar-bg.
+    // We use an empty default value because the default colour should come from the preset.
+    $name = 'theme_moove/navbarbg';
+    $title = get_string('navbarbg', 'theme_moove');
+    $description = get_string('navbarbg_desc', 'theme_moove');
+    $setting = new admin_setting_configcolourpicker($name, $title, $description, '');
+    $setting->set_updatedcallback('theme_reset_all_caches');
+    $page->add($setting);
+
+    // Variable $navbar-bg-hover.
+    // We use an empty default value because the default colour should come from the preset.
+    $name = 'theme_moove/navbarbghover';
+    $title = get_string('navbarbghover', 'theme_moove');
+    $description = get_string('navbarbghover_desc', 'theme_moove');
+    $setting = new admin_setting_configcolourpicker($name, $title, $description, '');
+    $setting->set_updatedcallback('theme_reset_all_caches');
+    $page->add($setting);
+
     // Course format option.
     $name = 'theme_moove/coursepresentation';
     $title = get_string('coursepresentation', 'theme_moove');
@@ -171,6 +189,22 @@ if ($ADMIN->fulltree) {
     * -----------------------
     */
     $page = new admin_settingpage('theme_moove_frontpage', get_string('frontpagesettings', 'theme_moove'));
+
+    // Disable bottom footer.
+    $name = 'theme_moove/disablefrontpageloginbox';
+    $title = get_string('disablefrontpageloginbox', 'theme_moove');
+    $description = get_string('disablefrontpageloginboxdesc', 'theme_moove');
+    $setting = new admin_setting_configcheckbox($name, $title, $description, 0);
+    $page->add($setting);
+    $setting->set_updatedcallback('theme_reset_all_caches');
+    $page->add($setting);
+
+    // Disable teachers from cards.
+    $name = 'theme_moove/disableteacherspic';
+    $title = get_string('disableteacherspic', 'theme_moove');
+    $description = get_string('disableteacherspicdesc', 'theme_moove');
+    $setting = new admin_setting_configcheckbox($name, $title, $description, 0);
+    $page->add($setting);
 
     // Headerimg file setting.
     $name = 'theme_moove/headerimg';
@@ -604,7 +638,7 @@ if ($ADMIN->fulltree) {
     $name = 'theme_moove/mail';
     $title = get_string('mail', 'theme_moove');
     $description = get_string('maildesc', 'theme_moove');
-    $default = 'willianmano@conectime.com';
+    $default = 'willianmano@conecti.me';
     $setting = new admin_setting_configtext($name, $title, $description, $default);
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
@@ -622,15 +656,6 @@ if ($ADMIN->fulltree) {
     $name = 'theme_moove/twitter';
     $title = get_string('twitter', 'theme_moove');
     $description = get_string('twitterdesc', 'theme_moove');
-    $default = '';
-    $setting = new admin_setting_configtext($name, $title, $description, $default);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $page->add($setting);
-
-    // Googleplus url setting.
-    $name = 'theme_moove/googleplus';
-    $title = get_string('googleplus', 'theme_moove');
-    $description = get_string('googleplusdesc', 'theme_moove');
     $default = '';
     $setting = new admin_setting_configtext($name, $title, $description, $default);
     $setting->set_updatedcallback('theme_reset_all_caches');
@@ -663,6 +688,15 @@ if ($ADMIN->fulltree) {
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
 
+    // Whatsapp url setting.
+    $name = 'theme_moove/whatsapp';
+    $title = get_string('whatsapp', 'theme_moove');
+    $description = get_string('whatsappdesc', 'theme_moove');
+    $default = '';
+    $setting = new admin_setting_configtext($name, $title, $description, $default);
+    $setting->set_updatedcallback('theme_reset_all_caches');
+    $page->add($setting);
+
     // Top footer background image.
     $name = 'theme_moove/topfooterimg';
     $title = get_string('topfooterimg', 'theme_moove');
@@ -671,14 +705,6 @@ if ($ADMIN->fulltree) {
     $setting = new admin_setting_configstoredfile($name, $title, $description, 'topfooterimg', 0, $opts);
     $setting->set_updatedcallback('theme_reset_all_caches');
     $page->add($setting);
-
-    // Disable bottom footer.
-    $name = 'theme_moove/disablebottomfooter';
-    $title = get_string('disablebottomfooter', 'theme_moove');
-    $description = get_string('disablebottomfooterdesc', 'theme_moove');
-    $setting = new admin_setting_configcheckbox($name, $title, $description, 0);
-    $page->add($setting);
-    $setting->set_updatedcallback('theme_reset_all_caches');
 
     $settings->add($page);
 

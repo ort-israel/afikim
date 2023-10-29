@@ -22,8 +22,7 @@
  * Toggles are persistent on a per browser session per course basis but can be made to persist longer by a small
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.txt' file.
  *
- * @package    course/format
- * @subpackage topcoll
+ * @package    format_topcoll
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2017-onwards G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
@@ -58,7 +57,7 @@ class toolbox {
      * @param string $hex
      * @return array
      */
-    static private function hex2rgb($hex) {
+    private static function hex2rgb($hex) {
         // From: http://bavotasan.com/2011/convert-hex-color-to-rgb-using-php/.
         $hex = str_replace("#", "", $hex);
 
@@ -82,7 +81,7 @@ class toolbox {
      * @param string $alpha
      * @return string
      */
-    static public function hex2rgba($hex, $alpha) {
+    public static function hex2rgba($hex, $alpha) {
         $rgba = self::hex2rgb($hex);
         $rgba[] = $alpha;
         return 'rgba('.implode(", ", $rgba).')'; // Returns the rgba values separated by commas.

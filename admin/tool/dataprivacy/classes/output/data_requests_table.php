@@ -62,6 +62,9 @@ class data_requests_table extends table_sql {
     /** @var \tool_dataprivacy\data_request[] Array of data request persistents. */
     protected $datarequests = [];
 
+    /** @var \stdClass[] List of userids and whether they have any ongoing active requests. */
+    protected $ongoingrequests = [];
+
     /** @var int The number of data request to be displayed per page. */
     protected $perpage;
 
@@ -74,15 +77,17 @@ class data_requests_table extends table_sql {
      * @param int $userid The user ID
      * @param int[] $statuses
      * @param int[] $types
+     * @param int[] $creationmethods
      * @param bool $manage
      * @throws coding_exception
      */
-    public function __construct($userid = 0, $statuses = [], $types = [], $manage = false) {
+    public function __construct($userid = 0, $statuses = [], $types = [], $creationmethods = [], $manage = false) {
         parent::__construct('data-requests-table');
 
         $this->userid = $userid;
         $this->statuses = $statuses;
         $this->types = $types;
+        $this->creationmethods = $creationmethods;
         $this->manage = $manage;
 
         $checkboxattrs = [
@@ -111,9 +116,17 @@ class data_requests_table extends table_sql {
      *
      * @param stdClass $data The row data.
      * @return string
+     * @throws \moodle_exception
+     * @throws coding_exception
      */
     public function col_select($data) {
         if ($data->status == \tool_dataprivacy\api::DATAREQUEST_STATUS_AWAITING_APPROVAL) {
+            if ($data->type == \tool_dataprivacy\api::DATAREQUEST_TYPE_DELETE
+                && !api::can_create_data_deletion_request_for_other()) {
+                // Don't show checkbox if request's type is delete and user don't have permission.
+                return false;
+            }
+
             $stringdata = [
                 'username' => $data->foruser->fullname,
                 'requesttype' => \core_text::strtolower($data->typenameshort)
@@ -177,7 +190,7 @@ class data_requests_table extends table_sql {
      * @return mixed
      */
     public function col_status($data) {
-        return html_writer::span($data->statuslabel, 'label ' . $data->statuslabelclass);
+        return html_writer::span($data->statuslabel, 'badge ' . $data->statuslabelclass);
     }
 
     /**
@@ -201,6 +214,7 @@ class data_requests_table extends table_sql {
 
         $requestid = $data->id;
         $status = $data->status;
+        $persistent = $this->datarequests[$requestid];
 
         // Prepare actions.
         $actions = [];
@@ -227,6 +241,11 @@ class data_requests_table extends table_sql {
                 }
                 break;
             case api::DATAREQUEST_STATUS_AWAITING_APPROVAL:
+                // Only show "Approve" and "Deny" button for deletion request if current user has permission.
+                if ($persistent->get('type') == api::DATAREQUEST_TYPE_DELETE &&
+                    !api::can_create_data_deletion_request_for_other()) {
+                    break;
+                }
                 // Approve.
                 $actiondata['data-action'] = 'approve';
                 $actiontext = get_string('approverequest', 'tool_dataprivacy');
@@ -245,6 +264,22 @@ class data_requests_table extends table_sql {
                     $actions[] = api::get_download_link($usercontext, $requestid);
                 }
                 break;
+        }
+
+        if ($this->manage) {
+            $canreset = $persistent->is_active() || empty($this->ongoingrequests[$data->foruser->id]->{$data->type});
+            $canreset = $canreset && $persistent->is_resettable();
+            // Prevent re-submmit deletion request if current user don't have permission.
+            $canreset = $canreset && ($persistent->get('type') != api::DATAREQUEST_TYPE_DELETE ||
+                    api::can_create_data_deletion_request_for_other());
+            if ($canreset) {
+                $reseturl = new moodle_url('/admin/tool/dataprivacy/resubmitrequest.php', [
+                        'requestid' => $requestid,
+                    ]);
+                $actiondata = ['data-action' => 'reset', 'data-requestid' => $requestid];
+                $actiontext = get_string('resubmitrequestasnew', 'tool_dataprivacy');
+                $actions[] = new action_menu_link_secondary($reseturl, null, $actiontext, $actiondata);
+            }
         }
 
         $actionsmenu = new action_menu($actions);
@@ -273,22 +308,30 @@ class data_requests_table extends table_sql {
         $sort = $this->get_sql_sort();
 
         // Get data requests from the given conditions.
-        $datarequests = api::get_data_requests($this->userid, $this->statuses, $this->types, $sort,
-                $this->get_page_start(), $this->get_page_size());
+        $datarequests = api::get_data_requests($this->userid, $this->statuses, $this->types,
+                $this->creationmethods, $sort, $this->get_page_start(), $this->get_page_size());
 
         // Count data requests from the given conditions.
-        $total = api::get_data_requests_count($this->userid, $this->statuses, $this->types);
+        $total = api::get_data_requests_count($this->userid, $this->statuses, $this->types,
+                $this->creationmethods);
         $this->pagesize($pagesize, $total);
 
         $this->rawdata = [];
         $context = \context_system::instance();
         $renderer = $PAGE->get_renderer('tool_dataprivacy');
 
+        $forusers = [];
         foreach ($datarequests as $persistent) {
             $this->datarequests[$persistent->get('id')] = $persistent;
             $exporter = new data_request_exporter($persistent, ['context' => $context]);
             $this->rawdata[] = $exporter->export($renderer);
+            $forusers[] = $persistent->get('userid');
         }
+
+        // Fetch the list of all ongoing requests for the users currently shown.
+        // This is used to determine whether any non-active request can be resubmitted.
+        // There can only be one ongoing request of a type for each user.
+        $this->ongoingrequests = api::find_ongoing_request_types_for_users($forusers);
 
         // Set initial bars.
         if ($useinitialsbar) {

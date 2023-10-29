@@ -1,21 +1,60 @@
-<ul class="nav navbar-nav {{#showright}}pull-right{{/showright}} {{^showright}}pull-left{{/showright}}">
-    <li class="linksmenu">
-        <a href="javascript:void(0)" id="openoverlaymenu">
-            <i class="fa fa-link fa-lg"></i><span class="linksdesc">{{#str}}linksmenu, theme_adaptable{{/str}}</span>
-        </a>
-    </li>
-</ul>
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template theme_adaptable/overlaymenu
+
+    Example context (json):
+    {
+        "showright": false,
+        "menuslinkicon": "fa-link",
+        "rows": {
+            "span": 12,
+            "menus": {
+                "menuitems": "Markup"
+            }
+        },
+        "showlinktext": false
+    }
+}}
+{{#showright}}
+    <span class="nav-link" id="openoverlaymenu">
+        <i class="fa {{{menuslinkicon}}} fa-lg"></i><span class="linksdesc">{{#showlinktext}}{{#str}}linksmenu, theme_adaptable{{/str}}{{/showlinktext}}</span>
+    </span>
+{{/showright}}
+
+{{^showright}}
+    <span class="nav-link" id="openoverlaymenu">
+        <i class="fa fa-link fa-lg"></i><span class="linksdesc">{{#showlinktext}}{{#str}}linksmenu, theme_adaptable{{/str}}{{/showlinktext}}</span>
+    </span>
+{{/showright}}
+
 <div id="conditionalmenu" class="overlaymenu">
-    <a id="overlaymenuclose" href="javascript:void(0)" class="btn btn-default pull-right overlayclosebtn">
+    <span id="overlaymenuclose" class="btn btn-default pull-right overlayclosebtn">
         <i class="fa fa-close"></i>
-    </a>
+    </span>
     <div class="overlay-content">
         {{#rows}}
         <div class="row-fluid">
             {{#menus}}
-                <div class="span{{span}}">
+                <div class="col-{{span}}">
                     <ul class="overlaylist">
-                        {{{menuitems}}}
+                    {{#menuitems}}
+                        {{> theme_adaptable/overlaymenuitem }}
+                    {{/menuitems}}
                     </ul>
                 </div>
             {{/menus}}

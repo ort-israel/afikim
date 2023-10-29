@@ -149,7 +149,9 @@ function theme_moove_get_pre_scss($theme) {
     $configurable = [
         // Config key => [variableName, ...].
         'brandcolor' => ['brand-primary'],
-        'navbarheadercolor' => 'navbar-header-color'
+        'navbarheadercolor' => 'navbar-header-color',
+        'navbarbg' => 'navbar-bg',
+        'navbarbghover' => 'navbar-bg-hover'
     ];
 
     // Prepend variables first.
@@ -188,31 +190,53 @@ function theme_moove_pluginfile($course, $cm, $context, $filearea, $args, $force
 
     if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'logo') {
         return $theme->setting_file_serve('logo', $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'headerimg') {
-        return $theme->setting_file_serve('headerimg', $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'marketing1icon') {
-        return $theme->setting_file_serve('marketing1icon', $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'marketing2icon') {
-        return $theme->setting_file_serve('marketing2icon', $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'marketing3icon') {
-        return $theme->setting_file_serve('marketing3icon', $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'marketing4icon') {
-        return $theme->setting_file_serve('marketing4icon', $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'topfooterimg') {
-        return $theme->setting_file_serve('topfooterimg', $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'loginbgimg') {
-        return $theme->setting_file_serve('loginbgimg', $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'favicon') {
-        return $theme->setting_file_serve('favicon', $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and preg_match("/^sliderimage[1-9][0-9]?$/", $filearea) !== false) {
-        return $theme->setting_file_serve($filearea, $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and preg_match("/^sponsorsimage[1-9][0-9]?$/", $filearea) !== false) {
-        return $theme->setting_file_serve($filearea, $args, $forcedownload, $options);
-    } else if ($context->contextlevel == CONTEXT_SYSTEM and preg_match("/^clientsimage[1-9][0-9]?$/", $filearea) !== false) {
-        return $theme->setting_file_serve($filearea, $args, $forcedownload, $options);
-    } else {
-        send_file_not_found();
     }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'headerimg') {
+        return $theme->setting_file_serve('headerimg', $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'marketing1icon') {
+        return $theme->setting_file_serve('marketing1icon', $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'marketing2icon') {
+        return $theme->setting_file_serve('marketing2icon', $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'marketing3icon') {
+        return $theme->setting_file_serve('marketing3icon', $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'marketing4icon') {
+        return $theme->setting_file_serve('marketing4icon', $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'topfooterimg') {
+        return $theme->setting_file_serve('topfooterimg', $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'loginbgimg') {
+        return $theme->setting_file_serve('loginbgimg', $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and $filearea === 'favicon') {
+        return $theme->setting_file_serve('favicon', $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and preg_match("/^sliderimage[1-9][0-9]?$/", $filearea) !== false) {
+        return $theme->setting_file_serve($filearea, $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and preg_match("/^sponsorsimage[1-9][0-9]?$/", $filearea) !== false) {
+        return $theme->setting_file_serve($filearea, $args, $forcedownload, $options);
+    }
+
+    if ($context->contextlevel == CONTEXT_SYSTEM and preg_match("/^clientsimage[1-9][0-9]?$/", $filearea) !== false) {
+        return $theme->setting_file_serve($filearea, $args, $forcedownload, $options);
+    }
+
+    send_file_not_found();
 }
 
 /**
@@ -227,75 +251,177 @@ function theme_moove_get_setting($setting, $format = false) {
 
     if (empty($theme->settings->$setting)) {
         return false;
-    } else if (!$format) {
+    }
+
+    if (!$format) {
         return $theme->settings->$setting;
-    } else if ($format === 'format_text') {
+    }
+
+    if ($format === 'format_text') {
         return format_text($theme->settings->$setting, FORMAT_PLAIN);
-    } else if ($format === 'format_html') {
+    }
+
+    if ($format === 'format_html') {
         return format_text($theme->settings->$setting, FORMAT_HTML, array('trusted' => true, 'noclean' => true));
-    } else {
-        return format_string($theme->settings->$setting);
+    }
+
+    return format_string($theme->settings->$setting);
+}
+
+
+/**
+ * Extend the Moove navigation
+ *
+ * @param flat_navigation $flatnav
+ */
+function theme_moove_extend_flat_navigation(\flat_navigation $flatnav) {
+    theme_moove_add_certificatesmenuitem($flatnav);
+
+    theme_moove_delete_menuitems($flatnav);
+
+    theme_moove_add_coursesections_to_navigation($flatnav);
+}
+
+/**
+ * Add items to flat navigation menu
+ *
+ * @param flat_navigation $flatnav
+ *
+ */
+function theme_moove_add_certificatesmenuitem(\flat_navigation $flatnav) {
+    global $COURSE;
+
+    try {
+        if (!theme_moove_has_certificates_plugin()) {
+            return;
+        }
+
+        $actionurl = new \moodle_url('/theme/moove/certificates.php');
+
+        // Course page.
+        if ($COURSE->id > 1) {
+            $parentitem = $flatnav->find('competencies', \navigation_node::TYPE_SETTING);
+
+            $actionurl = new \moodle_url('/theme/moove/certificates.php', ['id' => $COURSE->id]);
+        }
+
+        if ($COURSE->id == 1 && !$parentitem = $flatnav->find('privatefiles', \navigation_node::TYPE_SETTING)) {
+            return;
+        }
+
+        if (!is_null($parentitem->parent)) {
+            $certificatesitemoptions = [
+                'action' => $actionurl,
+                'text' => get_string('certificates', 'theme_moove'),
+                'shorttext' => get_string('certificates', 'theme_moove'),
+                'icon' => new pix_icon('i/export', ''),
+                'type' => \navigation_node::TYPE_SETTING,
+                'key' => 'certificates',
+                'parent' => $parentitem->parent
+            ];
+
+            $certificatesitem = new \flat_navigation_node($certificatesitemoptions, 0);
+
+            $flatnav->add($certificatesitem, $parentitem->key);
+        }
+    } catch (\coding_exception $e) {
+        debugging($e->getMessage(), DEBUG_DEVELOPER, $e->getTrace());
+    } catch (\moodle_exception $e) {
+        debugging($e->getMessage(), DEBUG_NORMAL, $e->getTrace());
     }
 }
 
 /**
- * Fumble with Moodle's global navigation by leveraging Moodle's *_extend_navigation() hook.
+ * Remove items from navigation
  *
- * @param global_navigation $navigation
+ * @param flat_navigation $flatnav
  */
-function theme_moove_boostnavigation_extend_navigation(global_navigation $navigation) {
-    global $CFG;
+function theme_moove_delete_menuitems(\flat_navigation $flatnav) {
 
-    // Check if admin wanted us to remove the mycourses node from Boost's nav drawer.
-    if ($mycoursesnode = $navigation->find('mycourses', global_navigation::TYPE_ROOTNODE)) {
+    $itemstodelete = [
+        'coursehome'
+    ];
 
-        // Hide all courses below the mycourses node.
-        $mycourseschildrennodeskeys = $mycoursesnode->get_children_key_list();
-        foreach ($mycourseschildrennodeskeys as $k) {
-            // If the admin decided to display categories, things get slightly complicated.
-            if ($CFG->navshowmycoursecategories) {
-                // We need to find all children nodes first.
-                $allchildrennodes = theme_moove_boostnavigation_get_all_childrenkeys($mycoursesnode->get($k));
-                // Then we can hide each children node.
-                // Unfortunately, the children nodes have navigation_node type TYPE_MY_CATEGORY or navigation_node type
-                // TYPE_COURSE, thus we need to search without a specific navigation_node type.
-                foreach ($allchildrennodes as $cn) {
-                    $mycoursesnode->find($cn, null)->showinflatnavigation = false;
-                }
-            } else {
-                // Otherwise we have a flat navigation tree and hiding the courses is easy.
-                $mycoursesnode->get($k)->showinflatnavigation = false;
-            }
+    foreach ($flatnav as $item) {
+        if (in_array($item->key, $itemstodelete)) {
+            $flatnav->remove($item->key);
+
+            continue;
+        }
+
+        if (isset($item->parent->key) && $item->parent->key == 'mycourses' &&
+            isset($item->type) && $item->type == \navigation_node::TYPE_COURSE) {
+
+            $flatnav->remove($item->key, \navigation_node::TYPE_COURSE);
         }
     }
 }
 
 /**
- * Moodle core does not have a built-in functionality to get all keys of all children of a navigation node,
- * so we need to get these ourselves.
+ * Improve flat navigation menu
  *
- * @param navigation_node $navigationnode
- * @return array
+ * @param flat_navigation $flatnav
  */
-function theme_moove_boostnavigation_get_all_childrenkeys(navigation_node $navigationnode) {
-    // Empty array to hold all children.
-    $allchildren = array();
+function theme_moove_add_coursesections_to_navigation(\flat_navigation $flatnav) {
+    global $PAGE;
 
-    // No, this node does not have children anymore.
-    if (count($navigationnode->children) == 0) {
-        return array();
+    $participantsitem = $flatnav->find('participants', \navigation_node::TYPE_CONTAINER);
+
+    if (!$participantsitem) {
+        return;
     }
 
-    // Get own children keys.
-    $childrennodeskeys = $navigationnode->get_children_key_list();
-    // Get all children keys of our children recursively.
-    foreach ($childrennodeskeys as $ck) {
-        $allchildren = array_merge($allchildren, theme_moove_boostnavigation_get_all_childrenkeys($navigationnode->get($ck)));
+    if ($PAGE->course->format != 'singleactivity') {
+        $coursesectionsoptions = [
+            'text' => get_string('coursesections', 'theme_moove'),
+            'shorttext' => get_string('coursesections', 'theme_moove'),
+            'icon' => new pix_icon('t/viewdetails', ''),
+            'type' => \navigation_node::COURSE_CURRENT,
+            'key' => 'course-sections',
+            'parent' => $participantsitem->parent
+        ];
+
+        $coursesections = new \flat_navigation_node($coursesectionsoptions, 0);
+
+        foreach ($flatnav as $item) {
+            if ($item->type == \navigation_node::TYPE_SECTION) {
+                $coursesections->add_node(new \navigation_node([
+                    'text' => $item->text,
+                    'shorttext' => $item->shorttext,
+                    'icon' => $item->icon,
+                    'type' => $item->type,
+                    'key' => $item->key,
+                    'parent' => $coursesections,
+                    'action' => $item->action
+                ]));
+            }
+        }
+
+        $flatnav->add($coursesections, $participantsitem->key);
     }
 
-    // And add our own children keys to the result.
-    $allchildren = array_merge($allchildren, $childrennodeskeys);
+    $mycourses = $flatnav->find('mycourses', \navigation_node::NODETYPE_LEAF);
 
-    // Return everything.
-    return $allchildren;
+    if ($mycourses) {
+        $flatnav->remove($mycourses->key);
+
+        $flatnav->add($mycourses, 'privatefiles');
+    }
+}
+
+/**
+ * Check if a certificate plugin is installed.
+ *
+ * @return bool
+ */
+function theme_moove_has_certificates_plugin() {
+    $simplecertificate = \core_plugin_manager::instance()->get_plugin_info('mod_simplecertificate');
+
+    $customcert = \core_plugin_manager::instance()->get_plugin_info('mod_customcert');
+
+    if ($simplecertificate || $customcert) {
+        return true;
+    }
+
+    return false;
 }

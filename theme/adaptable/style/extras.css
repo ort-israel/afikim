@@ -1,5 +1,6 @@
 /*
-* This file is part of Moodle - http://moodle.org/
+* This file is part of Adaptable theme for moodle
+*
 * Moodle is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -14,16 +15,17 @@
 * along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 *
 *
-* Adaptable extra elements style sheet
+* Adaptable Extras CSS file
 *
 * @package    theme_adaptable
-* @copyright  2015-2016 Jeremy Hopkins (Coventry University)
-* @copyright  2015-2017 Fernando Acedo (3-bits.com)
-* @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+* @copyright  2015-2019 Jeremy Hopkins (Coventry University)
+* @copyright  2015-2019 Fernando Acedo (3-bits.com)
+* @copyright  2018-2019 Manoj Solanki (Coventry University)
 *
+* @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 */
 
-a.back-to-top {
+#back-to-top {
     background-color: #000;
     background-color: rgba(0, 0, 0, 0.25);
     border-radius: 5px;
@@ -39,15 +41,10 @@ a.back-to-top {
     top: 85%;
     transition: all 0.3s ease 0s;
     font-size: 1.1em;
+    cursor: pointer;
 }
-
-.coursebox.panel {
-    border-radius: 2px;
-    position: relative;
-    background-color: #fafafa !important;
-    border: 1px solid #f5f5f5;
-    height: 210px;
-    margin-bottom: 20px;
+#back-to-top:hover .fa {
+    color: [[setting:linkhover]];
 }
 
 .gradereport-grader-table img {
@@ -89,11 +86,6 @@ ul.teachers {
     font-size: 90%;
 }
 
-.coursebox .boxfooter {
-    clear: both;
-    margin-bottom: 30px;
-}
-
 .btn.btn-info {
     background-image: none !important;
     color: #fff;
@@ -101,12 +93,6 @@ ul.teachers {
     text-shadow: none;
 }
 
-.coursebox .coursebtn {
-    bottom: 10px;
-    position: absolute;
-    right: 28%;
-    width: 30%;
-}
 
 /* Messages */
 .messaging-area-container .messaging-area .contacts-area .contacts .contact.selected {
@@ -451,6 +437,10 @@ ul.teachers {
     left: auto;
 }
 
+#intro.generalbox {
+	background-color: [[setting:introboxbackgroundcolor]];
+}
+
 /* Forum */
 .forumpost .maincontent .left {
     padding: 0 10px 0 10px;
@@ -462,6 +452,7 @@ ul.teachers {
 
 .forumpost .options .commands {
     margin-left: 0;
+    float: right;
 }
 
 .forumpost .subject {
@@ -485,11 +476,11 @@ ul.teachers {
 }
 
 .forumpost .picture img.userpicture {
-    margin: 0px 10px 0px 10px;
+    margin: 0 10px 0 10px;
 }
 
 .forumpost .header .topic {
-    margin: 0px 0px 10px 10px;
+    margin: 0 0 10px 10px;
 }
 
 .forumpost {
@@ -497,14 +488,14 @@ ul.teachers {
 }
 
 .forumpost .header {
-    padding: 10px 0px 10px 0px;
+    padding: 10px 0 10px 0;
     background-color: [[setting:forumheaderbackgroundcolor]];
     border-radius: 0 0 0 0;
 }
 
 .showblockicons .block_sitenews .header .title h2:before {
     content: "\f1ea";
-    font-family: FontAwesome;
+    font-family: "FontAwesome";
 }
 
 /* Lesson Activity */
@@ -520,14 +511,12 @@ ul.teachers {
 
 .lessonbutton a {
     background-color: [[setting:buttoncolor]];
-    color: [[setting:buttontextcolor]] !important;
-    padding: 5px;
-    margin: 10px;
+    border: none;
     box-shadow: 0 -2px 0 0 rgba(0, 0, 0, 0.5) inset;
-    border: 0;
-    border-radius: [[setting:buttonradius]];
+    color: [[setting:buttontextcolor]] !important;
     cursor: pointer;
     padding: 8px 15px 8px;
+    margin: 10px;
     transition: background .2s ease-out;
 }
 
@@ -542,16 +531,19 @@ ul.teachers {
     margin-top: 15px;
 }
 
+.block .content .box {
+    margin-top: 0;
+}
 
 /* Forum Activity */
 #page-mod-forum-discuss .discussioncontrol.displaymode {
     text-align: left;
 }
 
-#page-mod-forum-discuss .discussioncontrols .discussioncontrol {
+/* #page-mod-forum-discuss .discussioncontrols .discussioncontrol {
     float: none;
     width: 100%;
-}
+} */
 
 #page-mod-forum-discuss .discussioncontrols .discussioncontrol .singleselect {
     width: 100%;
@@ -604,19 +596,31 @@ textarea#page-mod-forum-discuss .discussioncontrols .discussioncontrol .singlese
     height: auto;
 }
 
-#page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscussion {
-    margin-top: 5px;
+/* For forum page, to add padding to each discussion in the table. Applies to Moodle 3.6 only. */
+.path-mod-forum .forumheaderlist tbody .discussion td {
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+/* Remove margin for form elements where it's not needed. */
+#page-mod-forum-discuss .discussioncontrols .form-inline,
+.forumsearch .form-inline {
+    margin: 0;
+}
+
+#page-mod-forum-discuss .discussioncontrols input {
+    margin: 0;
+    padding: .6rem 1rem;
 }
 
 #page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscussion select.urlselect {
     display: block;
     width: 100%;
     height: 38px;
-    padding: 8px 12px;
     font-size: 14px;
     line-height: 1.42857143;
     color: #555;
-    background-image: none;
+    margin: 0 10px 0 0;
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -657,8 +661,17 @@ textarea#page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscu
     height: auto;
 }
 
-#page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscussion.movediscussion {
-    float: left;
+@media (max-width: 575px) {
+    #page-mod-forum-discuss .discussioncontrols .discussioncontrol {
+        float: none;
+    }
+}
+
+@media (min-width: 576px) {
+    #page-mod-forum-discuss .discussioncontrols .discussioncontrol,
+    #page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscussion.movediscussion {
+        float: left;
+    }
 }
 
 #page-mod-forum-discuss .forumpost .row .left.picture img,
@@ -677,7 +690,7 @@ textarea#page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscu
     font-size: 1.8em;
     line-height: normal;
     font-weight: 400;
-    padding: 15px 0 10px;
+    /* padding: 15px 0 10px; */
 }
 
 .forumpost .content {
@@ -689,19 +702,20 @@ textarea#page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscu
     float: none;
 }
 
-#page-mod-forum-discuss .forumpost .row .options .commands {
-    color: #fafafa;
+/* #page-mod-forum-discuss .forumpost .row .options .commands {
+     color: #fafafa;
     display: inline-block;
     float: right;
-}
+} */
 
 #page-mod-forum-discuss .forumpost .row .options .commands a {
     font-size: 12px;
     border: 1px solid #b4b4b7;
-    background-color: #ecedf0;
+    background-color: #f7f7f7;
     color: #000000 !important;
     padding: 9px 12px 9px;
     line-height: 22px;
+    margin: 0 6px;
     text-decoration: none;
     border-radius: 3px;
     transition: 0.25s;
@@ -717,41 +731,8 @@ textarea#page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscu
     padding: 15px 5px;
 }
 
-/* User Menu */
-.dropdown-menu.usermen {
-    top: 23px;
-    margin-left: -54px;
-    left: -65px;
-}
-
-.usermen li {
-    text-align: left;
-}
-
-.usermen {
-    padding: 10px 0;
-}
-
-.usermen i {
-    padding-right: 5px;
-}
-
-.dropdown-menu.usermen > li > a:hover,
-.dropdown-menu.usermen > li > a:active {
-    background: none;
-    background-color: #eee;
-}
-
 .signuppanel .row .btn {
     display: none;
-}
-
-.coursebox.panel ul.teachers li {
-    display: [[setting:tilesshowallcontacts]];
-}
-
-.coursebox.panel ul.teachers li:first-child {
-    display: block;
 }
 
 #changenumsections .smallicon {
@@ -760,16 +741,8 @@ textarea#page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscu
 
 #id_category,
 #id_parent {
-    width: 100%;
+/*    width: 100%; */
     max-width: 100%;
-}
-
-.coursebox .panel-heading {
-    padding: 12px 10px 10px;
-}
-
-.coursebox .panel-heading a {
-    font-size: 105%;
 }
 
 /* News Ticker */
@@ -796,6 +769,7 @@ textarea#page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscu
     padding: 0 15px;
     color: #eee;
     margin-right: 15px;
+    margin-left: -15px;
     text-transform: uppercase;
     font-weight: 600;
 }
@@ -804,8 +778,10 @@ textarea#page-mod-forum-discuss .discussioncontrols .discussioncontrol.movediscu
     padding-right: 15px;
 }
 
-#ticker-wrap #controls a {
+#ticker-wrap #controls .fa {
     color: [[setting:maincolor]];
+    cursor: pointer;
+    margin-top: 10px;
 }
 
 #ticker-wrap #newscontent {
@@ -1052,7 +1028,7 @@ html[xmlns] .slides {
 }
 
 .flex-caption {
-    bottom: 0px;
+    bottom: 0;
     background-color: rgba(0, 0, 0, 0.5);
     color: #fff;
     margin: 0;
@@ -1065,7 +1041,7 @@ html[xmlns] .slides {
 .flex-caption h3 {
     color: [[setting:sliderh3color]];
     letter-spacing: 1px;
-    margin-bottom: 0px;
+    margin-bottom: 0;
     text-transform: uppercase;
     font-size: 1.5em;
 }
@@ -1211,7 +1187,7 @@ html[xmlns] .slides {
     padding: 8px 15px;
     text-transform: uppercase;
     text-align: left;
-    border: 0px solid #ab3423;
+    border: 0 solid #ab3423;
     background: [[setting:slideroption2color]] !important;
     color: [[setting:slideroption2submitcolor]] !important;
     border-radius: 0;
@@ -1231,7 +1207,8 @@ html[xmlns] .slides {
 }
 
 /* Fullscreen button */
-.fullin .container {
+.fullin.narrow .container,
+.fullin.standard .container {
     width: [[setting:fullscreenwidth]];
 }
 
@@ -1247,18 +1224,20 @@ html[xmlns] .slides {
     display: none;
 }
 
-.zoomin #block-region-side-post {
-    width: 0;
-    height: 0;
-    overflow: hidden;
-    margin-left: 0;
-    display: none;
-}
+@media (min-width: 992px) {
+    .zoomin #block-region-side-post {
+        display: none;
+        height: 0;
+        margin-left: 0;
+        min-height: 0;
+        overflow: hidden;
+        width: 0;
+    }
 
-.zoomin #region-main,
-.zoomin #region-bs-main-and-pre {
-    width: 100%;
-    margin-left: 0;
+    .zoomin #region-main {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
 }
 
 .sbl {
@@ -1271,4 +1250,12 @@ html[xmlns] .slides {
 
 .zoomin .hbl {
     display: none;
+}
+
+.fpcombocollapse .fp-chevron:before {
+    content: "\f077";
+}
+
+.fpcombocollapse.collapsed .fp-chevron:before {
+    content: "\f078";
 }

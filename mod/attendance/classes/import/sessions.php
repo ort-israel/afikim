@@ -92,7 +92,7 @@ class sessions {
      */
     public static function list_required_headers() {
         return array(
-            get_string('course', 'attendance'),
+            get_string('courseshortname', 'attendance'),
             get_string('groups', 'attendance'),
             get_string('sessiondate', 'attendance'),
             get_string('from', 'attendance'),
@@ -112,6 +112,7 @@ class sessions {
             get_string('preventsharediptime', 'attendance'),
             get_string('calendarevent', 'attendance'),
             get_string('includeqrcode', 'attendance'),
+            get_string('rotateqrcode', 'attendance'),
         );
     }
 
@@ -151,7 +152,8 @@ class sessions {
                 'preventsharedip' => $data->header16,
                 'preventsharediptime' => $data->header17,
                 'calendarevent' => $data->header18,
-                'includeqrcode' => $data->header19
+                'includeqrcode' => $data->header19,
+                'rotateqrcode' => $data->header20,
             );
         } else {
             return array(
@@ -174,7 +176,8 @@ class sessions {
                 'preventsharedip' => 16,
                 'preventsharediptime' => 17,
                 'calendarevent' => 18,
-                'includeqrcode' => 19
+                'includeqrcode' => 19,
+                'rotateqrcode' => 20
             );
         }
     }
@@ -340,10 +343,27 @@ class sessions {
                 $session->preventsharediptime = $this->get_column_data($row, $mapping['preventsharediptime']);
             }
 
+            if ($mapping['calendarevent'] == -1) {
+                $session->calendarevent = $pluginconfig->calendarevent_default;
+            } else {
+                $session->calendarevent = $this->get_column_data($row, $mapping['calendarevent']);
+            }
+
             if ($mapping['includeqrcode'] == -1) {
                 $session->includeqrcode = $pluginconfig->includeqrcode_default;
             } else {
                 $session->includeqrcode = $this->get_column_data($row, $mapping['includeqrcode']);
+
+                if ($session->includeqrcode == 1 && $session->studentscanmark != 1) {
+                    \mod_attendance_notifyqueue::notify_problem(get_string('error:qrcode', 'attendance'));
+                    continue;
+                }
+
+            }
+            if ($mapping['rotateqrcode'] == -1) {
+                $session->rotateqrcode = $pluginconfig->rotateqrcode_default;
+            } else {
+                $session->rotateqrcode = $this->get_column_data($row, $mapping['rotateqrcode']);
             }
 
             $session->statusset = 0;

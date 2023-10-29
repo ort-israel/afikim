@@ -17,8 +17,7 @@
 /**
  * Grid Format - A topics based format that uses a grid of user selectable images to popup a light box of the section.
  *
- * @package    course/format
- * @subpackage grid
+ * @package    format_grid
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2013 G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://about.me/gjbarnard} and
@@ -31,17 +30,13 @@ $string['display_summary'] = 'Sail out of thy grid';
 $string['display_summary_alt'] = 'Sail thee section out of thy grid';
 $string['editimage'] = 'Change thy flag';
 $string['editimage_alt'] = 'Hoist or change thy flag';
-$string['formatgrid'] = 'Grid format'; // Name to display for format.
-$string['general_information'] = 'General Information';
 $string['hidden_topic'] = 'Thy section has been buried';
 $string['hide_summary'] = 'Sail thy section into thee grid';
 $string['hide_summary_alt'] = 'Sail thy section into thee grid';
 $string['namegrid'] = 'Grid view';
 $string['pluginname'] = 'Grid format';
-$string['title'] = 'Section title';
 $string['topic'] = 'Section';
 $string['topic0'] = 'General';
-$string['topicoutline'] = 'Section';
 
 // Moodle 2.3 Enhancement.
 $string['hidefromothers'] = 'Bury thee section';

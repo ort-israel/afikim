@@ -31,15 +31,12 @@ Feature: Attempt a quiz
       | question | page | maxmark |
       | TF1      | 1    |         |
       | TF2      | 1    | 3.0     |
-    When I log in as "student"
-    And I am on "Course 1" course homepage
-    And I follow "Quiz 1"
-    And I press "Attempt quiz now"
-    And I click on "True" "radio" in the "First question" "question"
-    And I click on "False" "radio" in the "Second question" "question"
-    And I press "Finish attempt ..."
-    And I press "Submit all and finish"
-    And I click on "Submit all and finish" "button" in the "Confirmation" "dialogue"
+    And user "student" has attempted "Quiz 1" with responses:
+      | slot | response |
+      |   1  | True     |
+      |   2  | False    |
+    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
+    And I follow "Review"
     Then I should see "25.00 out of 100.00"
 
   @javascript
@@ -67,9 +64,7 @@ Feature: Attempt a quiz
       |           | 4         | 1       |
       | Section 3 | 5         | 0       |
 
-    When I log in as "student"
-    And I am on "Course 1" course homepage
-    And I follow "Quiz 1"
+    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
     And I press "Attempt quiz now"
 
     Then I should see "Section 1" in the "Quiz navigation" "block"
@@ -110,9 +105,7 @@ Feature: Attempt a quiz
       | question | page |
       | TF1      | 1    |
       | TF2      | 2    |
-    When I log in as "student"
-    And I am on "Course 1" course homepage
-    And I follow "Quiz 1"
+    When I am on the "Quiz 1" "mod_quiz > View" page logged in as "student"
     And I press "Attempt quiz now"
     Then I should see "Text of the first question"
     And I should not see "Text of the second question"
@@ -141,3 +134,30 @@ Feature: Attempt a quiz
     And I follow "Previous page"
     And I should see "Text of the first question"
     And I should not see "Text of the second question"
+
+  @javascript
+  Scenario: Take a quiz with number of attempts set
+    Given the following "activities" exist:
+      | activity | name   | course | grade | navmethod  | attempts |
+      | quiz     | Quiz 5 | C1     | 100   | free       | 2        |
+    And the following "questions" exist:
+      | questioncategory | qtype       | name  | questiontext    |
+      | Test questions   | truefalse   | TF7   | First question  |
+    And quiz "Quiz 5" contains the following questions:
+      | question | page |
+      | TF7      | 1    |
+    And user "student" has attempted "Quiz 5" with responses:
+      | slot | response |
+      |   1  | True     |
+    When I am on the "Quiz 5" "mod_quiz > View" page logged in as "student"
+    Then I should see "Attempts allowed: 2"
+    And I should not see "No more attempts are allowed"
+    And I press "Re-attempt quiz"
+    And I should see "First question"
+    And I click on "Finish attempt ..." "button" in the "region-main" "region"
+    And I press "Submit all and finish"
+    And I should see "Once you submit, you will no longer be able to change your answers for this attempt." in the "Confirmation" "dialogue"
+    And I click on "Submit all and finish" "button" in the "Confirmation" "dialogue"
+    And I follow "Finish review"
+    And I should not see "Re-attempt quiz"
+    And I should see "No more attempts are allowed"

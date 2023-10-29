@@ -290,6 +290,13 @@ M.mod_forumng = {
                 this.init_expand(link, match[2], expandposts[parseInt(match[2])]);
             }
 
+            // 'Collapse' links
+            var match = href.match(
+                /\/discuss\.php\?d=([0-9]+).*&collapse=1#p([0-9]+)$/);
+            if (match && link.hasClass('forumng-collapselink')) {
+                this.init_collapse(link, match[2]);
+            }
+
             // Magicalise 'Reply' links
             match = href.match(/\/editpost\.php\?replyto=([0-9]+).*$/);
             if (match) {
@@ -410,6 +417,11 @@ M.mod_forumng = {
      * @return Iframe YUI node or null if already editing (abort)
      */
     init_iframe : function(src, post) {
+        var classname_post = post.get('className').split(" ");
+        var is_unread = true;
+        if (classname_post.indexOf('forumng-unread') === -1) {
+            is_unread = false;
+        }
         // Check we're not already editing
         var t = this;
         if (this.nowediting) {
@@ -431,6 +443,7 @@ M.mod_forumng = {
         src += '&iframe=1';
         iframe.set('src', src);
         window.iframe_has_loaded = function(innerwin) {
+            innerwin.document.body.className += is_unread ? ' iframe-post-unread' : '';
             M.util.js_complete('forumng_iframe');
             M.util.js_pending('forumng_iframe_load');
             // Note: I am avoiding using YUI because I think there are
@@ -808,7 +821,7 @@ M.mod_forumng = {
         div.span = div.one(' span');
         // Get on state from image icon.
         div.icon = div.one(' img.icon');
-        div.on = div.icon.get('src').match(/flag\.on/);
+        div.on = div.icon.get('src').match(/star\.on/);
         // Remove all other event listeners just in case this func called multiple times.
         this.Y.Event.purgeElement(div.icon, false, 'click');
         div.anchor.on('click', function(e) {
@@ -822,14 +835,15 @@ M.mod_forumng = {
                 on: {
                     success: function(o) {
                         div.on = !div.on;
-                        div.icon.set('src', div.icon.get('src').replace(/flag\.o(n|ff)/,
-                                'flag.' + (div.on ? 'on' : 'off')));
+                        div.icon.set('src', div.icon.get('src').replace(/star\.o(n|ff)/,
+                                'star.' + (div.on ? 'on' : 'off')));
                         div.anchor.set('href', div.anchor.get('href').replace(/\&flag=(0|1)/, '&flag=' + (div.on ? 0 : 1)));
                         div.anchor.set('title',
-                                div.on ? M.str.forumng.clearflag : M.str.forumng.setflag);
+                                div.on ? M.str.forumng.clearstar : M.str.forumng.setstar);
+                        div.on ? div.addClass('starred-post') : div.removeClass('starred-post');
                         var text = div.span.get('innerHTML');
                         if (text) {
-                            div.span.set('innerHTML', div.on ? M.str.forumng.clearflag : M.str.forumng.flagpost);
+                            div.span.set('innerHTML', div.on ? M.str.forumng.clearstar : M.str.forumng.starpost);
                         }
                     },
                     failure: function(o) {
@@ -1008,17 +1022,27 @@ M.mod_forumng = {
         // Pick max indent level
         var region = this.Y.DOM.region(document.getElementById('forumng-main'));
         var width = region.right - region.left;
-        var minwidth = 550; // Min size at which the stupid editor doesn't get cut off
+        var ismobile = window.matchMedia('(max-width: 767px)').matches;
+        // Min size at which the editor still looks ok
+        var minwidth = ismobile ? 256 : 550;
         var maxindentpixels = width - minwidth;
-        var stopIndent;
+        // This can't go lower than 1, otherwise the indentation never stops
+        var stopIndent = 1;
 
-        // There are 5 indents of 40px then 5 of 30px, then all 20px
-        if (maxindentpixels > 350) {
-            stopIndent = 10 + Math.floor((maxindentpixels - 350) / 20);
-        } else if (maxindentpixels > 200) {
-            stopIndent = 5 + Math.floor((maxindentpixels - 200) / 30);
+        if (ismobile) {
+            // All indents are 6px at this width
+            if (maxindentpixels > 6) {
+                stopIndent = Math.floor(maxindentpixels / 6);
+            }
         } else {
-            stopIndent = Math.floor(maxindentpixels / 40);
+            // There are 5 indents of 40px then 5 of 30px, then all 20px
+            if (maxindentpixels > 350) {
+                stopIndent = 10 + Math.floor((maxindentpixels - 350) / 20);
+            } else if (maxindentpixels > 200) {
+                stopIndent = 5 + Math.floor((maxindentpixels - 200) / 30);
+            } else if (maxindentpixels >= 40) {
+                stopIndent = Math.floor(maxindentpixels / 40);
+            }
         }
 
         // Fix indents for all tags
@@ -1215,12 +1239,33 @@ M.mod_forumng = {
         link.postid = postid;
         link.delay = true;
 
-        // Replace 'expand all' text with 'expand this post'
+        this.process_link_retrieve_message(link);
+
+        // Automatically expand message listed in URL (if any)
+        if (expandnow) {
+            link.delay = false;
+            M.mod_forumng.simulate_click(link);
+        }
+    },
+
+    /**
+     * Process link hashtag url to retrieve the message when you expands the post.
+     * @param link Link node
+     * @param postid Post ID
+     * @param expandnow If true, expand this post immediately
+     */
+    process_link_retrieve_message: function(link, short = true) {
+        // Replace 'expand/collapse all' text with 'expand/collapse'
         var postnum = link.post.get('className').replace(/^.*forumng-p([0-9]+).*$/, '$1');
-        var text = link.one('.forumng-expandtext');
-        if (text) {
+
+        var text = short ? link.one('.forumng-expandtext') : link.one('.forumng-collapsetext');
+        if (text && short) {
             text.set('innerHTML', M.str.forumng.expand.replace('#', postnum));
         }
+        if (text && !short) {
+            text.set('innerHTML', M.str.forumng.collapse.replace('#', postnum));
+        }
+
         // Add to post number to alt when using an image in expand link (expand_text lang string).
         var linkimg = link.one('img.fng-eai');
         if (linkimg) {
@@ -1236,7 +1281,7 @@ M.mod_forumng = {
 
             var cfg = {
                 method: 'GET',
-                data: 'p=' + link.postid + this.cloneparam,
+                data: 'p=' + link.postid + this.cloneparam + '&short=' + short,
                 timeout: 10000,
                 context: this,
                 arguments: link,
@@ -1246,15 +1291,29 @@ M.mod_forumng = {
                 }
             };
             this.Y.io('expandpost.php', cfg);
-            link.loader.set('src', this.loaderpix);
+            if (link.loader) {
+                link.loader.set('src', this.loaderpix);
+            }
             link.inProcess = true;
         }, this);
+    },
 
-        // Automatically expand message listed in URL (if any)
-        if (expandnow) {
-            link.delay = false;
-            M.mod_forumng.simulate_click(link);
+    /**
+     * Initialises an collapse link so that it can use AJAX to retrieve the message.
+     * @param link Link node
+     * @param postid Post ID
+     */
+    init_collapse: function(link, postid) {
+        link.post = link.ancestor('.forumng-post');
+        link.loader = link.get('nextSibling');
+        while (link.loader.get('nodeName').toLowerCase() != 'img') {
+            link.loader = link.loader.get('nextSibling');
         }
+        link.loader.originalsrc = link.loader.get('src');
+        link.postid = postid;
+        link.delay = true;
+
+        this.process_link_retrieve_message(link, false);
     },
 
     /**

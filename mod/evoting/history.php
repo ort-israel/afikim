@@ -48,7 +48,8 @@ $context = context_module::instance($cm -> id);
 $context_course = context_course::instance($course -> id);
 
 $PAGE->requires->jquery();
-$PAGE->requires->js('/mod/evoting/js/google-jsapi.js');
+//$PAGE->requires->js('/mod/evoting/js/google-jsapi.js');
+$PAGE->requires->js('/mod/evoting/js/googlechart.js');
 
 // If the user is not at least a teacher show the vote page
 if (!has_capability('mod/evoting:openevoting', $context_course)) {

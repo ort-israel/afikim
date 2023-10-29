@@ -26,18 +26,29 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-    // Navbar.
-    $temp = new admin_settingpage('theme_adaptable_usernav', get_string('usernav', 'theme_adaptable'));
-    $temp->add(new admin_setting_heading('theme_adaptable_usernav', get_string('usernavheading', 'theme_adaptable'),
+if ($ADMIN->fulltree) {
+    $page = new admin_settingpage('theme_adaptable_usernav', get_string('usernav', 'theme_adaptable'));
+
+    $page->add(new admin_setting_heading('theme_adaptable_usernav', get_string('usernavheading', 'theme_adaptable'),
            format_text(get_string('usernavdesc', 'theme_adaptable'), FORMAT_MARKDOWN)));
+
+    // Position of the username.
+    $name = 'theme_adaptable/usernameposition';
+    $title = get_string('usernameposition', 'theme_adaptable');
+    $description = get_string('usernamepositiondesc', 'theme_adaptable');
+    $poschoices = array(
+        'left' => get_string('left', 'editor'),
+        'right' => get_string('right', 'editor')
+    );
+    $setting = new admin_setting_configselect($name, $title, $description, 'left', $poschoices);
+    $page->add($setting);
 
     $name = 'theme_adaptable/hideinforum';
     $title = get_string('hideinforum', 'theme_adaptable');
     $description = get_string('hideinforumdesc', 'theme_adaptable');
     $default = false;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable My.
     $name = 'theme_adaptable/enablemy';
@@ -45,8 +56,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enablemydesc', 'theme_adaptable');
     $default = true;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable View Profile.
     $name = 'theme_adaptable/enableprofile';
@@ -54,8 +64,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enableprofiledesc', 'theme_adaptable');
     $default = true;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable Edit Profile.
     $name = 'theme_adaptable/enableeditprofile';
@@ -63,8 +72,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enableeditprofiledesc', 'theme_adaptable');
     $default = true;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable Calendar.
     $name = 'theme_adaptable/enablecalendar';
@@ -72,8 +80,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enablecalendardesc', 'theme_adaptable');
     $default = true;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable Private Files.
     $name = 'theme_adaptable/enableprivatefiles';
@@ -81,8 +88,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enableprivatefilesdesc', 'theme_adaptable');
     $default = false;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable Grades.
     $name = 'theme_adaptable/enablegrades';
@@ -90,8 +96,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enablegradesdesc', 'theme_adaptable');
     $default = true;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable Badges.
     $name = 'theme_adaptable/enablebadges';
@@ -99,8 +104,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enablebadgesdesc', 'theme_adaptable');
     $default = false;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable Preferences.
     $name = 'theme_adaptable/enablepref';
@@ -108,8 +112,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enableprefdesc', 'theme_adaptable');
     $default = true;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable Notes.
     $name = 'theme_adaptable/enablenote';
@@ -117,8 +120,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enablenotedesc', 'theme_adaptable');
     $default = false;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable Blog.
     $name = 'theme_adaptable/enableblog';
@@ -126,8 +128,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enableblogdesc', 'theme_adaptable');
     $default = false;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable Forum posts.
     $name = 'theme_adaptable/enableposts';
@@ -135,16 +136,23 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enablepostsdesc', 'theme_adaptable');
     $default = false;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    // Enable Feed.
+    // Enable My Feedback.
     $name = 'theme_adaptable/enablefeed';
     $title = get_string('enablefeed', 'theme_adaptable');
     $description = get_string('enablefeeddesc', 'theme_adaptable');
     $default = false;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    $ADMIN->add('theme_adaptable', $temp);
+    // Enable Accessibility Tool.
+    $name = 'theme_adaptable/enableaccesstool';
+    $title = get_string('enableaccesstool', 'theme_adaptable');
+    $description = get_string('enableaccesstooldesc', 'theme_adaptable');
+    $default = false;
+    $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
+    $page->add($setting);
+
+    $asettings->add($page);
+}

@@ -28,7 +28,6 @@ defined('MOODLE_INTERNAL') || die();
 
 use \mod_readaloud\constants;
 
-
 /**
  * A mod_readaloud adhoc task to fetch back transcriptions from Amazon S3
  *
@@ -38,54 +37,78 @@ use \mod_readaloud\constants;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class readaloud_s3_adhoc extends \core\task\adhoc_task {
-                                                                     
-   	 /**
+
+    /**
      *  Run the tasks
      */
-	 public function execute(){
-	     global $DB;
-		$trace = new \text_progress_trace();
+    public function execute() {
+        global $DB;
+        $trace = new \text_progress_trace();
 
-		//CD should contain activityid / attemptid and modulecontextid
-		$cd =  $this->get_custom_data();
-		//$trace->output($cd->somedata)
+        //CD should contain activityid / attemptid and modulecontextid
+        $cd = $this->get_custom_data();
+        //$trace->output($cd->somedata)
 
-         $activity = $DB->get_record(constants::MOD_READALOUD_TABLE,array('id'=>$cd->activityid));
-         if(!\mod_readaloud\utils::can_transcribe($activity)){
-             $this->do_forever_fail('This activity does not support transcription',$trace);
-             return;
-         }
+        $activity = $DB->get_record(constants::M_TABLE, array('id' => $cd->activityid));
+        if (!\mod_readaloud\utils::can_transcribe($activity)) {
+            if (!$activity) {
+                $this->do_forever_fail('This activity has been deleted or can not be fetched', $trace);
+                return;
+            }
+        }
+        if (!\mod_readaloud\utils::can_transcribe($activity)) {
+            $this->do_forever_fail('This activity does not support transcription', $trace);
+            return;
+        }
 
-         $aigrade = new \mod_readaloud\aigrade($cd->attemptid,$cd->modulecontextid);
-         if($aigrade){
-             if(!$aigrade->has_attempt()){
-                 $this->do_forever_fail('No attempt could be found',$trace);
-                 return;
-             }
+        $aigrade = new \mod_readaloud\aigrade($cd->attemptid, $cd->modulecontextid);
+        if ($aigrade) {
+            if (!$aigrade->has_attempt()) {
+                $this->do_forever_fail('No attempt could be found', $trace);
+                return;
+            }
 
-             if(!$aigrade->has_transcripts()){
-                 $this->do_retry_fail('Transcript appears to not be ready yet',$trace);
-                 return;
-             }else{
-                 //if we got here, we have transcripts and we do not need to come back
-                 $trace->output("Transcripts are fetched for " . $cd->attemptid . " ...all ok");
-                 return;
-             }
+            if (!$aigrade->has_transcripts()) {
+                $this->do_retry('Transcript appears to not be ready yet for ' . $cd->attemptid, $trace, $cd);
+                return;
+            } else {
+                //if we got here, we have transcripts and we do not need to come back
+                $trace->output("Transcripts are fetched for " . $cd->attemptid . " ...all ok");
+                return;
+            }
 
-         }else{
-             $this->do_forever_fail('Unable to create AI grade for some reason',$trace);
-             return;
-         }
-	}
+        } else {
+            $this->do_forever_fail('Unable to create AI grade for some reason for ' . $cd->attemptid, $trace);
+            return;
+        }
+    }
 
-	protected function do_retry_fail($reason,$trace){
-        $trace->output($reason . ": will retry ");
-        throw new \file_exception('retrievefileproblem', 'could not fetch transcripts.');
-	 }
+    protected function do_retry($reason, $trace, $customdata) {
+        if($customdata->taskcreationtime + (HOURSECS * 24) < time()){
+            //after 24 hours we give up
+            $trace->output($reason . ": Its been more than 24 hours. Giving up on this transcript.");
+            return;
 
-    protected function do_forever_fail($reason,$trace){
+        }elseif ($customdata->taskcreationtime + (MINSECS * 15) < time()) {
+            //15 minute delay
+            $delay = (MINSECS * 15);
+        }else{
+            //30 second delay
+            $delay = 30;
+        }
+        $trace->output($reason . ": will try again next cron after $delay seconds");
+        $s3_task = new \mod_readaloud\task\readaloud_s3_adhoc();
+        $s3_task->set_component('mod_readaloud');
+        $s3_task->set_custom_data($customdata);
+        //if we do not set the next run time it can extend the current cron job indef with a recurring task
+        $s3_task->set_next_run_time(time()+$delay);
+        // queue it
+        \core\task\manager::queue_adhoc_task($s3_task);
+    }
+
+    protected function do_forever_fail($reason, $trace) {
         $trace->output($reason . ": will not retry ");
-	}
-		
+    }
+
 }
 

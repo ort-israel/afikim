@@ -66,9 +66,8 @@ function resource_display_embed($resource, $cm, $course, $file) {
     $clicktoopen = resource_get_clicktoopen($file, $resource->revision);
 
     $context = context_module::instance($cm->id);
-    $path = '/'.$context->id.'/mod_resource/content/'.$resource->revision.$file->get_filepath().$file->get_filename();
-    $fullurl = file_encode_url($CFG->wwwroot.'/pluginfile.php', $path, false);
-    $moodleurl = new moodle_url('/pluginfile.php' . $path);
+    $moodleurl = moodle_url::make_pluginfile_url($context->id, 'mod_resource', 'content', $resource->revision,
+            $file->get_filepath(), $file->get_filename());
 
     $mimetype = $file->get_mimetype();
     $title    = $resource->name;
@@ -82,11 +81,11 @@ function resource_display_embed($resource, $cm, $course, $file) {
     );
 
     if (file_mimetype_in_typegroup($mimetype, 'web_image')) {  // It's an image
-        $code = resourcelib_embed_image($fullurl, $title);
+        $code = resourcelib_embed_image($moodleurl->out(), $title);
 
     } else if ($mimetype === 'application/pdf') {
         // PDF document
-        $code = resourcelib_embed_pdf($fullurl, $title, $clicktoopen);
+        $code = resourcelib_embed_pdf($moodleurl->out(), $title, $clicktoopen);
 
     } else if ($mediamanager->can_embed_url($moodleurl, $embedoptions)) {
         // Media (audio/video) file.
@@ -215,7 +214,7 @@ function resource_print_workaround($resource, $cm, $course, $file) {
         case RESOURCELIB_DISPLAY_POPUP:
             $path = '/'.$file->get_contextid().'/mod_resource/content/'.$resource->revision.$file->get_filepath().$file->get_filename();
             $fullurl = file_encode_url($CFG->wwwroot.'/pluginfile.php', $path, false);
-            $options = empty($resource->displayoptions) ? array() : unserialize($resource->displayoptions);
+            $options = empty($resource->displayoptions) ? [] : (array) unserialize_array($resource->displayoptions);
             $width  = empty($options['popupwidth'])  ? 620 : $options['popupwidth'];
             $height = empty($options['popupheight']) ? 450 : $options['popupheight'];
             $wh = "width=$width,height=$height,toolbar=no,location=no,menubar=no,copyhistory=no,status=no,directories=no,scrollbars=yes,resizable=yes";
@@ -281,7 +280,7 @@ function resource_print_heading($resource, $cm, $course, $notused = false) {
  * @return string Size and type or empty string if show options are not enabled
  */
 function resource_get_file_details($resource, $cm) {
-    $options = empty($resource->displayoptions) ? array() : @unserialize($resource->displayoptions);
+    $options = empty($resource->displayoptions) ? [] : (array) unserialize_array($resource->displayoptions);
     $filedetails = array();
     if (!empty($options['showsize']) || !empty($options['showtype']) || !empty($options['showdate'])) {
         $context = context_module::instance($cm->id);
@@ -305,6 +304,7 @@ function resource_get_file_details($resource, $cm) {
         if (!empty($options['showtype'])) {
             if ($mainfile) {
                 $filedetails['type'] = get_mimetype_description($mainfile);
+                $filedetails['mimetype'] = $mainfile->get_mimetype();
                 // Only show type if it is not unknown.
                 if ($filedetails['type'] === get_mimetype_description('document/unknown')) {
                     $filedetails['type'] = '';
@@ -349,7 +349,7 @@ function resource_get_optional_details($resource, $cm) {
 
     $details = '';
 
-    $options = empty($resource->displayoptions) ? array() : @unserialize($resource->displayoptions);
+    $options = empty($resource->displayoptions) ? [] : (array) unserialize_array($resource->displayoptions);
     if (!empty($options['showsize']) || !empty($options['showtype']) || !empty($options['showdate'])) {
         if (!array_key_exists('filedetails', $options)) {
             $filedetails = resource_get_file_details($resource, $cm);
@@ -410,7 +410,7 @@ function resource_get_optional_details($resource, $cm) {
 function resource_print_intro($resource, $cm, $course, $ignoresettings=false) {
     global $OUTPUT;
 
-    $options = empty($resource->displayoptions) ? array() : unserialize($resource->displayoptions);
+    $options = empty($resource->displayoptions) ? [] : (array) unserialize_array($resource->displayoptions);
 
     $extraintro = resource_get_optional_details($resource, $cm);
     if ($extraintro) {

@@ -5,51 +5,71 @@
   }
 }
 
-@media (max-width: 767px) {
-  /* Hide the breadcrumb for the smallest screens. */
-  #page-navbar {
-    display: none;
+@media (min-width: 576px) {
+  .modal-dialog {
+    max-width: 50%;
   }
+}
 
+@media (max-width: 767px) {
   h1 {
     font-size: 1.634375rem;
   }
 
-  #nav-drawer .metismenu .has-arrow {
-    display: none !important;
+  h2 {
+    font-size: 1.234375rem;
+  }
+
+  #page-header .card {
+    border: 1px solid $card-border-color;
+
+    .card-body {
+      padding: 1.25rem;
+    }
+  }
+
+  .breadcrumb:not(:empty) {
+    border: none;
   }
 
   #page-site-index.notloggedin {
-    .usermenu {
-      display: none;
-    }
-
     #page-header {
       padding-top: 0;
       margin-top: 0;
       background-color: #fff;
       min-height: inherit;
-
-      #loginbox {
-        margin-bottom: 0;
-        position: relative;
-        display: inline-block;
-        right: 0;
-        top: 0;
-        padding-left: 15px;
-        padding-right: 15px;
-        width: 100%;
-
-        #boxForm {
-          float: left;
-          width: 100%;
-          margin-top: 0;
-        }
-      }
     }
 
     .frontpage-marketing {
       margin-top: 0;
+
+      .col-md-3 {
+        margin-bottom: 1rem;
+      }
+    }
+
+    #frontpage-course-list .frontpage-course-list-all .col-md-3 {
+      margin-bottom: 1rem;
+    }
+
+    .frontpage-numbers {
+      padding: 2em 0;
+
+      h2 {
+        text-align: center;
+      }
+
+      .number {
+        hr {
+          display: none !important;
+        }
+
+        p {
+          margin-bottom: 1em !important;
+          padding-bottom: 1em !important;
+          border-bottom: solid 1px #fff;
+        }
+      }
     }
   }
 
@@ -57,7 +77,7 @@
     margin-left: 0;
 
     #nav-drawer {
-      width: 60px;
+      width: 70px;
 
       .list-group {
         .list-group-item {
@@ -77,7 +97,6 @@
           }
 
           &:hover {
-            width: 260px;
             background-color: $navbar-bg-hover;
 
             &[data-key="mycourses"] {
@@ -85,11 +104,7 @@
             }
 
             a .text {
-              display: inline-block;
-            }
-
-            .text {
-              margin-left: 4px;
+              display: none;
             }
 
             > ul {
@@ -147,44 +162,29 @@
   }
 
   #page-login-index.moove-login {
-    .loginpanel .instructions {
-      border-top-right-radius: $m-login-padding;
-      -webkit-border-top-right-radius:  $m-login-padding;
-      -moz-border-radius-topright: $m-login-padding;
+    #page {
+      padding: 1rem 0 0 0;
 
-      border-top-left-radius: $m-login-padding;
-      -webkit-border-top-left-radius:  $m-login-padding;
-      -moz-border-radius-topleft: $m-login-padding;
-    }
-  }
-}
+      #region-main-box {
+        padding: 0;
 
-.card-deck {
-  display: flex;
-  flex-direction: column;
-  width: initial;
+        .loginpanel {
+          .instructions {
+            border-top-right-radius: $m-login-padding;
+            -webkit-border-top-right-radius: $m-login-padding;
+            -moz-border-radius-topright: $m-login-padding;
+            border-top-left-radius: $m-login-padding;
+            -webkit-border-top-left-radius: $m-login-padding;
+            -moz-border-radius-topleft: $m-login-padding;
+            padding: 20px 15px;
+            min-height: inherit;
+          }
 
-  .card {
-    margin-bottom: $card-deck-margin;
-  }
-
-  @include media-breakpoint-up(sm) {
-    flex-flow: row wrap;
-    margin-right: -15px;
-    margin-left: -15px;
-
-    .card {
-      display: flex;
-      flex: 1 0 0%;
-      flex-direction: column;
-      margin-right: 15px;;
-      margin-bottom: 2rem;
-      margin-left: 15px;;
-      flex-grow: 0;
-      flex-shrink: 0;
-
-      .card-body {
-        flex: 1 1 auto;
+          .form {
+            height: inherit;
+            max-height: inherit;
+          }
+        }
       }
     }
   }
@@ -199,7 +199,7 @@
     }
 
     &.drawer-open-right {
-      margin-right: 280px;
+      margin-right: 320px;
     }
   }
 
@@ -214,6 +214,16 @@
       border-top-left-radius: $m-login-padding;
       border-bottom-left-radius: $m-login-padding;
     }
+  }
+
+  .card-deck .card {
+    flex-basis: calc(25% - .5rem);
+    flex-shrink: 0;
+    flex-grow: 0;
+  }
+
+  .pagelayout-mydashboard .card-deck .card {
+    flex-basis: calc(50% - .5rem);
   }
 }
 
@@ -232,9 +242,29 @@
     }
   }
 
-  .card-deck {
-    .card {
-      flex-basis: calc(50% - 30px);
+  #page-site-index.notloggedin #page-header #loginbox #intro {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin-top: 0;
+
+    h1 {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+  }
+
+  #page-course-view-topics {
+    .course-content {
+      .topics {
+        .card {
+          .pgr-img {
+            display: none !important;
+          }
+          .pgr-content {
+            width: 100% !important;
+          }
+        }
+      }
     }
   }
 }
@@ -248,17 +278,7 @@
     bottom: 80px;
   }
 
-  .card-deck {
-    .card {
-      flex-basis: calc(25% - 30px);
-    }
-  }
-}
-
-@media (min-width: 1200px) {
-  #page-site-index.notloggedin .frontpage-marketing .card {
-    &:first-child {
-      margin-left: 0;
-    }
+  #page-site-index.notloggedin:not(.disablefrontpageloginbox) .btn-login-top {
+    display: none;
   }
 }

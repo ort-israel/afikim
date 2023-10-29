@@ -24,20 +24,21 @@
  *
  */
 
+defined('MOODLE_INTERNAL') || die;
+
 /**
  * @copyright 2015 Jeremy Hopkins (Coventry University)
  * @copyright 2015 Fernando Acedo (3-bits.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * Class to configure html editor for admin settings allowing use of repositories
+ * Class to configure html editor for admin settings allowing use of repositories.
+ *
+ * TODO: Does not remove old files when no longer in use!  No separate file area for each setting.
  *
  * Special thanks to Iban Cardona i Subiela (http://icsbcn.blogspot.com.es/2015/03/use-image-repository-in-theme-settings.html)
  * This post laid the ground work for most of the code featured in this file.
  *
  */
-
-defined('MOODLE_INTERNAL') || die;
-
 class adaptable_setting_confightmleditor extends admin_setting_configtext {
 
     /** @var int number of rows */
@@ -45,9 +46,6 @@ class adaptable_setting_confightmleditor extends admin_setting_configtext {
 
     /** @var int number of columns */
     private $cols;
-
-    /** @var string options - looks like this unused and should be removed */
-    private $options;
 
     /** @var string filearea - filearea within Moodle repository API */
     private $filearea;
@@ -65,24 +63,26 @@ class adaptable_setting_confightmleditor extends admin_setting_configtext {
      * @param string $filearea
      */
     public function __construct($name, $visiblename, $description, $defaultsetting,
-                                $paramtype=PARAM_RAW, $cols='60', $rows='8',
-                                $filearea = 'adaptablemarketingimages') {
+            $paramtype = PARAM_RAW, $cols = '60', $rows= '8',
+            $filearea = 'adaptablemarkettingimages') {
         $this->rows = $rows;
         $this->cols = $cols;
         $this->filearea = $filearea;
+        $this->nosave = (during_initial_install() or CLI_SCRIPT);
         parent::__construct($name, $visiblename, $description, $defaultsetting, $paramtype);
         editors_head_setup();
     }
 
     /**
-     * get options
+     * Gets the file area options.
+     *
+     * @param context_user $ctx
+     * @return array
      */
-    private function get_options() {
-        global $USER;
-
+    private function get_options(context_user $ctx) {
         $default = array();
         $default['noclean'] = false;
-        $default['context'] = context_user::instance($USER->id);
+        $default['context'] = $ctx;
         $default['maxbytes'] = 0;
         $default['maxfiles'] = -1;
         $default['forcehttps'] = false;
@@ -102,7 +102,12 @@ class adaptable_setting_confightmleditor extends admin_setting_configtext {
      * @return string XHTML string for the editor
      */
     public function output_html($data, $query='') {
-        global $USER;
+        if (PHPUNIT_TEST) {
+            $userid = 2;  // Admin user.
+        } else {
+            global $USER;
+            $userid = $USER->id;
+        }
 
         $default = $this->get_defaultsetting();
 
@@ -111,14 +116,14 @@ class adaptable_setting_confightmleditor extends admin_setting_configtext {
             $defaultinfo = "\n".$default;
         }
 
-        $ctx = context_user::instance($USER->id);
+        $ctx = context_user::instance($userid);
         $editor = editors_get_preferred_editor(FORMAT_HTML);
-        $options = $this->get_options();
+        $options = $this->get_options($ctx);
         $draftitemid = file_get_unused_draft_itemid();
         $component = is_null($this->plugin) ? 'core' : $this->plugin;
         $data = file_prepare_draft_area($draftitemid, $options['context']->id,
-                                        $component, $this->get_full_name().'_draftitemid',
-                                        $draftitemid, $options, $data);
+            $component, $this->get_full_name().'_draftitemid',
+            $draftitemid, $options, $data);
 
         $fpoptions = array();
         $args = new stdClass();
@@ -175,12 +180,21 @@ class adaptable_setting_confightmleditor extends admin_setting_configtext {
     }
 
     /**
-     * Handle file writes to repository
+     * Writes the setting to the database.
      *
-     * @param string $data
+     * @param mixed $data
+     * @return string
+     * @throws coding_exception
+     * @throws dml_exception
+     * @throws file_exception
+     * @throws stored_file_creation_exception
      */
     public function write_setting($data) {
-        global $CFG;
+        global $CFG, $USER;
+
+        if ($this->nosave) {
+            return '';
+        }
 
         if ($this->paramtype === PARAM_INT and $data === '') {
             // ... do not complain if '' used instead of 0 !
@@ -192,7 +206,7 @@ class adaptable_setting_confightmleditor extends admin_setting_configtext {
             return $validated;
         }
 
-        $options = $this->get_options();
+        $options = $this->get_options(context_user::instance($USER->id));
         $fs = get_file_storage();
         $component = is_null($this->plugin) ? 'core' : $this->plugin;
         $wwwroot = $CFG->wwwroot;
@@ -200,7 +214,14 @@ class adaptable_setting_confightmleditor extends admin_setting_configtext {
             $wwwroot = str_replace('http://', 'https://', $wwwroot);
         }
 
-        $draftitemid = $_REQUEST[$this->get_full_name().'_draftitemid'];
+        $draftitemidname = sprintf('%s_draftitemid', $this->get_full_name());
+        if (PHPUNIT_TEST or !isset($_REQUEST[$draftitemidname])) {
+            $draftitemid = 0;
+        } else {
+            $draftitemid = $_REQUEST[$draftitemidname];
+        }
+
+        $hasfiles = false;
         $draftfiles = $fs->get_area_files($options['context']->id, 'user', 'draft', $draftitemid, 'id');
         foreach ($draftfiles as $file) {
             if (!$file->is_directory()) {
@@ -230,7 +251,13 @@ class adaptable_setting_confightmleditor extends admin_setting_configtext {
                                                            $filerec->get_filepath(),
                                                            $filerec->get_filename());
                     $data = str_ireplace($strtosearch, $url, $data);
+                    $hasfiles = true;
                 }
+            }
+        }
+        if (!$hasfiles) {
+            if (trim(html_to_text($data)) === '') {
+                $data = '';
             }
         }
 

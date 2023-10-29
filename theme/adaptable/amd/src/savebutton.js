@@ -1,5 +1,5 @@
 /* jshint ignore:start */
-define(['jquery', 'theme_bootstrapbase/bootstrap', 'core/log'], function($, bootstrap, log) {
+define(['jquery', 'core/log'], function($, log) {
 
     "use strict"; // ... jshint ;_;.
 
@@ -16,10 +16,11 @@ define(['jquery', 'theme_bootstrapbase/bootstrap', 'core/log'], function($, boot
                 });
 
                 $("#adminsubmitbutton").click(function() {
+                    window.onbeforeunload = null;
                     $("#adminsettings").submit();
                 });
                 $("#adminresetbutton").click(function() {
-                    var result = confirm("This resets any changes made since loading this page. Are you sure?")
+                    var result = confirm("This resets any changes made since loading this page. Are you sure?");
                     if (result == true) {
                         $('#adminsettings')[0].reset();
                         $("#savediscardsection").hide();

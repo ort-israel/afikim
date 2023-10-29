@@ -30,7 +30,7 @@ Feature: Teachers can override the grade for any question
       | TF1      | 1    |
     And I log in as "student1"
     And I am on "Course 1" course homepage
-    And I follow "Quiz 1"
+    And I am on the "Quiz 1" "mod_quiz > View" page
     And I press "Attempt quiz now"
     And I follow "Finish attempt ..."
     And I press "Submit all and finish"
@@ -40,10 +40,7 @@ Feature: Teachers can override the grade for any question
   @javascript @_switch_window @_bug_phantomjs
   Scenario: Validating the marking of an essay question attempt.
     When I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Quiz 1"
-    And I follow "Attempts: 1"
-    And I follow "Review attempt"
+    And I am on the "Quiz 1 > student1 > Attempt 1" "mod_quiz > Attempt review" page
     And I follow "Make comment or override mark"
     And I switch to "commentquestion" window
     And I set the field "Mark" to "25"
@@ -58,16 +55,14 @@ Feature: Teachers can override the grade for any question
     # This time is same as time the window is open. So wait for it to close before proceeding.
     And I wait "2" seconds
 
-  @javascript @_switch_window @_file_upload @_bug_phantomjs
+  # This scenario has Atto-specific steps. See MDL-75913 for further details.
+  @javascript @_switch_window @_file_upload @_bug_phantomjs @editor_atto
   Scenario: Comment on a response to an essay question attempt.
     When I log in as "teacher1"
     And I follow "Manage private files"
     And I upload "mod/quiz/tests/fixtures/moodle_logo.jpg" file to "Files" filemanager
     And I click on "Save changes" "button"
-    And I am on "Course 1" course homepage
-    And I follow "Quiz 1"
-    And I follow "Attempts: 1"
-    And I follow "Review attempt"
+    And I am on the "Quiz 1 > student1 > Attempt 1" "mod_quiz > Attempt review" page
     And I follow "Make comment or override mark"
     And I switch to "commentquestion" window
     And I set the field "Comment" to "Administrator's comment"

@@ -52,7 +52,8 @@ class core_phpunit_basic_testcase extends basic_testcase {
      */
     public function test_bootstrap() {
         global $CFG;
-        // The use of httpswwwroot is deprecated, but we are still setting it for backwards compatibility.
+
+        // The httpswwwroot has been deprecated, we keep it as an alias for backwards compatibility with plugins only.
         $this->assertTrue(isset($CFG->httpswwwroot));
         $this->assertEquals($CFG->httpswwwroot, $CFG->wwwroot);
         $this->assertEquals($CFG->prefix, $CFG->phpunit_prefix);
@@ -143,6 +144,16 @@ STRING;
     public function test_setup_assert() {
         $this->assertTrue($this->testassertexecuted);
         $this->testassertexecuted = false;
+    }
+
+    /**
+     * Test assert Tag
+     */
+    public function test_assert_tag() {
+        // This should succeed.
+        self::assertTag(['id' => 'testid'], "<div><span id='testid'></span></div>");
+        $this->expectException(\PHPUnit\Framework\ExpectationFailedException::class);
+        self::assertTag(['id' => 'testid'], "<div><div>");
     }
 
     // Uncomment following tests to see logging of unexpected changes in global state and database.

@@ -1213,7 +1213,7 @@ function xmldb_game_upgrade($oldversion) {
         $table = new xmldb_table('game_sudoku');
         $field = new xmldb_field('level', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, null, null, '0');
 
-        $dbman->cchange_field_precision($table, $field);
+        $dbman->change_field_precision($table, $field);
         upgrade_mod_savepoint(true, 2008101106, 'game');
     }
 
@@ -1738,7 +1738,7 @@ function xmldb_game_upgrade($oldversion) {
     if ($oldversion < ($ver = 2018060404)) {
         // Import 2 new boards.
 
-        require( 'importsnakes.php');
+        require_once( 'importsnakes.php');
         $sql = "SELECT * FROM {$CFG->prefix}game_snakes_database WHERE fileboard='fidaki3.jpg'";
         $rec = $DB->get_record_sql( $sql);
         if ($rec === false) {
@@ -1756,10 +1756,91 @@ function xmldb_game_upgrade($oldversion) {
     if ($oldversion < ($ver = 2018100800)) {
         // Import 2 new boards.
 
-        require( 'importsnakes.php');
+        require_once( 'importsnakes.php');
         $sql = "UPDATE {$CFG->prefix}game_cross SET createscore=0 WHERE createscore IS NULL";
         $DB->execute( $sql);
 
+        upgrade_mod_savepoint(true, $ver, 'game');
+    }
+
+    if ($oldversion < ($ver = 2018112004)) {
+        $table = new xmldb_table('game_attempts');
+        $field = new xmldb_field('lastip');
+
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, $ver, 'game');
+    }
+
+    if ($oldversion < ($ver = 2018112005)) {
+        $table = new xmldb_table('game_attempts');
+        $field = new xmldb_field('lastremotehost');
+
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, $ver, 'game');
+    }
+
+    if ($oldversion < ($ver = 2018112102)) {
+        $table = new xmldb_table('game_course');
+
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+        upgrade_mod_savepoint(true, $ver, 'game');
+    }
+
+    if ($oldversion < ($ver = 2018112103)) {
+        $table = new xmldb_table('game_course_inputs');
+
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+        upgrade_mod_savepoint(true, $ver, 'game');
+    }
+
+    if ($oldversion < ($ver = 2018112108)) {
+        $table = new xmldb_table( 'game_queries');
+        $field = new xmldb_field( 'col', XMLDB_TYPE_INTEGER, 10, null, null, null, '0');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'mycol');
+        }
+        upgrade_mod_savepoint(true, $ver, 'game');
+    }
+
+    if ($oldversion < ($ver = 2018112109)) {
+        $table = new xmldb_table( 'game_queries');
+        $field = new xmldb_field( 'row', XMLDB_TYPE_INTEGER, 10, null, null, null, '0');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'myrow');
+        }
+        upgrade_mod_savepoint(true, $ver, 'game');
+    }
+
+    if ($oldversion < ($ver = 2019042411)) {
+        $table = new xmldb_table('game');
+        $field = new xmldb_field('intro', XMLDB_TYPE_TEXT, null, null, false, null, null, 'course');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        } else {
+            $dbman->change_field_notnull($table, $field);
+        }
+        upgrade_mod_savepoint(true, $ver, 'game');
+    }
+
+    if ($oldversion < ($ver = 2019042600)) {
+        // Define field timeclose to be added to game.
+        $table = new xmldb_table('game');
+        $field = new xmldb_field('introformat', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, null, null, '0', 'intro');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
         upgrade_mod_savepoint(true, $ver, 'game');
     }
 

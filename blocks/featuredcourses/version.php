@@ -18,14 +18,14 @@
  * Version details
  *
  * @package    block_featuredcourses
- * @copyright  Daniel Neis <danielneis@gmail.com>
+ * @copyright  Daniel Neis Araujo <danielneis@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2015042702;        // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2014110400;        // Requires this Moodle version
-$plugin->release = 2;
+$plugin->version   = 2020041300; // The current plugin version (Date: YYYYMMDDXX).
+$plugin->requires  = 2018120300; // Requires this Moodle version.
+$plugin->release = 6;
 $plugin->maturity = MATURITY_STABLE;
-$plugin->component = 'block_featuredcourses'; // Full name of the plugin (used for diagnostics)
+$plugin->component = 'block_featuredcourses'; // Full name of the plugin (used for diagnostics).

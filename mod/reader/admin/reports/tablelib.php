@@ -16,6 +16,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * mod/reader/admin/reports/tablelib.php
+ *
+ * @package    mod
+ * @subpackage reader
+ * @copyright  2013 Gordon Bateson (gordon.bateson@gmail.com)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since      Moodle 2.0
+ */
+
+/**
  * Create a table to display attempts at a Reader activity
  *
  * @package   mod-reader
@@ -23,9 +33,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// get parent class
+
+/** Prevent direct access to this script */
 defined('MOODLE_INTERNAL') || die();
 
-// get parent class
+/** Include required files */
 require_once($CFG->dirroot.'/mod/reader/admin/tablelib.php');
 
 /**
@@ -189,34 +202,28 @@ class reader_admin_reports_table extends reader_admin_table {
 
         $termtype = $this->filter->get_optionvalue('termtype');
 
-        // average grade
+        // average grade ($i = 1)
         $exclude = $this->select_sql_attempts_exclude(1, $termtype);
-        $sum = "SUM(CASE WHEN ($exclude) THEN 0 ELSE (ra.percentgrade) END)";
+        $averagegrade = "AVG(CASE WHEN ($exclude) THEN NULL ".
+                                 "ELSE (ra.percentgrade) END)";
+        $averagegrade = "ROUND($averagegrade, 0)";
+
+
+        // average duration ($i = 2)
         $exclude = $this->select_sql_attempts_exclude(2, $termtype);
-        $count = "SUM(CASE WHEN ($exclude) THEN 0 ELSE 1 END)";
-        $averagegrade  = "ROUND($sum / $count, 0)";
+        $averageduration = "AVG(CASE WHEN ($exclude) THEN NULL ".
+                                    "WHEN (ra.timefinish <= ra.timestart) THEN :maxduration ".
+                                    "ELSE (ra.timefinish - ra.timestart) END)";
+        $averageduration = "ROUND($averageduration, 0)";
 
-        // sum duration
-        $exclude = $this->select_sql_attempts_exclude(3, $termtype);
-        $sum = 'ra.timefinish - ra.timestart';
-        $sum = "CASE WHEN (ra.timefinish = ra.timestart) THEN :maxduration ELSE ($sum) END";
-        $sum = "SUM(CASE WHEN ($exclude) THEN 0 ELSE ($sum) END)";
-
-        // count duration
-        $exclude = $this->select_sql_attempts_exclude(4, $termtype);
-        $count = "SUM(CASE WHEN ($exclude) THEN 0 ELSE 1 END)";
-
-        // average duration
-        $averageduration = "ROUND($sum / $count, 0)";
-
-        // count passed
-        $include = $this->select_sql_attempts_include(5, $termtype);
-        $include = "$include AND ra.passed = :passed5";
+        // count passed ($i = 3)
+        $include = $this->select_sql_attempts_include(3, $termtype);
+        $include = "$include AND ra.passed = :passed3";
         $countpassed = "SUM(CASE WHEN ($include) THEN 1 ELSE 0 END)";
 
-        // count failed
-        $include = $this->select_sql_attempts_include(6, $termtype);
-        $include = "$include AND ra.passed <> :passed6";
+        // count failed ($i = 4)
+        $include = $this->select_sql_attempts_include(4, $termtype);
+        $include = "$include AND ra.passed <> :passed4";
         $countfailed = "SUM(CASE WHEN ($include) THEN 1 ELSE 0 END)";
 
         $select = "ra.$groupbyfield,".
@@ -228,8 +235,8 @@ class reader_admin_reports_table extends reader_admin_table {
         $from   = "{reader_attempts} ra ".
                   "LEFT JOIN {reader_books} rb ON ra.bookid = rb.id";
 
-        $params = array('passed5' => 1,
-                        'passed6' => 1,
+        $params = array('passed3' => 1,
+                        'passed4' => 1,
                         'maxduration' => $maxduration);
 
         if ($termtype==reader_admin_reports_options::THIS_TERM) {
@@ -237,14 +244,10 @@ class reader_admin_reports_table extends reader_admin_table {
             $params['reader2'] = $readerid;
             $params['reader3'] = $readerid;
             $params['reader4'] = $readerid;
-            $params['reader5'] = $readerid;
-            $params['reader6'] = $readerid;
             $params['time1'] = $ignoredate;
             $params['time2'] = $ignoredate;
             $params['time3'] = $ignoredate;
             $params['time4'] = $ignoredate;
-            $params['time5'] = $ignoredate;
-            $params['time6'] = $ignoredate;
         }
 
         if ($this->output->reader->wordsorpoints==0) {
@@ -260,43 +263,38 @@ class reader_admin_reports_table extends reader_admin_table {
         switch ($groupbyfield) {
             case 'userid': // usersummary AND groupsummary
 
-                $include = $this->select_sql_attempts_include(7, reader_admin_reports_options::THIS_TERM);
-                $include = "$include AND ra.passed = :passed7";
+                $include = $this->select_sql_attempts_include(5, reader_admin_reports_options::THIS_TERM);
+                $include = "$include AND ra.passed = :passed5";
                 $totalthisterm = "SUM(CASE WHEN ($include) THEN $totalfield ELSE 0 END)";
 
-                $include = $this->select_sql_attempts_include(8, reader_admin_reports_options::ALL_TERMS);
-                $include = "$include AND ra.passed = :passed8";
+                $include = $this->select_sql_attempts_include(6, reader_admin_reports_options::ALL_TERMS);
+                $include = "$include AND ra.passed = :passed6";
                 $totalallterms = "SUM(CASE WHEN ($include) THEN $totalfield ELSE 0 END)";
 
                 $select .= ",$totalthisterm AS {$totalalias}thisterm".
                            ",$totalallterms AS {$totalalias}allterms";
 
-                $params += array('reader7' => $this->output->reader->id,
-                                 'reader8' => $this->output->reader->id,
-                                 'passed7' => 1, 'time7' => $ignoredate,
-                                 'passed8' => 1, 'time8' => 0);
+                $params += array('reader5' => $this->output->reader->id,
+                                 'reader6' => $this->output->reader->id,
+                                 'passed5' => 1, 'time5' => $ignoredate,
+                                 'passed6' => 1, 'time6' => 0);
                 break;
 
             case 'bookid': // booksummary
                 $notrated = 'ra.timefinish IS NULL OR ra.timefinish = 0 OR ra.bookrating IS NULL';
 
-                $exclude = "ra.readerid <> :reader7 OR $notrated";
+                $exclude = "ra.readerid <> :reader5 OR $notrated";
                 $countrating = "SUM(CASE WHEN ($exclude) THEN 0 ELSE 1 END)";
 
-                $exclude = "ra.readerid <> :reader8 OR $notrated";
-                $sum = "SUM(CASE WHEN ($exclude) THEN 0 ELSE ra.bookrating END)";
-
-                $exclude = "ra.readerid <> :reader9 OR $notrated";
-                $count = "SUM(CASE WHEN ($exclude) THEN 0 ELSE 1 END)";
-
-                $averagerating = "ROUND($sum / $count, 0)";
+                $exclude = "ra.readerid <> :reader6 OR $notrated";
+                $averagerating = "AVG(CASE WHEN ($exclude) THEN NULL ELSE ra.bookrating END)";
+                $averagerating = "ROUND($averagerating, 0)";
 
                 $select     .= ",$countrating AS countrating".
                                ",$averagerating AS averagerating";
 
-                $params += array('reader7' => $this->output->reader->id,
-                                 'reader8' => $this->output->reader->id,
-                                 'reader9' => $this->output->reader->id);
+                $params += array('reader5' => $this->output->reader->id,
+                                 'reader6' => $this->output->reader->id);
                 break;
         }
 
@@ -990,6 +988,34 @@ class reader_admin_reports_table extends reader_admin_table {
     }
 
     /**
+     * display_action_settings_sendmessage
+     *
+     * @param string $action
+     * @return xxx
+     */
+    public function display_action_settings_sendmessage($action) {
+        $settings = '';
+
+        $name = $action.'subject';
+        $value = optional_param($name, '', PARAM_TEXT);
+        $settings .= get_string('subject', 'forum').': ';
+        $params = array('name' => $name, 'value' => $value, 'type' => 'text', 'size' => 44);
+        $params += $this->display_action_onclickchange($name, 'onchange');
+        $settings .= html_writer::empty_tag('input', $params);
+
+        $settings .= html_writer::empty_tag('br');
+
+        $name = $action.'message';
+        $value = optional_param($name, '', PARAM_TEXT);
+        $settings .= get_string('message', 'forum').': ';
+        $params = array('name' => $name, 'rows' => 2, 'cols' => 44);
+        $params += $this->display_action_onclickchange($name, 'onchange');
+        $settings .= html_writer::tag('textarea', $value, $params);
+
+        return $this->display_action_settings($action, $settings);
+    }
+
+    /**
      * execute_action_deleteattempts
      *
      * @param string $action
@@ -1044,5 +1070,62 @@ class reader_admin_reports_table extends reader_admin_table {
         $select = 'readerid = ?';
         $params = array($this->output->reader->id);
         return $this->execute_action_update('id', $table, $field, $value, $select, $params);
+    }
+
+    /**
+     * execute_action_sendmessage
+     *
+     * @param string $action
+     * @return xxx
+     */
+    public function execute_action_sendmessage($action) {
+        global $DB, $USER;
+
+        // get subject
+        $subject = optional_param($action.'subject', '', PARAM_TEXT);
+        if (trim($subject)=='') {
+            return false; // no subject
+        }
+
+        $message = optional_param($action.'message', '', PARAM_TEXT);
+        if (trim($message)=='') {
+            return false; // no message
+        }
+
+        // get selected userids, either directly from "usersummary" report
+        // or via attempt ids from "userdetailed" or "bookdetailed" report
+        if ($userids = $this->get_selected('userid')) {
+            list($select, $params) = $this->select_sql_users();
+            $userids = array_intersect($userids, $params);
+        } else if ($ids = $this->get_selected('id')) {
+            list($select, $params) = $DB->get_in_or_equal($ids);
+            $select = "id $select AND readerid = ?";
+            $params[] = $this->output->reader->id;
+            if ($userids = $DB->get_records_select_menu('reader_attempts', $select, $params, '', 'id,userid')) {
+                $userids = array_values(array_unique($userids));
+            }
+        }
+
+        if (empty($userids)) {
+            return false; // no (valid) userids selected
+        }
+
+        // send message to selected users userids
+        $sentmessage = 0;
+        foreach ($userids as $userid) {
+            if ( ! $user = $DB->get_record('user', array('id' => $userid))) {
+                continue; // invalid userid - shouldn't happen !!
+            }
+            if (! email_to_user($user, $USER, $subject, $message)) {
+                continue; // email problems - shouldn't happen !!
+            }
+            $sentmessage++;
+        }
+
+        // send confirmation message to browser
+        if ($sentmessage) {
+            $sentmessage = get_string('sentmessage', 'mod_reader', $sentmessage);
+            echo $this->output->notification($sentmessage, 'notifysuccess');
+        }
     }
 }

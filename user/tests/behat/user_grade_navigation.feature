@@ -51,11 +51,9 @@ Feature: The student can navigate to their grades page and user grade report.
     | Test assignment three | 0.00 %( Empty ) | - | 0–150 | - | 0.00 % |
 
   Scenario: Change Grades settings to go to a custom url.
-    When I log in as "admin"
-    And I set the following administration settings values:
-    | grade_mygrades_report | External URL |
-    | gradereport_mygradeurl | /badges/mybadges.php |
-    And I log out
+    Given the following config values are set as admin:
+      | grade_mygrades_report  | external             |
+      | gradereport_mygradeurl | /badges/mybadges.php |
     And I log in as "student1"
     And I follow "Student 1"
     And I follow "Grades" in the user menu
@@ -66,7 +64,7 @@ Feature: The student can navigate to their grades page and user grade report.
     And I am on site homepage
     And I turn editing mode on
     And I add the "Mentees" block
-    And I navigate to "Define roles" node in "Site administration > Users > Permissions"
+    And I navigate to "Users > Permissions > Define roles" in site administration
     And I click on "Add a new role" "button"
     And I click on "Continue" "button"
     And I set the following fields to these values:
@@ -78,7 +76,7 @@ Feature: The student can navigate to their grades page and user grade report.
     | moodle/user:viewuseractivitiesreport | 1 |
     | moodle/user:viewdetails | 1 |
     And I click on "Create this role" "button"
-    And I navigate to "Browse list of users" node in "Site administration > Users > Accounts"
+    And I navigate to "Users > Accounts > Browse list of users" in site administration
     And I follow "Student 1"
     And I click on "Preferences" "link" in the ".profile_tree" "css_element"
     And I follow "Assign roles relative to this user"

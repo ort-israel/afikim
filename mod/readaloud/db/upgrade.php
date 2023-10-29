@@ -32,6 +32,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use \mod_readaloud\utils;
+use \mod_readaloud\constants;
+
 /**
  * Execute readaloud upgrade from the given old version
  *
@@ -42,7 +45,6 @@ function xmldb_readaloud_upgrade($oldversion) {
     global $DB;
 
     $dbman = $DB->get_manager(); // loads ddl manager and xmldb classes
-
 
     // Add allowearlyexit field
     if ($oldversion < 2015071501) {
@@ -58,7 +60,7 @@ function xmldb_readaloud_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2015071501, 'readaloud');
     }
 
-	// Add allowearlyexit field
+    // Add allowearlyexit field
     if ($oldversion < 2015071502) {
 
         // Define field grade to be added to readaloud
@@ -71,8 +73,8 @@ function xmldb_readaloud_upgrade($oldversion) {
         }
         upgrade_mod_savepoint(true, 2015071502, 'readaloud');
     }
-	
-	// Add wcpm field
+
+    // Add wcpm field
     if ($oldversion < 2015072201) {
 
         // Define field wpcm to be added to readaloud_attempt
@@ -85,8 +87,8 @@ function xmldb_readaloud_upgrade($oldversion) {
         }
         upgrade_mod_savepoint(true, 2015072201, 'readaloud');
     }
-	
-	// Add accuracy and targetwpm fields
+
+    // Add accuracy and targetwpm fields
     if ($oldversion < 2015072701) {
 
         // Define field wpcm to be added to readaloud_attempt
@@ -97,8 +99,8 @@ function xmldb_readaloud_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-		
-		// Define field wpcm to be added to readaloud_attempt
+
+        // Define field wpcm to be added to readaloud_attempt
         $table = new xmldb_table('readaloud');
         $field = new xmldb_field('targetwpm', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '100');
 
@@ -108,7 +110,7 @@ function xmldb_readaloud_upgrade($oldversion) {
         }
         upgrade_mod_savepoint(true, 2015072701, 'readaloud');
     }
-    	// Rename fedbackformat to feedbackformat
+    // Rename fedbackformat to feedbackformat
     if ($oldversion < 2016022102) {
 
         // Define field wpcm to be added to readaloud_attempt
@@ -117,13 +119,13 @@ function xmldb_readaloud_upgrade($oldversion) {
 
         // Rename field to feedbackformat
         if ($dbman->field_exists($table, $field)) {
-            $dbman->rename_field($table, $field,'feedbackformat');
+            $dbman->rename_field($table, $field, 'feedbackformat');
         }
 
         upgrade_mod_savepoint(true, 2016022102, 'readaloud');
     }
 
-    if ($oldversion < 2018060900){
+    if ($oldversion < 2018060900) {
         $table = new xmldb_table('readaloud_ai_result');
 
         // Adding fields to table tool_dataprivacy_contextlist.
@@ -171,7 +173,6 @@ function xmldb_readaloud_upgrade($oldversion) {
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
-
 
         // Define field expiredays to be added to readaloud
         $field = new xmldb_field('region', XMLDB_TYPE_CHAR, '255', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 'useast1');
@@ -246,7 +247,6 @@ function xmldb_readaloud_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-
         upgrade_mod_savepoint(true, 2018082402, 'readaloud');
     }
     // Add humanpostattempt and machinepostattempt to readaloud table
@@ -272,7 +272,7 @@ function xmldb_readaloud_upgrade($oldversion) {
         $table = new xmldb_table('readaloud');
 
         //This adds the post attempt display options for each of the evaluation methods (machine and human)
-        $field = new xmldb_field('alternatives',XMLDB_TYPE_TEXT, null, null, null, null);
+        $field = new xmldb_field('alternatives', XMLDB_TYPE_TEXT, null, null, null, null);
 
         // add fields to readaloud table
         if (!$dbman->field_exists($table, $field)) {
@@ -310,6 +310,234 @@ function xmldb_readaloud_upgrade($oldversion) {
         }
 
         upgrade_mod_savepoint(true, 2018101200, 'readaloud');
+    }
+
+    // Add transcriber to readaloud table
+    if ($oldversion < 2019052000) {
+        $table = new xmldb_table('readaloud');
+
+        //This allows the activity admin to compensate for a certain no. of errors to compensate for machine transcription errors
+        $field = new xmldb_field('transcriber', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '1');
+
+        // add field to readaloud table
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2019052000, 'readaloud');
+    }
+
+    // Add submitrawaudio to readaloud table
+    if ($oldversion < 2019101400) {
+        $table = new xmldb_table('readaloud');
+
+        //This allows the activity admin to submit raw audio (as opposed to recording). Usually for some sort of disaster recovery
+        $field = new xmldb_field('submitrawaudio', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0');
+
+        // add field to readaloud table
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2019101400, 'readaloud');
+    }
+
+    // Add sessionscoremethod to readaloud table.
+    if ($oldversion < 2020021800) {
+        $table = new xmldb_table('readaloud');
+
+        //
+        $field = new xmldb_field('sessionscoremethod', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0');
+
+        // add field to readaloud table
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2020021800, 'readaloud');
+    }
+
+    // Add sessionscoremethod to readaloud table.
+    if ($oldversion < 2020022000) {
+        $table = new xmldb_table('readaloud');
+
+        $fields=array();
+        //Model Audio URL
+        $fields[] = new xmldb_field('modelaudiourl', XMLDB_TYPE_CHAR, '255', XMLDB_UNSIGNED, null, null, null);
+        //Model audio breaks (JSON)
+        $fields[] = new xmldb_field('modelaudiobreaks', XMLDB_TYPE_TEXT, null, null, null, null);
+        //TTS Voice
+        $fields[] = new xmldb_field('ttsvoice', XMLDB_TYPE_CHAR, '255', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 'Amy');
+        //Enable preview mode
+        $fields[] = new xmldb_field('enablepreview', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0');
+        //Enable shadow mode
+        $fields[] = new xmldb_field('enableshadow', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0');
+
+        // add fields to readaloud table
+        foreach($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        upgrade_mod_savepoint(true, 2020022000, 'readaloud');
+    }
+
+    // Add TTS Speed to readaloud table.
+    if ($oldversion < 2020022900) {
+        $table = new xmldb_table('readaloud');
+
+        //
+        $field = new xmldb_field('ttsspeed', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '1');
+
+        // add field to readaloud table
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2020022900, 'readaloud');
+    }
+
+    // Add recorder to readaloud table
+    if ($oldversion < 2020060100) {
+        $table = new xmldb_table('readaloud');
+
+        // Define field recorder to be added to readaloud
+        $field = new xmldb_field('recorder', XMLDB_TYPE_CHAR, '255', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 'readaloud');
+        // add field to readaloud table
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2020060100, 'readaloud');
+    }
+
+    // Add passage hashcode to readaloud table
+    if ($oldversion < 2020062800) {
+        $table = new xmldb_table('readaloud');
+
+        // Define field expiredays to be added to readaloud
+        $field = new xmldb_field('passagehash', XMLDB_TYPE_CHAR, '255', XMLDB_UNSIGNED, null, null);
+        // add field to readaloud table
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2020062800, 'readaloud');
+    }
+
+    // Add enable listen and repeat to readaloud table
+    if ($oldversion < 2020070500) {
+        $table = new xmldb_table('readaloud');
+
+        // Define field enablelandr to be added to readaloud
+        $field = new xmldb_field('enablelandr', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0');
+        // add field to readaloud table
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2020070500, 'readaloud');
+    }
+
+    // Make sure language models are saved on langservices server.
+    if ($oldversion < 2020111700) {
+        $mods = $DB->get_records('readaloud',array());
+        foreach ($mods as $themod) {
+            utils::fetch_lang_model($themod->passage,$themod->ttslanguage,$themod->region);
+        }
+        upgrade_mod_savepoint(true, 2020111700, 'readaloud');
+    }
+
+    // Add stricttranscribe to readaloud table
+    if ($oldversion < 2020121400) {
+        $table = new xmldb_table('readaloud');
+
+        //This allows the activity admin to submit raw audio (as opposed to recording). Usually for some sort of disaster recovery
+        $field = new xmldb_field('stricttranscribe', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0');
+
+        // add field to readaloud table
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_mod_savepoint(true, 2020121400, 'readaloud');
+    }
+
+    if($oldversion<2021032600){
+
+        $table = new xmldb_table('readaloud');
+
+        // Adding fields to table tool_dataprivacy_contextlist.
+        $fields=array();
+        $fields[] = new xmldb_field('modelaudiotrans', XMLDB_TYPE_TEXT, null, null, null, null);
+        $fields[] = new xmldb_field('modelaudiofulltrans', XMLDB_TYPE_TEXT, null, null, null, null);
+        $fields[] = new xmldb_field('modelaudiomatches', XMLDB_TYPE_TEXT, null, null, null, null);
+
+        // add fields to readaloud table
+        foreach($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_mod_savepoint(true, 2021032600, 'readaloud');
+
+    }
+
+    if($oldversion<2021032902){
+        //loop through records looking for newly available neural voices and generate speechmarks and breaks
+        //neural voices will be available right away, but the timing of words in the speech will change. So we need to do this
+        //so we regenerate when required to do so
+        $config = get_config(constants::M_COMPONENT);
+        $token = utils::fetch_token($config->apiuser,$config->apisecret);
+        $readalouds=$DB->get_records(constants::M_TABLE);
+
+        foreach($readalouds as $readaloud){
+            if($token && !empty($readaloud->passage)
+                    && !empty($readaloud->modelaudiobreaks)
+                    && empty($readaloud->modelaudiourl)
+            ){
+                //if it is not a neural voice, there is no need to resync
+                if(!in_array($readaloud->ttsvoice,constants::M_NEURALVOICES)){continue;}
+
+                //fetch SSML , speechmarks
+                $slowpassage = utils::fetch_speech_ssml($readaloud->passage, $readaloud->ttsspeed);
+                $speechmarks = utils::fetch_polly_speechmarks($token, $readaloud->region,
+                        $slowpassage, 'ssml', $readaloud->ttsvoice);
+
+                //if successful create a set of 'matches' (internal doc matching audio/passage/transcript positions)
+                if($speechmarks) {
+                    $matches = utils::speechmarks_to_matches($readaloud->passage,$speechmarks);
+                    //from matches create or sync an existing phrase breaks array with audio/word locations
+                    if(!empty($readaloud->modelaudiobreaks)){
+                        $breaks = utils::sync_modelaudio_breaks(json_decode($readaloud->modelaudiobreaks,true),$matches);
+                    }else {
+                        $breaks = utils::guess_modelaudio_breaks($readaloud->passage, $matches);
+                    }
+                    //save it
+                    $updatereadaloud = new stdClass();
+                    $updatereadaloud->id = $readaloud->id;
+                    $updatereadaloud->modelaudiomatches = json_encode($matches);
+                    $updatereadaloud->modelaudiobreaks = json_encode($breaks);
+                    $DB->update_record(constants::M_TABLE,$updatereadaloud);
+                } //end of if speechmarks
+            } //end of if should regenerate speechmarks/breaks
+        } //end of for each
+
+        upgrade_mod_savepoint(true, 2021032902, 'readaloud');
+    }
+
+    //a bug means that some attempts might not have been graded
+    if($oldversion <2021033000){
+        if($oldversion>=2021032900){
+            $sql = "SELECT * from {" . constants::M_AITABLE . "} WHERE timecreated < 1617092420 AND timecreated > 1616943600 ";
+            $ai_evals = $DB->get_records_sql($sql);
+            if ($ai_evals) {
+                foreach ($ai_evals as $eval) {
+                    $thecm = get_coursemodule_from_instance(constants::M_TABLE, $eval->readaloudid, $eval->courseid, false);
+                    if($thecm) {
+                        $modulecontext =context_module::instance($thecm->id);
+                        $aigrade = new \mod_readaloud\aigrade($eval->attemptid, $modulecontext->id);
+                        if ($aigrade->has_transcripts()) {
+                            $aigrade->do_diff();
+                        }
+                    }
+                }
+            }
+        }
+        upgrade_mod_savepoint(true, 2021033000, 'readaloud');
     }
 
     // Final return of upgrade result (true, all went good) to Moodle.

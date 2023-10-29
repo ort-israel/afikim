@@ -24,9 +24,7 @@
 
 require_once(dirname(__FILE__).'/../../config.php');
 require_once(dirname(__FILE__).'/locallib.php');
-require_once(dirname(__FILE__).'/add_form.php');
-require_once(dirname(__FILE__).'/update_form.php');
-require_once(dirname(__FILE__).'/duration_form.php');
+require_once($CFG->dirroot.'/lib/formslib.php');
 
 $pageparams = new mod_attendance_sessions_page_params();
 
@@ -67,7 +65,7 @@ $formparams = array('course' => $course, 'cm' => $cm, 'modcontext' => $context, 
 switch ($att->pageparams->action) {
     case mod_attendance_sessions_page_params::ACTION_ADD:
         $url = $att->url_sessions(array('action' => mod_attendance_sessions_page_params::ACTION_ADD));
-        $mform = new mod_attendance_add_form($url, $formparams);
+        $mform = new \mod_attendance\form\addsession($url, $formparams);
 
         if ($mform->is_cancelled()) {
             redirect($att->url_manage());
@@ -93,7 +91,7 @@ switch ($att->pageparams->action) {
 
         $url = $att->url_sessions(array('action' => mod_attendance_sessions_page_params::ACTION_UPDATE, 'sessionid' => $sessionid));
         $formparams['sessionid'] = $sessionid;
-        $mform = new mod_attendance_update_form($url, $formparams);
+        $mform = new \mod_attendance\form\updatesession($url, $formparams);
 
         if ($mform->is_cancelled()) {
             redirect($att->url_manage());
@@ -122,7 +120,7 @@ switch ($att->pageparams->action) {
 
         $sessinfo = $att->get_session_info($sessionid);
 
-        $message = get_string('deletecheckfull', '', get_string('session', 'attendance'));
+        $message = get_string('deletecheckfull', 'attendance', get_string('session', 'attendance'));
         $message .= str_repeat(html_writer::empty_tag('br'), 2);
         $message .= userdate($sessinfo->sessdate, get_string('strftimedmyhm', 'attendance'));
         $message .= html_writer::empty_tag('br');
@@ -137,7 +135,7 @@ switch ($att->pageparams->action) {
         exit;
     case mod_attendance_sessions_page_params::ACTION_DELETE_SELECTED:
         $confirm    = optional_param('confirm', null, PARAM_INT);
-        $message = get_string('deletecheckfull', '', get_string('session', 'attendance'));
+        $message = get_string('deletecheckfull', 'attendance', get_string('sessions', 'attendance'));
 
         if (isset($confirm) && confirm_sesskey()) {
             $sessionsids = required_param('sessionsids', PARAM_ALPHANUMEXT);
@@ -150,7 +148,7 @@ switch ($att->pageparams->action) {
         }
         $sessid = optional_param_array('sessid', '', PARAM_SEQUENCE);
         if (empty($sessid)) {
-            print_error('nosessionsselected', 'attendance', $att->url_manage());
+            throw new moodle_exception('nosessionsselected', 'mod_attendance', $att->url_manage());
         }
         $sessionsinfo = $att->get_sessions_info($sessid);
 
@@ -179,7 +177,7 @@ switch ($att->pageparams->action) {
 
         $url = $att->url_sessions(array('action' => mod_attendance_sessions_page_params::ACTION_CHANGE_DURATION));
         $formparams['ids'] = $slist;
-        $mform = new mod_attendance_duration_form($url, $formparams);
+        $mform = new mod_attendance\form\duration($url, $formparams);
 
         if ($mform->is_cancelled()) {
             redirect($att->url_manage());
@@ -193,7 +191,7 @@ switch ($att->pageparams->action) {
         }
 
         if ($slist === '') {
-            print_error('nosessionsselected', 'attendance', $att->url_manage());
+            throw new moodle_exception('nosessionsselected', 'mod_attendance', $att->url_manage());
         }
 
         break;

@@ -29,10 +29,26 @@ defined('MOODLE_INTERNAL') || die();
  */
 define('BYTESERVING_BOUNDARY', 's1k2o3d4a5k6s7');
 
+
+/**
+ * Do not process file merging when working with draft area files.
+ */
+define('IGNORE_FILE_MERGE', -1);
+
 /**
  * Unlimited area size constant
  */
 define('FILE_AREA_MAX_BYTES_UNLIMITED', -1);
+
+/**
+ * Capacity of the draft area bucket when using the leaking bucket technique to limit the draft upload rate.
+ */
+define('DRAFT_AREA_BUCKET_CAPACITY', 50);
+
+/**
+ * Leaking rate of the draft area bucket when using the leaking bucket technique to limit the draft upload rate.
+ */
+define('DRAFT_AREA_BUCKET_LEAK', 0.2);
 
 require_once("$CFG->libdir/filestorage/file_exceptions.php");
 require_once("$CFG->libdir/filestorage/file_storage.php");
@@ -384,7 +400,7 @@ function file_get_unused_draft_itemid() {
  * @return string|null returns string if $text was passed in, the rewritten $text is returned. Otherwise NULL.
  */
 function file_prepare_draft_area(&$draftitemid, $contextid, $component, $filearea, $itemid, array $options=null, $text=null) {
-    global $CFG, $USER, $CFG;
+    global $CFG, $USER;
 
     $options = (array)$options;
     if (!isset($options['subdirs'])) {
@@ -455,30 +471,43 @@ function file_prepare_draft_area(&$draftitemid, $contextid, $component, $fileare
  * Passing a new option reverse = true in the $options var will make the function to convert actual URLs in $text to encoded URLs
  * in the @@PLUGINFILE@@ form.
  *
- * @category files
- * @global stdClass $CFG
- * @param string $text The content that may contain ULRs in need of rewriting.
- * @param string $file The script that should be used to serve these files. pluginfile.php, draftfile.php, etc.
- * @param int $contextid This parameter and the next two identify the file area to use.
- * @param string $component
- * @param string $filearea helps identify the file area.
- * @param int $itemid helps identify the file area.
- * @param array $options text and file options ('forcehttps'=>false), use reverse = true to reverse the behaviour of the function.
- * @return string the processed text.
+ * @param   string  $text The content that may contain ULRs in need of rewriting.
+ * @param   string  $file The script that should be used to serve these files. pluginfile.php, draftfile.php, etc.
+ * @param   int     $contextid This parameter and the next two identify the file area to use.
+ * @param   string  $component
+ * @param   string  $filearea helps identify the file area.
+ * @param   int     $itemid helps identify the file area.
+ * @param   array   $options
+ *          bool    $options.forcehttps Force the user of https
+ *          bool    $options.reverse Reverse the behaviour of the function
+ *          mixed   $options.includetoken Use a token for authentication. True for current user, int value for other user id.
+ *          string  The processed text.
  */
 function file_rewrite_pluginfile_urls($text, $file, $contextid, $component, $filearea, $itemid, array $options=null) {
-    global $CFG;
+    global $CFG, $USER;
 
     $options = (array)$options;
     if (!isset($options['forcehttps'])) {
         $options['forcehttps'] = false;
     }
 
-    if (!$CFG->slasharguments) {
-        $file = $file . '?file=';
+    $baseurl = "{$CFG->wwwroot}/{$file}";
+    if (!empty($options['includetoken'])) {
+        $userid = $options['includetoken'] === true ? $USER->id : $options['includetoken'];
+        $token = get_user_key('core_files', $userid);
+        $finalfile = basename($file);
+        $tokenfile = "token{$finalfile}";
+        $file = substr($file, 0, strlen($file) - strlen($finalfile)) . $tokenfile;
+        $baseurl = "{$CFG->wwwroot}/{$file}";
+
+        if (!$CFG->slasharguments) {
+            $baseurl .= "?token={$token}&file=";
+        } else {
+            $baseurl .= "/{$token}";
+        }
     }
 
-    $baseurl = "$CFG->wwwroot/$file/$contextid/$component/$filearea/";
+    $baseurl .= "/{$contextid}/{$component}/{$filearea}/";
 
     if ($itemid !== null) {
         $baseurl .= "$itemid/";
@@ -585,6 +614,55 @@ function file_is_draft_area_limit_reached($draftitemid, $areamaxbytes, $newfiles
         }
     }
     return false;
+}
+
+/**
+ * Returns whether a user has reached their draft area upload rate.
+ *
+ * @param int $userid The user id
+ * @return bool
+ */
+function file_is_draft_areas_limit_reached(int $userid): bool {
+    global $CFG;
+
+    $capacity = $CFG->draft_area_bucket_capacity ?? DRAFT_AREA_BUCKET_CAPACITY;
+    $leak = $CFG->draft_area_bucket_leak ?? DRAFT_AREA_BUCKET_LEAK;
+
+    $since = time() - floor($capacity / $leak); // The items that were in the bucket before this time are already leaked by now.
+                                                // We are going to be a bit generous to the user when using the leaky bucket
+                                                // algorithm below. We are going to assume that the bucket is empty at $since.
+                                                // We have to do an assumption here unless we really want to get ALL user's draft
+                                                // items without any limit and put all of them in the leaking bucket.
+                                                // I decided to favour performance over accuracy here.
+
+    $fs = get_file_storage();
+    $items = $fs->get_user_draft_items($userid, $since);
+    $items = array_reverse($items); // So that the items are sorted based on time in the ascending direction.
+
+    // We only need to store the time that each element in the bucket is going to leak. So $bucket is array of leaking times.
+    $bucket = [];
+    foreach ($items as $item) {
+        $now = $item->timemodified;
+        // First let's see if items can be dropped from the bucket as a result of leakage.
+        while (!empty($bucket) && ($now >= $bucket[0])) {
+            array_shift($bucket);
+        }
+
+        // Calculate the time that the new item we put into the bucket will be leaked from it, and store it into the bucket.
+        if ($bucket) {
+            $bucket[] = max($bucket[count($bucket) - 1], $now) + (1 / $leak);
+        } else {
+            $bucket[] = $now + (1 / $leak);
+        }
+    }
+
+    // Recalculate the bucket's content based on the leakage until now.
+    $now = time();
+    while (!empty($bucket) && ($now >= $bucket[0])) {
+        array_shift($bucket);
+    }
+
+    return count($bucket) >= $capacity;
 }
 
 /**
@@ -871,6 +949,137 @@ function file_remove_editor_orphaned_files($editor) {
 }
 
 /**
+ * Finds all draft areas used in a textarea and copies the files into the primary textarea. If a user copies and pastes
+ * content from another draft area it's possible for a single textarea to reference multiple draft areas.
+ *
+ * @category files
+ * @param int $draftitemid the id of the primary draft area.
+ *            When set to -1 (probably, by a WebService) it won't process file merging, keeping the original state of the file area.
+ * @param int $usercontextid the user's context id.
+ * @param string $text some html content that needs to have files copied to the correct draft area.
+ * @param bool $forcehttps force https urls.
+ *
+ * @return string $text html content modified with new draft links
+ */
+function file_merge_draft_areas($draftitemid, $usercontextid, $text, $forcehttps = false) {
+    if (is_null($text)) {
+        return null;
+    }
+
+    // Do not merge files, leave it as it was.
+    if ($draftitemid === IGNORE_FILE_MERGE) {
+        return null;
+    }
+
+    $urls = extract_draft_file_urls_from_text($text, $forcehttps, $usercontextid, 'user', 'draft');
+
+    // No draft areas to rewrite.
+    if (empty($urls)) {
+        return $text;
+    }
+
+    foreach ($urls as $url) {
+        // Do not process the "home" draft area.
+        if ($url['itemid'] == $draftitemid) {
+            continue;
+        }
+
+        // Decode the filename.
+        $filename = urldecode($url['filename']);
+
+        // Copy the file.
+        file_copy_file_to_file_area($url, $filename, $draftitemid);
+
+        // Rewrite draft area.
+        $text = file_replace_file_area_in_text($url, $draftitemid, $text, $forcehttps);
+    }
+    return $text;
+}
+
+/**
+ * Rewrites a file area in arbitrary text.
+ *
+ * @param array $file General information about the file.
+ * @param int $newid The new file area itemid.
+ * @param string $text The text to rewrite.
+ * @param bool $forcehttps force https urls.
+ * @return string The rewritten text.
+ */
+function file_replace_file_area_in_text($file, $newid, $text, $forcehttps = false) {
+    global $CFG;
+
+    $wwwroot = $CFG->wwwroot;
+    if ($forcehttps) {
+        $wwwroot = str_replace('http://', 'https://', $wwwroot);
+    }
+
+    $search = [
+        $wwwroot,
+        $file['urlbase'],
+        $file['contextid'],
+        $file['component'],
+        $file['filearea'],
+        $file['itemid'],
+        $file['filename']
+    ];
+    $replace = [
+        $wwwroot,
+        $file['urlbase'],
+        $file['contextid'],
+        $file['component'],
+        $file['filearea'],
+        $newid,
+        $file['filename']
+    ];
+
+    $text = str_ireplace( implode('/', $search), implode('/', $replace), $text);
+    return $text;
+}
+
+/**
+ * Copies a file from one file area to another.
+ *
+ * @param array $file Information about the file to be copied.
+ * @param string $filename The filename.
+ * @param int $itemid The new file area.
+ */
+function file_copy_file_to_file_area($file, $filename, $itemid) {
+    $fs = get_file_storage();
+
+    // Load the current file in the old draft area.
+    $fileinfo = array(
+        'component' => $file['component'],
+        'filearea' => $file['filearea'],
+        'itemid' => $file['itemid'],
+        'contextid' => $file['contextid'],
+        'filepath' => '/',
+        'filename' => $filename
+    );
+    $oldfile = $fs->get_file($fileinfo['contextid'], $fileinfo['component'], $fileinfo['filearea'],
+        $fileinfo['itemid'], $fileinfo['filepath'], $fileinfo['filename']);
+    $newfileinfo = array(
+        'component' => $file['component'],
+        'filearea' => $file['filearea'],
+        'itemid' => $itemid,
+        'contextid' => $file['contextid'],
+        'filepath' => '/',
+        'filename' => $filename
+    );
+
+    $newcontextid = $newfileinfo['contextid'];
+    $newcomponent = $newfileinfo['component'];
+    $newfilearea = $newfileinfo['filearea'];
+    $newitemid = $newfileinfo['itemid'];
+    $newfilepath = $newfileinfo['filepath'];
+    $newfilename = $newfileinfo['filename'];
+
+    // Check if the file exists.
+    if (!$fs->file_exists($newcontextid, $newcomponent, $newfilearea, $newitemid, $newfilepath, $newfilename)) {
+        $fs->create_file_from_storedfile($newfileinfo, $oldfile);
+    }
+}
+
+/**
  * Saves files from a draft file area to a real one (merging the list of files).
  * Can rewrite URLs in some content at the same time if desired.
  *
@@ -878,6 +1087,7 @@ function file_remove_editor_orphaned_files($editor) {
  * @global stdClass $USER
  * @param int $draftitemid the id of the draft area to use. Normally obtained
  *      from file_get_submitted_draft_itemid('elementname') or similar.
+ *      When set to -1 (probably, by a WebService) it won't process file merging, keeping the original state of the file area.
  * @param int $contextid This parameter and the next two identify the file area to save to.
  * @param string $component
  * @param string $filearea indentifies the file area.
@@ -890,6 +1100,12 @@ function file_remove_editor_orphaned_files($editor) {
  */
 function file_save_draft_area_files($draftitemid, $contextid, $component, $filearea, $itemid, array $options=null, $text=null, $forcehttps=false) {
     global $USER;
+
+    // Do not merge files, leave it as it was.
+    if ($draftitemid === IGNORE_FILE_MERGE) {
+        // Safely return $text, no need to rewrite pluginfile because this is mostly comming from an external client like the app.
+        return $text;
+    }
 
     $usercontext = context_user::instance($USER->id);
     $fs = get_file_storage();
@@ -914,6 +1130,10 @@ function file_save_draft_area_files($draftitemid, $contextid, $component, $filea
         // are not passed to file_save_draft_area_files()
         $allowreferences = false;
     }
+
+    // Check if the user has copy-pasted from other draft areas. Those files will be located in different draft
+    // areas and need to be copied into the current draft area.
+    $text = file_merge_draft_areas($draftitemid, $usercontext->id, $text, $forcehttps);
 
     // Check if the draft area has exceeded the authorised limit. This should never happen as validation
     // should have taken place before, unless the user is doing something nauthly. If so, let's just not save
@@ -1478,6 +1698,7 @@ function download_file_content($url, $headers=null, $postdata=null, $fullrespons
  *     commonly used in moodle the following groups:
  *       - web_image - image that can be included as <img> in HTML
  *       - image - image that we can parse using GD to find it's dimensions, also used for portfolio format
+ *       - optimised_image - image that will be processed and optimised
  *       - video - file that can be imported as video in text editor
  *       - audio - file that can be imported as audio in text editor
  *       - archive - we can extract files from this archive
@@ -1998,23 +2219,26 @@ function readfile_accel($file, $mimetype, $accelerate) {
         }
     }
 
-    if ($accelerate and !empty($CFG->xsendfile)) {
-        if (empty($CFG->disablebyteserving) and $mimetype !== 'text/plain') {
-            header('Accept-Ranges: bytes');
-        } else {
-            header('Accept-Ranges: none');
-        }
+    if ($accelerate and empty($CFG->disablebyteserving) and $mimetype !== 'text/plain') {
+        header('Accept-Ranges: bytes');
+    } else {
+        header('Accept-Ranges: none');
+    }
 
+    if ($accelerate) {
         if (is_object($file)) {
             $fs = get_file_storage();
-            if ($fs->xsendfile($file->get_contenthash())) {
-                return;
+            if ($fs->supports_xsendfile()) {
+                if ($fs->xsendfile_file($file)) {
+                    return;
+                }
             }
-
         } else {
-            require_once("$CFG->libdir/xsendfilelib.php");
-            if (xsendfile($file)) {
-                return;
+            if (!empty($CFG->xsendfile)) {
+                require_once("$CFG->libdir/xsendfilelib.php");
+                if (xsendfile($file)) {
+                    return;
+                }
             }
         }
     }
@@ -2024,7 +2248,6 @@ function readfile_accel($file, $mimetype, $accelerate) {
     header('Last-Modified: '. gmdate('D, d M Y H:i:s', $lastmodified) .' GMT');
 
     if ($accelerate and empty($CFG->disablebyteserving) and $mimetype !== 'text/plain') {
-        header('Accept-Ranges: bytes');
 
         if (!empty($_SERVER['HTTP_RANGE']) and strpos($_SERVER['HTTP_RANGE'],'bytes=') !== FALSE) {
             // byteserving stuff - for acrobat reader and download accelerators
@@ -2056,25 +2279,38 @@ function readfile_accel($file, $mimetype, $accelerate) {
             if ($ranges) {
                 if (is_object($file)) {
                     $handle = $file->get_content_file_handle();
+                    if ($handle === false) {
+                        throw new file_exception('storedfilecannotreadfile', $file->get_filename());
+                    }
                 } else {
                     $handle = fopen($file, 'rb');
+                    if ($handle === false) {
+                        throw new file_exception('cannotopenfile', $file);
+                    }
                 }
                 byteserving_send_file($handle, $mimetype, $ranges, $filesize);
             }
         }
-    } else {
-        // Do not byteserve
-        header('Accept-Ranges: none');
     }
 
-    header('Content-Length: '.$filesize);
+    header('Content-Length: ' . $filesize);
 
-    if ($filesize > 10000000) {
-        // for large files try to flush and close all buffers to conserve memory
-        while(@ob_get_level()) {
-            if (!@ob_end_flush()) {
-                break;
+    if (!empty($_SERVER['REQUEST_METHOD']) and $_SERVER['REQUEST_METHOD'] === 'HEAD') {
+        exit;
+    }
+
+    while (ob_get_level()) {
+        $handlerstack = ob_list_handlers();
+        $activehandler = array_pop($handlerstack);
+        if ($activehandler === 'default output handler') {
+            // We do not expect any content in the buffer when we are serving files.
+            $buffercontents = ob_get_clean();
+            if ($buffercontents !== '') {
+                error_log('Non-empty default output handler buffer detected while serving the file ' . $file);
             }
+        } else {
+            // Some handlers such as zlib output compression may have file signature buffered - flush it.
+            ob_end_flush();
         }
     }
 
@@ -2082,7 +2318,9 @@ function readfile_accel($file, $mimetype, $accelerate) {
     if (is_object($file)) {
         $file->readfile();
     } else {
-        readfile_allow_large($file, $filesize);
+        if (readfile_allow_large($file, $filesize) === false) {
+            throw new file_exception('cannotopenfile', $file);
+        }
     }
 }
 
@@ -2090,10 +2328,10 @@ function readfile_accel($file, $mimetype, $accelerate) {
  * Similar to readfile_accel() but designed for strings.
  * @param string $string
  * @param string $mimetype
- * @param bool $accelerate
+ * @param bool $accelerate Ignored
  * @return void
  */
-function readstring_accel($string, $mimetype, $accelerate) {
+function readstring_accel($string, $mimetype, $accelerate = false) {
     global $CFG;
 
     if ($mimetype === 'text/plain') {
@@ -2104,14 +2342,6 @@ function readstring_accel($string, $mimetype, $accelerate) {
     }
     header('Last-Modified: '. gmdate('D, d M Y H:i:s', time()) .' GMT');
     header('Accept-Ranges: none');
-
-    if ($accelerate and !empty($CFG->xsendfile)) {
-        $fs = get_file_storage();
-        if ($fs->xsendfile(sha1($string))) {
-            return;
-        }
-    }
-
     header('Content-Length: '.strlen($string));
     echo $string;
 }
@@ -2147,6 +2377,9 @@ function send_temp_file($path, $filename, $pathisstring=false) {
         $filename = urlencode($filename);
     }
 
+    // If this file was requested from a form, then mark download as complete.
+    \core_form\util::form_download_complete();
+
     header('Content-Disposition: attachment; filename="'.$filename.'"');
     if (is_https()) { // HTTPS sites - watch out for IE! KB812935 and KB316431.
         header('Cache-Control: private, max-age=10, no-transform');
@@ -2160,7 +2393,7 @@ function send_temp_file($path, $filename, $pathisstring=false) {
 
     // send the contents - we can not accelerate this because the file will be deleted asap
     if ($pathisstring) {
-        readstring_accel($path, $mimetype, false);
+        readstring_accel($path, $mimetype);
     } else {
         readfile_accel($path, $mimetype, false);
         @unlink($path);
@@ -2298,6 +2531,9 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
 
     if ($forcedownload) {
         header('Content-Disposition: attachment; filename="'.$filename.'"');
+
+        // If this file was requested from a form, then mark download as complete.
+        \core_form\util::form_download_complete();
     } else if ($mimetype !== 'application/x-shockwave-flash') {
         // If this is an swf don't pass content-disposition with filename as this makes the flash player treat the file
         // as an upload and enforces security that may prevent the file from being loaded.
@@ -2346,7 +2582,7 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
     if (empty($filter)) {
         // send the contents
         if ($pathisstring) {
-            readstring_accel($path, $mimetype, !$dontdie);
+            readstring_accel($path, $mimetype);
         } else {
             readfile_accel($path, $mimetype, !$dontdie);
         }
@@ -2366,7 +2602,7 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
             }
             $output = format_text($text, FORMAT_HTML, $options, $COURSE->id);
 
-            readstring_accel($output, $mimetype, false);
+            readstring_accel($output, $mimetype);
 
         } else if (($mimetype == 'text/plain') and ($filter == 1)) {
             // only filter text if filter all files is selected
@@ -2382,12 +2618,12 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
             }
             $output = '<pre>'. format_text($text, FORMAT_MOODLE, $options, $COURSE->id) .'</pre>';
 
-            readstring_accel($output, $mimetype, false);
+            readstring_accel($output, $mimetype);
 
         } else {
             // send the contents
             if ($pathisstring) {
-                readstring_accel($path, $mimetype, !$dontdie);
+                readstring_accel($path, $mimetype);
             } else {
                 readfile_accel($path, $mimetype, !$dontdie);
             }
@@ -2827,7 +3063,7 @@ class curl {
     public  $error;
     /** @var int error code */
     public  $errno;
-    /** @var bool use workaround for open_basedir restrictions, to be changed from unit tests only! */
+    /** @var bool Perform redirects at PHP level instead of relying on native cURL functionality. Always true now. */
     public $emulateredirects = null;
 
     /** @var array cURL options */
@@ -2924,9 +3160,13 @@ class curl {
             $this->proxy = false;
         }
 
-        if (!isset($this->emulateredirects)) {
-            $this->emulateredirects = ini_get('open_basedir');
-        }
+        // All redirects are performed at PHP level now and each one is checked against blocked URLs rules. We do not
+        // want to let cURL naively follow the redirect chain and visit every URL for security reasons. Even when the
+        // caller explicitly wants to ignore the security checks, we would need to fall back to the original
+        // implementation and use emulated redirects if open_basedir is in effect to avoid the PHP warning
+        // "CURLOPT_FOLLOWLOCATION cannot be activated when in safe_mode or an open_basedir". So it is better to simply
+        // ignore this property and always handle redirects at this PHP wrapper level and not inside the native cURL.
+        $this->emulateredirects = true;
 
         // Curl security setup. Allow injection of a security helper, but if not found, default to the core helper.
         if (isset($settings['securityhelper']) && $settings['securityhelper'] instanceof \core\files\curl_security_helper_base) {
@@ -2942,7 +3182,7 @@ class curl {
      */
     public function resetopt() {
         $this->options = array();
-        $this->options['CURLOPT_USERAGENT']         = 'MoodleBot/1.0';
+        $this->options['CURLOPT_USERAGENT']         = \core_useragent::get_moodlebot_useragent();
         // True to include the header in the output
         $this->options['CURLOPT_HEADER']            = 0;
         // True to Exclude the body from the output
@@ -3025,7 +3265,11 @@ class curl {
                     throw new coding_exception('Curl options should be defined using strings, not constant values.');
                 }
                 if (stripos($name, 'CURLOPT_') === false) {
-                    $name = strtoupper('CURLOPT_'.$name);
+                    // Only prefix with CURLOPT_ if the option doesn't contain CURLINFO_,
+                    // which is a valid prefix for at least one option CURLINFO_HEADER_OUT.
+                    if (stripos($name, 'CURLINFO_') === false) {
+                        $name = strtoupper('CURLOPT_'.$name);
+                    }
                 } else {
                     $name = strtoupper($name);
                 }
@@ -3185,7 +3429,7 @@ class curl {
         } else if (!empty($this->options['CURLOPT_USERAGENT'])) {
             $useragent = $this->options['CURLOPT_USERAGENT'];
         } else {
-            $useragent = 'MoodleBot/1.0';
+            $useragent = \core_useragent::get_moodlebot_useragent();
         }
 
         // Set headers.
@@ -3235,8 +3479,8 @@ class curl {
 
         // Set options.
         foreach($this->options as $name => $val) {
-            if ($name === 'CURLOPT_FOLLOWLOCATION' and $this->emulateredirects) {
-                // The redirects are emulated elsewhere.
+            if ($name === 'CURLOPT_FOLLOWLOCATION') {
+                // All the redirects are emulated at PHP level.
                 curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 0);
                 continue;
             }
@@ -3386,7 +3630,7 @@ class curl {
         if ((defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
             array_push(self::$mockresponses, $response);
         } else {
-            throw new coding_excpetion('mock_response function is only available for unit tests.');
+            throw new coding_exception('mock_response function is only available for unit tests.');
         }
     }
 
@@ -3408,8 +3652,12 @@ class curl {
             }
         }
 
-        // If curl security is enabled, check the URL against the blacklist before calling curl_exec.
-        // Note: This will only check the base url. In the case of redirects, the blacklist is also after the curl_exec.
+        if (empty($this->emulateredirects)) {
+            // Just in case someone had tried to explicitly disable emulated redirects in legacy code.
+            debugging('Attempting to disable emulated redirects has no effect any more!', DEBUG_DEVELOPER);
+        }
+
+        // If curl security is enabled, check the URL against the list of blocked URLs before calling the first curl_exec.
         if (!$this->ignoresecurity && $this->securityhelper->url_is_blocked($url)) {
             $this->error = $this->securityhelper->get_blocked_url_string();
             return $this->error;
@@ -3432,16 +3680,14 @@ class curl {
         $this->errno = curl_errno($curl);
         // Note: $this->response and $this->rawresponse are filled by $hits->formatHeader callback.
 
-        // In the case of redirects (which curl blindly follows), check the post-redirect URL against the blacklist entries too.
-        if (intval($this->info['redirect_count']) > 0 && !$this->ignoresecurity
-            && $this->securityhelper->url_is_blocked($this->info['url'])) {
-            $this->reset_request_state_vars();
-            $this->error = $this->securityhelper->get_blocked_url_string();
-            curl_close($curl);
-            return $this->error;
+        if (intval($this->info['redirect_count']) > 0) {
+            // For security reasons we do not allow the cURL handle to follow redirects on its own.
+            // See setting CURLOPT_FOLLOWLOCATION in {@see self::apply_opt()} method.
+            throw new coding_exception('Internal cURL handle should never follow redirects on its own!',
+                'Reported number of redirects: ' . $this->info['redirect_count']);
         }
 
-        if ($this->emulateredirects and $this->options['CURLOPT_FOLLOWLOCATION'] and $this->info['http_code'] != 200) {
+        if ($this->options['CURLOPT_FOLLOWLOCATION'] && $this->info['http_code'] != 200) {
             $redirects = 0;
 
             while($redirects <= $this->options['CURLOPT_MAXREDIRS']) {
@@ -3475,6 +3721,12 @@ class curl {
                 if (isset($this->info['redirect_url'])) {
                     if (preg_match('|^https?://|i', $this->info['redirect_url'])) {
                         $redirecturl = $this->info['redirect_url'];
+                    } else {
+                        // Emulate CURLOPT_REDIR_PROTOCOLS behaviour which we have set to (CURLPROTO_HTTP | CURLPROTO_HTTPS) only.
+                        $this->errno = CURLE_UNSUPPORTED_PROTOCOL;
+                        $this->error = 'Redirect to a URL with unsuported protocol: ' . $this->info['redirect_url'];
+                        curl_close($curl);
+                        return $this->error;
                     }
                 }
                 if (!$redirecturl) {
@@ -3501,6 +3753,23 @@ class curl {
                             // Relative to current script.
                             $redirecturl = dirname($current).'/'.$redirecturl;
                         }
+                    }
+                }
+
+                if (!$this->ignoresecurity && $this->securityhelper->url_is_blocked($redirecturl)) {
+                    $this->reset_request_state_vars();
+                    $this->error = $this->securityhelper->get_blocked_url_string();
+                    curl_close($curl);
+                    return $this->error;
+                }
+
+                // If the response body is written to a seekable stream resource, reset the stream pointer to avoid
+                // appending multiple response bodies to the same resource.
+                if (!empty($this->options['CURLOPT_FILE'])) {
+                    $streammetadata = stream_get_meta_data($this->options['CURLOPT_FILE']);
+                    if ($streammetadata['seekable']) {
+                        ftruncate($this->options['CURLOPT_FILE'], 0);
+                        rewind($this->options['CURLOPT_FILE']);
                     }
                 }
 
@@ -4057,6 +4326,9 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
 
     // ========================================================================================================================
     } else if ($component === 'grade') {
+
+        require_once($CFG->libdir . '/grade/constants.php');
+
         if (($filearea === 'outcome' or $filearea === 'scale') and $context->contextlevel == CONTEXT_SYSTEM) {
             // Global gradebook files
             if ($CFG->forcelogin) {
@@ -4072,15 +4344,35 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             \core\session\manager::write_close(); // Unlock session during file serving.
             send_stored_file($file, 60*60, 0, $forcedownload, $sendfileoptions);
 
-        } else if ($filearea === 'feedback' and $context->contextlevel == CONTEXT_COURSE) {
-            //TODO: nobody implemented this yet in grade edit form!!
-            send_file_not_found();
-
-            if ($CFG->forcelogin || $course->id != SITEID) {
-                require_login($course);
+        } else if ($filearea == GRADE_FEEDBACK_FILEAREA || $filearea == GRADE_HISTORY_FEEDBACK_FILEAREA) {
+            if ($context->contextlevel != CONTEXT_MODULE) {
+                send_file_not_found();
             }
 
-            $fullpath = "/$context->id/$component/$filearea/".implode('/', $args);
+            require_login($course, false);
+
+            $gradeid = (int) array_shift($args);
+            $filename = array_pop($args);
+            if ($filearea == GRADE_HISTORY_FEEDBACK_FILEAREA) {
+                $grade = $DB->get_record('grade_grades_history', ['id' => $gradeid]);
+            } else {
+                $grade = $DB->get_record('grade_grades', ['id' => $gradeid]);
+            }
+
+            if (!$grade) {
+                send_file_not_found();
+            }
+
+            $iscurrentuser = $USER->id == $grade->userid;
+
+            if (!$iscurrentuser) {
+                $coursecontext = context_course::instance($course->id);
+                if (!has_capability('moodle/grade:viewall', $coursecontext)) {
+                    send_file_not_found();
+                }
+            }
+
+            $fullpath = "/$context->id/$component/$filearea/$gradeid/$filename";
 
             if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
                 send_file_not_found();
@@ -4444,11 +4736,8 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             }
 
             // Check if user can view this category.
-            if (!has_capability('moodle/category:viewhiddencategories', $context)) {
-                $coursecatvisible = $DB->get_field('course_categories', 'visible', array('id' => $context->instanceid));
-                if (!$coursecatvisible) {
-                    send_file_not_found();
-                }
+            if (!core_course_category::get($context->instanceid, IGNORE_MISSING)) {
+                send_file_not_found();
             }
 
             $filename = array_pop($args);
@@ -4715,8 +5004,29 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             \core\session\manager::write_close(); // Unlock session during file serving.
             send_stored_file($file, 60*60, 0, $forcedownload, $sendfileoptions);
         }
+    } else if ($component === 'contentbank') {
+        if ($filearea != 'public' || isguestuser()) {
+            send_file_not_found();
+        }
 
-        // ========================================================================================================================
+        if ($context->contextlevel == CONTEXT_SYSTEM || $context->contextlevel == CONTEXT_COURSECAT) {
+            require_login();
+        } else if ($context->contextlevel == CONTEXT_COURSE) {
+            require_login($course);
+        } else {
+            send_file_not_found();
+        }
+
+        $itemid = (int)array_shift($args);
+        $filename = array_pop($args);
+        $filepath = $args ? '/'.implode('/', $args).'/' : '/';
+        if (!$file = $fs->get_file($context->id, $component, $filearea, $itemid, $filepath, $filename) or
+            $file->is_directory()) {
+            send_file_not_found();
+        }
+
+        \core\session\manager::write_close(); // Unlock session during file serving.
+        send_stored_file($file, 0, 0, true, $sendfileoptions); // must force download - security!
     } else if (strpos($component, 'mod_') === 0) {
         $modname = substr($component, 4);
         if (!file_exists("$CFG->dirroot/mod/$modname/lib.php")) {

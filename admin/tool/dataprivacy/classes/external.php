@@ -92,17 +92,30 @@ class external extends external_api {
         ]);
         $requestid = $params['requestid'];
 
-        // Validate context.
+        // Validate context and access to manage the registry.
         $context = context_user::instance($USER->id);
         self::validate_context($context);
 
         // Ensure the request exists.
         $select = 'id = :id AND (userid = :userid OR requestedby = :requestedby)';
         $params = ['id' => $requestid, 'userid' => $USER->id, 'requestedby' => $USER->id];
-        $requestexists = data_request::record_exists_select($select, $params);
+        $requests = data_request::get_records_select($select, $params);
+        $requestexists = count($requests) === 1;
 
         $result = false;
         if ($requestexists) {
+            $request = reset($requests);
+            $datasubject = $request->get('userid');
+
+            if ($datasubject !== $USER->id) {
+                // The user is not the subject. Check that they can cancel this request.
+                if (!api::can_create_data_request_for_user($datasubject)) {
+                    $forusercontext = \context_user::instance($datasubject);
+                    throw new required_capability_exception($forusercontext,
+                            'tool/dataprivacy:makedatarequestsforchildren', 'nopermissions', '');
+                }
+            }
+
             // TODO: Do we want a request to be non-cancellable past a certain point? E.g. When it's already approved/processing.
             $result = api::update_request_status($requestid, api::DATAREQUEST_STATUS_CANCELLED);
         } else {
@@ -257,9 +270,10 @@ class external extends external_api {
         ]);
         $requestid = $params['requestid'];
 
-        // Validate context.
+        // Validate context and access to manage the registry.
         $context = context_system::instance();
         self::validate_context($context);
+        api::check_can_manage_data_registry();
 
         $message = get_string('markedcomplete', 'tool_dataprivacy');
         // Update the data request record.
@@ -675,6 +689,7 @@ class external extends external_api {
      * @throws restricted_context_exception
      */
     public static function get_users($query) {
+        global $DB;
         $params = external_api::validate_parameters(self::get_users_parameters(), [
             'query' => $query
         ]);
@@ -689,15 +704,30 @@ class external extends external_api {
         // Exclude admins and guest user.
         $excludedusers = array_keys(get_admins()) + [guest_user()->id];
         $sort = 'lastname ASC, firstname ASC';
-        $fields = 'id, email, ' . $allusernames;
-        $users = get_users(true, $query, true, $excludedusers, $sort, '', '', 0, 30, $fields);
+        $fields = 'id,' . $allusernames;
+
+        $extrafields = get_extra_user_fields($context);
+        if (!empty($extrafields)) {
+            $fields .= ',' . implode(',', $extrafields);
+        }
+
+        list($sql, $params) = users_search_sql($query, '', false, $extrafields, $excludedusers);
+        $users = $DB->get_records_select('user', $sql, $params, $sort, $fields, 0, 30);
         $useroptions = [];
         foreach ($users as $user) {
-            $useroptions[$user->id] = (object)[
+            $useroption = (object)[
                 'id' => $user->id,
-                'fullname' => fullname($user),
-                'email' => $user->email
+                'fullname' => fullname($user)
             ];
+            $useroption->extrafields = [];
+            foreach ($extrafields as $extrafield) {
+                // Sanitize the extra fields to prevent potential XSS exploit.
+                $useroption->extrafields[] = (object)[
+                    'name' => $extrafield,
+                    'value' => s($user->$extrafield)
+                ];
+            }
+            $useroptions[$user->id] = $useroption;
         }
 
         return $useroptions;
@@ -715,7 +745,13 @@ class external extends external_api {
             [
                 'id' => new external_value(core_user::get_property_type('id'), 'ID of the user'),
                 'fullname' => new external_value(core_user::get_property_type('firstname'), 'The fullname of the user'),
-                'email' => new external_value(core_user::get_property_type('email'), 'The user\'s email address', VALUE_OPTIONAL),
+                'extrafields' => new external_multiple_structure(
+                    new external_single_structure([
+                            'name' => new external_value(PARAM_TEXT, 'Name of the extrafield.'),
+                            'value' => new external_value(PARAM_TEXT, 'Value of the extrafield.')
+                        ]
+                    ), 'List of extra fields', VALUE_OPTIONAL
+                )
             ]
         ));
     }
@@ -748,7 +784,9 @@ class external extends external_api {
             'jsonformdata' => $jsonformdata
         ]);
 
+        // Validate context and access to manage the registry.
         self::validate_context(\context_system::instance());
+        api::check_can_manage_data_registry();
 
         $serialiseddata = json_decode($params['jsonformdata']);
         $data = array();
@@ -816,6 +854,10 @@ class external extends external_api {
             'id' => $id
         ]);
 
+        // Validate context and access to manage the registry.
+        self::validate_context(\context_system::instance());
+        api::check_can_manage_data_registry();
+
         $result = api::delete_purpose($params['id']);
 
         return [
@@ -865,7 +907,9 @@ class external extends external_api {
             'jsonformdata' => $jsonformdata
         ]);
 
+        // Validate context and access to manage the registry.
         self::validate_context(\context_system::instance());
+        api::check_can_manage_data_registry();
 
         $serialiseddata = json_decode($params['jsonformdata']);
         $data = array();
@@ -933,6 +977,10 @@ class external extends external_api {
             'id' => $id
         ]);
 
+        // Validate context and access to manage the registry.
+        self::validate_context(\context_system::instance());
+        api::check_can_manage_data_registry();
+
         $result = api::delete_category($params['id']);
 
         return [
@@ -982,8 +1030,9 @@ class external extends external_api {
             'jsonformdata' => $jsonformdata
         ]);
 
-        // Extra permission checkings are delegated to api::set_contextlevel.
+        // Validate context and access to manage the registry.
         self::validate_context(\context_system::instance());
+        api::check_can_manage_data_registry();
 
         $serialiseddata = json_decode($params['jsonformdata']);
         $data = array();
@@ -997,7 +1046,6 @@ class external extends external_api {
             $contextlevel = api::set_contextlevel($validateddata);
         } else if ($errors = $mform->is_validated()) {
             $warnings[] = json_encode($errors);
-            throw new moodle_exception('generalerror');
         }
 
         if ($contextlevel) {
@@ -1052,8 +1100,9 @@ class external extends external_api {
             'jsonformdata' => $jsonformdata
         ]);
 
-        // Extra permission checkings are delegated to api::set_context_instance.
+        // Validate context and access to manage the registry.
         self::validate_context(\context_system::instance());
+        api::check_can_manage_data_registry();
 
         $serialiseddata = json_decode($params['jsonformdata']);
         $data = array();
@@ -1063,6 +1112,7 @@ class external extends external_api {
         $customdata = \tool_dataprivacy\form\context_instance::get_context_instance_customdata($context);
         $mform = new \tool_dataprivacy\form\context_instance(null, $customdata, 'post', '', null, true, $data);
         if ($validateddata = $mform->get_data()) {
+            api::check_can_manage_data_registry($validateddata->contextid);
             $context = api::set_context_instance($validateddata);
         } else if ($errors = $mform->is_validated()) {
             $warnings[] = json_encode($errors);
@@ -1192,9 +1242,9 @@ class external extends external_api {
         ]);
         $ids = $params['ids'];
 
-        // Validate context.
-        $context = context_system::instance();
-        self::validate_context($context);
+        // Validate context and access to manage the registry.
+        self::validate_context(\context_system::instance());
+        api::check_can_manage_data_registry();
 
         $result = true;
         if (!empty($ids)) {
@@ -1204,24 +1254,27 @@ class external extends external_api {
                 $expiredcontext = new expired_context($id);
                 $targetcontext = context_helper::instance_by_id($expiredcontext->get('contextid'));
 
-                // Fetch this context's child contexts. Make sure that all of the child contexts are flagged for deletion.
-                $childcontexts = $targetcontext->get_child_contexts();
-                foreach ($childcontexts as $child) {
-                    if ($expiredchildcontext = expired_context::get_record(['contextid' => $child->id])) {
-                        // Add this child context to the list for approval.
-                        $expiredcontextstoapprove[] = $expiredchildcontext;
-                    } else {
-                        // This context has not yet been flagged for deletion.
-                        $result = false;
-                        $message = get_string('errorcontexthasunexpiredchildren', 'tool_dataprivacy',
-                            $targetcontext->get_context_name(false));
-                        $warnings[] = [
-                            'item' => 'tool_dataprivacy_ctxexpired',
-                            'warningcode' => 'errorcontexthasunexpiredchildren',
-                            'message' => $message
-                        ];
-                        // Exit the process.
-                        break 2;
+                if (!$targetcontext instanceof \context_user) {
+                    // Fetch this context's child contexts. Make sure that all of the child contexts are flagged for deletion.
+                    // User context children do not need to be considered.
+                    $childcontexts = $targetcontext->get_child_contexts();
+                    foreach ($childcontexts as $child) {
+                        if ($expiredchildcontext = expired_context::get_record(['contextid' => $child->id])) {
+                            // Add this child context to the list for approval.
+                            $expiredcontextstoapprove[] = $expiredchildcontext;
+                        } else {
+                            // This context has not yet been flagged for deletion.
+                            $result = false;
+                            $message = get_string('errorcontexthasunexpiredchildren', 'tool_dataprivacy',
+                                $targetcontext->get_context_name(false));
+                            $warnings[] = [
+                                'item' => 'tool_dataprivacy_ctxexpired',
+                                'warningcode' => 'errorcontexthasunexpiredchildren',
+                                'message' => $message
+                            ];
+                            // Exit the process.
+                            break 2;
+                        }
                     }
                 }
 
@@ -1313,6 +1366,7 @@ class external extends external_api {
         // Validate context.
         $context = context_system::instance();
         self::validate_context($context);
+        api::check_can_manage_data_registry();
 
         // Set the context defaults.
         $result = api::set_context_defaults($contextlevel, $category, $purpose, $activity, $override);
@@ -1366,6 +1420,7 @@ class external extends external_api {
 
         $context = context_system::instance();
         self::validate_context($context);
+        api::check_can_manage_data_registry();
 
         $categories = api::get_categories();
         $options = data_registry_page::category_options($categories, $includenotset, $includeinherit);
@@ -1558,7 +1613,7 @@ class external extends external_api {
      */
     private static function get_tree_node_structure($allowchildbranches = true) {
         $fields = [
-            'text' => new external_value(PARAM_TEXT, 'The node text', VALUE_REQUIRED),
+            'text' => new external_value(PARAM_RAW, 'The node text', VALUE_REQUIRED),
             'expandcontextid' => new external_value(PARAM_INT, 'The contextid this node expands', VALUE_REQUIRED),
             'expandelement' => new external_value(PARAM_ALPHA, 'What element is this node expanded to', VALUE_REQUIRED),
             'contextid' => new external_value(PARAM_INT, 'The node contextid', VALUE_REQUIRED),

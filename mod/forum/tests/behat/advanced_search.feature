@@ -24,7 +24,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     And I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
     And I add the "Latest announcements" block
-    And I navigate to "Edit settings" node in "Course administration"
+    And I navigate to "Edit settings" in current page administration
     And I expand all fieldsets
     And I set the field "id_newsitems" to "1"
     And I press "Save and display"
@@ -38,9 +38,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     And I log out
 
   Scenario: Perform an advanced search using any term
-    Given I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Announcements"
+    Given I am on the "Announcements" "forum activity" page logged in as student1
     And I press "Search forums"
     And I should see "Advanced search"
     And I set the field "words" to "subject"
@@ -49,9 +47,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     And I should see "Your subjective"
 
   Scenario: Perform an advanced search avoiding words
-    Given I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Announcements"
+    Given I am on the "Announcements" "forum activity" page logged in as student1
     And I press "Search forums"
     And I should see "Advanced search"
     And I set the field "words" to "My"
@@ -62,11 +58,9 @@ Feature: The forum search allows users to perform advanced searches for forum po
 
   Scenario: Perform an advanced search using whole words
     Given database family used is one of the following:
-      | mysql |
+      | mysql    |
       | postgres |
-    And I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Announcements"
+    And I am on the "Announcements" "forum activity" page logged in as student1
     And I press "Search forums"
     And I should see "Advanced search"
     And I set the field "fullwords" to "subject"
@@ -75,9 +69,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     And I should not see "Your subjective"
 
   Scenario: Perform an advanced search matching the subject
-    Given I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Announcements"
+    Given I am on the "Announcements" "forum activity" page logged in as student1
     And I press "Search forums"
     And I should see "Advanced search"
     And I set the field "subject" to "subjective"
@@ -92,9 +84,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
       | Subject | My Subjects |
       | Message | My message |
     And I log out
-    When I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Announcements"
+    When I am on the "Announcements" "forum activity" page logged in as student1
     And I press "Search forums"
     And I should see "Advanced search"
     And I set the field "user" to "TWO"
@@ -103,9 +93,7 @@ Feature: The forum search allows users to perform advanced searches for forum po
     And I should not see "Teacher ONE"
 
   Scenario: Perform an advanced search with multiple words
-    Given I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Announcements"
+    Given I am on the "Announcements" "forum activity" page logged in as student1
     And I press "Search forums"
     And I should see "Advanced search"
     And I set the field "subject" to "your subjective"
@@ -115,22 +103,42 @@ Feature: The forum search allows users to perform advanced searches for forum po
 
   @javascript
   Scenario: Perform an advanced search using tags
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Announcements"
+    Given I am on the "Announcements" "forum activity" page logged in as teacher1
     And I follow "My subject"
     And I follow "Edit"
     And I set the following fields to these values:
         | Tags    | SearchedTag |
     And I press "Save changes"
     And I log out
-    And I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Announcements"
+    And I am on the "Announcements" "forum activity" page logged in as student1
     And I press "Search forums"
     And I should see "Advanced search"
     And I set the field "Is tagged with" to "SearchedTag"
-    And I click on "[data-value='SearchedTag']" "css_element"
     When I press "Search forums"
     Then I should see "My subject"
     And I should not see "Your subjective"
+
+  @javascript
+  Scenario: Perform an advanced search on starred discussions without text
+    Given I am on the "Announcements" "forum activity" page logged in as student1
+    And I click on "Your subjective" action menu
+    And I follow "Star this discussion"
+    And I press "Search forums"
+    And I should see "Advanced search"
+    And I set the field "starredonly" to "1"
+    When I press "Search forums"
+    Then I should not see "My message"
+    And I should see "Your subjective"
+
+  @javascript
+  Scenario: Perform an advanced search on starred discussions with text
+    Given I am on the "Announcements" "forum activity" page logged in as student1
+    And I click on "Your subjective" action menu
+    And I follow "Star this discussion"
+    And I press "Search forums"
+    And I should see "Advanced search"
+    And I set the field "words" to "message"
+    And I set the field "starredonly" to "1"
+    When I press "Search forums"
+    Then I should not see "My message"
+    And I should see "Your subjective"

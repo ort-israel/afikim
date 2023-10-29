@@ -703,15 +703,24 @@ class mod_forumng_discussion {
                 $posts = unserialize($this->postscache);
             }
 
-            // Add numbers to posts
+            // Add numbers to parent post.
             $i = 1;
             foreach ($posts as $post) {
-                $post->number = $i++;
+                if (is_null($post->parentpostid)) {
+                    $post->number = $i;
+                    $i++;
+                    break;
+                }
             }
 
             // Obtain post relationships
             $children = array();
             foreach ($posts as $id => $fields) {
+                // Add numbers to posts.
+                if (!is_null($fields->parentpostid)) {
+                    $fields->number = $i++;
+                }
+
                 if (!array_key_exists($fields->parentpostid, $children)) {
                     $children[$fields->parentpostid] = array();
                 }
@@ -976,6 +985,17 @@ WHERE
         global $DB;
         $userid = mod_forumng_utils::get_real_userid($userid);
 
+        // Security checks.
+        if ($setimportant && !$this->forum->can_set_important($userid)) {
+            $setimportant = false;
+        }
+        if ($asmoderator && !$this->forum->can_indicate_moderator($userid)) {
+            $asmoderator = mod_forumng::ASMODERATOR_NO;
+        }
+        if ($asmoderator == mod_forumng::ASMODERATOR_ANON && !$this->forum->can_post_anonymously($userid)) {
+            $asmoderator = mod_forumng::ASMODERATOR_NO;
+        }
+
         // Prepare post object
         $postobj = new StdClass;
         $postobj->discussionid = $this->discussionfields->id;
@@ -1202,6 +1222,11 @@ WHERE
             // No change
             return;
         }
+
+        // Update modified time so that Moodle global search knows it needs reindexing with the
+        // new location/group.
+        $update->modified = time();
+
         // Delete search data for this discussion before moving.
         $this->ismakingsearchchange = true;
         $root = $this->get_root_post();
@@ -1279,6 +1304,20 @@ WHERE
 
         $this->uncache();
         $transaction->allow_commit();
+
+        // Log the information.
+        $params = array(
+            'context' => $this->get_forum()->get_context(),
+            'objectid' => $this->get_id(),
+            'other' => array(
+                'info' => 'd' . $this->discussionfields->id,
+                'logurl' => $this->get_log_url(),
+                'newforum' => $targetforum->get_id(),
+                'newgroup' => $targetgroupid ? $targetgroupid : 0,
+            )
+        );
+        $event = \mod_forumng\event\discussion_moved::create($params);
+        $event->trigger();
     }
     /**
      * Copy the discussion and its posts to another forum and/or group.
@@ -1305,7 +1344,7 @@ WHERE
         }
         $transaction = $DB->start_delegated_transaction();
         $newdiscussionid =  $DB->insert_record('forumng_discussions', $discussionobj);
-        $rs = $DB->get_recordset('forumng_posts', array('discussionid' => $this->get_id()));
+        $rs = $DB->get_recordset('forumng_posts', array('discussionid' => $this->get_id()), 'id ASC');
         // $newids and $parentused are temp arrays used to
         // $newids is a array of new postids using the indices of its old postids
         // Update the parentid of the post records copied over
@@ -1396,6 +1435,19 @@ WHERE
             }
             $newdiscussion->edit_settings(self::NOCHANGE, self::NOCHANGE, self::NOCHANGE, self::NOCHANGE, self::NOCHANGE, $tags);
         }
+
+        // Log the information.
+        $params = array(
+            'context' => $this->get_forum()->get_context(),
+            'objectid' => $this->get_id(),
+            'other' => array(
+                'info' => 'd' . $this->discussionfields->id,
+                'logurl' => $this->get_log_url(),
+                'newid' => $newdiscussion->get_id(),
+            )
+        );
+        $event = \mod_forumng\event\discussion_copied::create($params);
+        $event->trigger();
     }
 
     /**
@@ -1428,6 +1480,7 @@ WHERE
         $update = new StdClass;
         $update->id = $this->discussionfields->id;
         $update->deleted = time();
+        $update->modified = time();
         $DB->update_record('forumng_discussions', $update);
         $this->discussionfields->deleted = $update->deleted;
 
@@ -1460,6 +1513,7 @@ WHERE
         $update = new StdClass;
         $update->id = $this->discussionfields->id;
         $update->deleted = 0;
+        $update->modified = time();
         $DB->update_record('forumng_discussions', $update);
         $this->discussionfields->deleted = 0;
 
@@ -1816,6 +1870,7 @@ ORDER BY
             $this->discussionfields->timeread = $time;
             $this->cache($this->incache->userid);
         }
+        $this->log('read discussion', $userid);
     }
 
     /**
@@ -1938,8 +1993,19 @@ ORDER BY
                 unset($params['objectid']);// Unset discuss id as event for subscriptions table.
                 break;
             case 'merge discussion':
-                $params['other']['newid'] = substr($info, strpos($info, 'into d') + 6);
                 $classname = 'discussion_merged';
+                $params['other']['newid'] = preg_replace('~^.*into d~', '', $info);
+                break;
+            case 'read discussion':
+                $classname = 'discussion_read';
+                $params['userid'] = $info;
+                $params['other']['info'] = 'd' . $this->discussionfields->id;
+                break;
+            case 'print discussion':
+                $classname = 'discussion_printed';
+                break;
+            case 'view readers':
+                $classname = 'discussion_readers_viewed';
                 break;
             default:
                 $classname = 'discussion_viewed';
@@ -2266,6 +2332,11 @@ WHERE
 
         // Check forum view permission and group access
         $this->forum->require_view($groupid, $userid, true);
+
+        // User id might be different now after require_login call in require_view.
+        if (!$userid) {
+            $userid = mod_forumng_utils::get_real_userid($userid);
+        }
 
         // Check viewdiscussion
         require_capability('mod/forumng:viewdiscussion',
@@ -2602,9 +2673,23 @@ WHERE
             return '';
         }
 
+        $canseeatom = has_capability('mod/forumng:showatom', $this->get_forum()->get_context());
+        $canseerss = has_capability('mod/forumng:showrss', $this->get_forum()->get_context());
+        // Check they're allowed to see it
+        if (!$canseeatom && !$canseerss) {
+            return '';
+        }
+        $atom = '';
+        $rss = '';
+        if ($canseeatom) {
+            $atom = $this->get_feed_url(mod_forumng::FEEDFORMAT_ATOM);
+        }
+        if ($canseerss) {
+            $rss = $this->get_feed_url(mod_forumng::FEEDFORMAT_RSS);
+        }
+
         $out = mod_forumng_utils::get_renderer();
-        return $out->render_feed_links($this->get_feed_url(mod_forumng::FEEDFORMAT_ATOM),
-                $this->get_feed_url(mod_forumng::FEEDFORMAT_RSS));
+        return $out->render_feed_links($atom, $rss);
     }
 
     // Feeds
@@ -2724,17 +2809,22 @@ WHERE
      * Get first level posts belong to this discussion.
      *
      * @param $numbertoshow integer Number of first posts to show, "0" to show all posts.
+     * @param $includeimportant bool True to add the important post always (ipud)
      * @return array Array of stdClass contain posts.
      */
-    public function get_root_post_replies($numbertoshow) {
+    public function get_root_post_replies($numbertoshow, $includeimportant = false) {
         // Get Root post.
         $rootpost = $this->get_root_post();
         $rootpostreplies = $rootpost->get_replies();
+        $importantposts = [];
 
         // Filter to excluded deleted post if current user don't have permission.
-        $rootpostreplies = array_filter($rootpostreplies, function ($reply) {
+        $rootpostreplies = array_filter($rootpostreplies, function ($reply) use (&$importantposts) {
             $whynot = null;
 
+            if ($reply->is_important()) {
+                $importantposts[] = $reply;
+            }
             // If this post is not deleted of user can view this delete post then display.
             if ($reply->get_deleted() == 0 || $reply->can_view_deleted($whynot)) {
                 return true;
@@ -2758,13 +2848,45 @@ WHERE
         }
 
         $replies = array();
+        $hasimportant = false;
+        $importantpost = null;
+        if ($includeimportant) {
+            foreach ($importantposts as $post) {
+                // Make sure that only the important post shown to everyone is added.
+                if (!$post->get_deleted()) {
+                    $importantpost = $post;
+                    break;
+                } else {
+                    // This post is still classed as important if a child is shown.
+                    if ($post->has_children()) {
+                        foreach ($post->get_replies() as $subreply) {
+                            if (!$subreply->get_deleted()) {
+                                // The reply will show as it has a non deleted reply.
+                                $importantpost = $post;
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // Get first latest post.
         $index = count($rootpostreplies) - 1;
         while ($numbertoshow > 0 && $index >= 0) {
+            if ($includeimportant && !$hasimportant &&
+                    $importantpost && $rootpostreplies[$index]->get_id() == $importantpost->get_id()) {
+                // We are returning an important post already.
+                $hasimportant = true;
+            }
             $replies[] = $rootpostreplies[$index];
             $index --;
             $numbertoshow --;
+        }
+
+        if ($includeimportant && !$hasimportant && $importantpost) {
+            // Put the important post at the end as an extra entry.
+            $replies = array_merge($replies, [$importantpost]);
         }
 
         return $replies;

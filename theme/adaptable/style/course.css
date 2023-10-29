@@ -1,5 +1,5 @@
 /*
-* This file is part of Moodle - http://moodle.org/
+* This file is part of Adaptable theme for moodle
 *
 * Moodle is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -15,156 +15,133 @@
 * along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 *
 *
-* Adaptable Style sheet for courses format
+* Adaptable course CSS file
 *
 * @package    theme_adaptable
-* @copyright  2015-2016 Jeremy Hopkins (Coventry University)
-* @copyright  2015-2018 Fernando Acedo (3-bits.com)
-* @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+* @copyright  2015-2019 Jeremy Hopkins (Coventry University)
+* @copyright  2015-2019 Fernando Acedo (3-bits.com)
+* @copyright  2018-2019 Manoj Solanki (Coventry University)
 *
+* @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 */
 
 /* ****************** */
 /* Common settings    */
 /* ****************** */
 
-
+/* Remove 'Your Progress' in Course page (only 3.6 or lower). */
 #completionprogressid {
     display: [[setting:showyourprogress]];
+    margin-bottom: 15px;
 }
 
-
-/* ************************ */
-/* Topics / Weekly format   */
-/* ************************ */
-
-.course-content ul.topics li.section {
-    padding-bottom: 0;
-}
-
-#page .course-content ul li.section.main {
-    background-color: [[setting:coursesectionbgcolor]];
-    border: [[setting:coursesectionborderwidth]] [[setting:coursesectionborderstyle]] [[setting:coursesectionbordercolor]];
-    margin-bottom: 10px;
-    border-radius: [[setting:coursesectionborderradius]];
-}
-
-.site-topic ul.section, .course-content ul.section {
-    margin: 0em 1em;
-}
-
-#newdiscussionform {
+#page-coursetitle h1 {
+    font-size: 1.5rem;
     text-align: center;
 }
 
-#searchforums {
-    margin: 5px 0 5px 5px;
+#coursetitle,
+#sitetitle #coursetitle {
+    color: [[setting:fonttitlecolorcourse]];
 }
 
-.course-content .current {
-    background-color: transparent;
-    border-left: 0px solid #ccc;
-    border-right: 0px dashed #ccc;
-    margin-top: 0px !important;
+/* ************************ */
+/* Course Tiles             */
+/* ************************ */
+
+/* Remove 'Available courses' label. */
+#frontpage-available-course-list h2 {
+    display: [[setting:enableavailablecourses]];
 }
 
-.panel-body {
-    overflow: hidden;
+/* Display the course list container */
+
+#frontpage-available-course-list {
+    display: block;
+    flex-flow: row wrap;
+    justify-content: space-between;
+    flex-grow: 1;
+    flex-wrap: wrap;
 }
 
-.panel-body .courseimage img {
-    float: right;
-    margin-bottom: 10px;
-    max-width: 60px;
-    margin-left: 5px;
+#page-site-index .courses {
+    display: flex;
+    flex-flow: row wrap;
 }
 
-.course-content ul li.section .side {
-    display: none;
+.paging-morelink {
+    display: block;
+    clear:both;
+    width: 100%;
 }
 
-.editing .course-content ul li.section .side {
-    display: inherit;
+/* Media breakpoints for courses list area */
+@media (min-width: 992px) {
+    #page-site-index .courses {
+        max-width: 960px;
+    }
+}
+@media (min-width: 1200px) {
+    #page-site-index .courses {
+        max-width: 100%;
+    }
 }
 
-.course-content ul.topics li.section .content,
-.course-content ul.weeks li.section .content {
-    margin: 0;
+/* Course tiles */
+.coursebox.panel .panel-body {
+    border: 4px solid [[setting:tilesbordercolor]];
+    margin: 2px;
 }
 
-.editing .course-content ul.topics li.section .content,
-.editing .course-content ul.weeks li.section .content {
-    margin: 0;
-}
-
-.section-handle {
-    margin: 0;
+.coursebox.panel,
+.coursebox.panel .panel-body {
     position: relative;
-    top: 12px;
 }
 
-.course-content ul.topics li.section .left {
-    padding-top: 2px;
-    text-align: right;
+.coursebox .boxfooter {
+    clear: both;
+    margin-bottom: 30px;
 }
 
-.course-content ul li.section.main {
-    margin: 0;
+/* 1 tile. */
+.coursebox.col-12 .coursebtn {
+    width: 20%;
 }
 
-.sectionname {
-    background-color: [[setting:coursesectionheaderbg]] !important;
-    color: [[setting:sectionheadingcolor]] !important;
-    font-size: 20px;
-    margin-bottom: 20px;
-    padding: 3px 10px;
-    border-bottom: [[setting:coursesectionheaderborderstyle]] [[setting:coursesectionheaderbordercolor]] [[setting:coursesectionheaderborderwidth]];
-    border-radius: [[setting:coursesectionheaderborderradiustop]];
-    border-bottom-right-radius: [[setting:coursesectionheaderborderradiusbottom]];
-    border-bottom-left-radius: [[setting:coursesectionheaderborderradiusbottom]];
+/* 2 tiles. */
+.coursebox.col-6 .coursebtn {
+    width: 40%;
 }
 
-
-/* Alter nav on single-section for better onetopic course format support */
-.single-section .nav {
-    margin-bottom: 0;
+/* 3 tiles. */
+.coursebox.col-4 .coursebtn {
+    width: 50%;
 }
 
-.single-section .nav-tabs {
-    border-bottom: none;
+/* 4 tiles. */
+.coursebox.col-3 .coursebtn {
+    width: 50%;
 }
 
-.path-course-view .completionprogress {
-    color: #666;
-    float: none;
-    font-size: 90%;
-    padding: 0 0 10px;
+/* 6 tiles. */
+.coursebox.col-2 .coursebtn {
+    width: 80%;
 }
 
-.path-course-view .section .summary {
-    padding: 10px 0 0 20px;
+.coursebox.panel ul.teachers li {
+    display: [[setting:tilesshowallcontacts]];
 }
 
-#gridshadebox_content .content .summary,
-#gridshadebox_content .content ul.section {
-    padding: 0 20px;
+.coursebox.panel ul.teachers li:first-child {
+    display: block;
 }
 
-/* Current Section */
-#page .course-content ul li.section.main.current {
-    background: [[setting:currentcolor]];
+.coursebox .panel-heading {
+    padding: 12px 10px 10px;
 }
 
-.course-content ul li.section.hidden .sectionname,
-.course-content ul li.section.hidden .content > div {
-    margin-right: 40px;
-}
-
-/* Course Tiles */
-.courses .coursebox.even,
-.courses .coursebox {
-  background-color: #fafafa !important;
-  border-radius: 6px;
+.coursebox .panel-heading a {
+    font-size: 105%;
 }
 
 .courses .coursebox.even {
@@ -172,8 +149,9 @@
 }
 
 .coursebox > .info > .coursename a {
-  font-weight: normal;
-  font-size: 80%;
+    background-size: 14px;
+    font-size: 14px;
+    font-weight: normal;
 }
 
 .coursebox > .info > h3.name,
@@ -191,6 +169,9 @@
     padding: 0;
     border: 0;
     border-radius: 0;
+      flex-grow: 2 !important;
+        flex-shrink: 2 !important;
+          flex-basis: 90% !important;
 }
 
 #page .covtiles.panel {
@@ -327,23 +308,172 @@
 }
 
 .covtiles .coursebox-content {
+    background-color: [[setting:covbkcolor]];
     bottom: 5px;
+    height: 38px;
     left: 5px;
     right: 4px;
-    height: 38px;
     position: absolute;
-    width: auto;
-    transition: all .5s ease-in-out;
     overflow: hidden;
-    background-color: [[setting:covbkcolor]];
+    transition: height .5s ease-in-out;
+    width: auto;
+    z-index: 9; /* Override .cimbox class. */
 }
 
-.covtiles .coursebox-content:hover {
-    height: 80%;
-    position: absolute;
-    width: auto;
-    background-color: [[setting:covbkcolor]];
-    transition: all .5s ease-in-out;
+.covtiles .panel-body .coursebox-content:hover,
+.covtiles .panel-body .coursebox-content:focus {
+    height: calc(100% - 5px);
+}
+
+/* ************************ */
+/* Topics / Weekly format   */
+/* ************************ */
+
+.course-content ul.topics li.section {
+    padding-bottom: 0;
+}
+
+#page .course-content ul li.section.main {
+    background-color: [[setting:coursesectionbgcolor]];
+    border: [[setting:coursesectionborderwidth]] [[setting:coursesectionborderstyle]] [[setting:coursesectionbordercolor]];
+    margin-bottom: 10px;
+    border-radius: [[setting:coursesectionborderradius]];
+}
+
+.sitetopic ul.section,
+.course-content ul.section {
+    margin: 0;
+}
+
+.sitetopic ul.section,
+body:not(.editing) .sitetopic ul.section,
+.course-content ul.section {
+    padding-left: 0.2em;
+}
+
+@media (max-width: 767.98px) {
+    .course-content li.section ul ul {
+        padding-left: 1rem;
+    }
+}
+
+#newdiscussionform {
+    text-align: center;
+}
+
+#searchforums {
+    margin: 5px 0 5px 5px;
+}
+
+.course-content .current {
+    background-color: transparent;
+    border-left: 0 solid #ccc;
+    border-right: 0 dashed #ccc;
+    margin-top: 0 !important;
+}
+
+.panel-body {
+    overflow: hidden;
+}
+
+.panel-body .courseimage img {
+    float: right;
+    margin-bottom: 10px;
+    max-width: 60px;
+    margin-left: 5px;
+}
+
+.course-content ul li.section .side {
+    display: none;
+}
+
+.editing .course-content ul li.section .side {
+    display: inherit;
+}
+
+.course-content ul.topics li.section .content,
+.course-content ul.weeks li.section .content {
+    margin: 0;
+}
+
+.editing .course-content ul.topics li.section .content,
+.editing .course-content ul.weeks li.section .content {
+    margin: 0;
+}
+
+.course-content ul.topics li.section .content .summarytext,
+.course-content ul.weeks li.section .content .summarytext {
+    margin-left: 15px;
+}
+
+.section-handle {
+    margin: 0;
+    position: relative;
+    top: 12px;
+}
+
+.course-content ul.topics li.section .left {
+    padding-top: 2px;
+    text-align: right;
+}
+
+.course-content ul li.section.main {
+    margin: 0;
+}
+
+.sectionname {
+    background-color: [[setting:coursesectionheaderbg]];
+    border-bottom: [[setting:coursesectionheaderborderstyle]] [[setting:coursesectionheaderbordercolor]] [[setting:coursesectionheaderborderwidth]];
+    border-bottom-left-radius: [[setting:coursesectionheaderborderradiusbottom]];
+    border-bottom-right-radius: [[setting:coursesectionheaderborderradiusbottom]];
+    border-radius: [[setting:coursesectionheaderborderradiustop]];
+    color: [[setting:sectionheadingcolor]];
+    margin-bottom: 20px;
+    padding: 3px 10px;
+}
+
+.format-onetopic .onetopic .tab_content {
+    background-color: [[setting:coursesectionheaderbg]];
+}
+
+/* Alter nav on single-section for better onetopic course format support */
+.single-section .nav {
+    margin-bottom: 0;
+}
+
+.single-section .nav-tabs {
+    border-bottom: none;
+}
+
+.path-course-view .completionprogress {
+    color: #666;
+    float: none;
+    font-size: 90%;
+    padding: 0 0 10px;
+}
+
+#gridshadebox_content .content .summary,
+#gridshadebox_content .content ul.section {
+    padding: 0 20px;
+}
+
+/* Current Section */
+#page .course-content ul li.section.main.current{
+    background-color: [[setting:currentcolor]];
+}
+
+.format-onetopic .onetopic .nav-tabs .nav-link .tab_content .sectionname {
+    background-color: inherit;
+}
+
+.format-onetopic .onetopic .nav-tabs .nav-link.active .tab_content,
+.format-onetopic .onetopic .nav-tabs .nav-link.active .tab_content .sectionname {
+    background-color: [[setting:currentcolor]] !important;
+}
+
+.course-content ul li.section.hidden .sectionname,
+.course-content ul li.section.hidden .content > div {
+    margin-right: 40px;
 }
 
 /* ************* */
@@ -358,7 +488,6 @@
     background-color: [[setting:socialwallbackgroundcolor]];
     word-wrap: break-word;
     font-family: [[setting:fontname]];
-    font-family: [[setting:customfontname]], sans-serif;
 }
 
 /*Add padding, background, and border to all sections */
@@ -537,7 +666,7 @@ div.fdescription.required {
 /* Before the like action link----------------------------------------------------- */
 /* Add a hollow thumbs up icon before like */
 .format-socialwall .like:before {
-    font-family: FontAwesome;
+    font-family: "Font Awesome 5 Free";
     content: "\f087";
     position: relative;
     padding-right: .15em;
@@ -545,7 +674,7 @@ div.fdescription.required {
 
 /* Add a full thumbs up icon before like */
 .format-socialwall .likenomore:before {
-    font-family: FontAwesome;
+    font-family: "Font Awesome 5 Free";
     content: "\f164";
     position: relative;
     padding-right: .15em;
@@ -553,7 +682,7 @@ div.fdescription.required {
 
 /* Add a hollow comment icon before like */
 .format-socialwall .tl-actionlink a:nth-child(3):before {
-    font-family: FontAwesome;
+    font-family: "Font Awesome 5 Free";
     content: "\f0e5";
     position: relative;
     padding-right: .15em;
@@ -567,6 +696,7 @@ div.fdescription.required {
     box-shadow: 0 0.05em 0.05em rgba(0,0,0,0.05);
 }
 
+.activity_footer,
 .section_footer {
   margin-top: 2em;
   padding: 1em 0;
@@ -583,8 +713,10 @@ div.fdescription.required {
   width: 100%;
 }
 
-@media screen and (min-width: 768px) {
+@media (min-width: 768px) {
+  .section_footer .previous_activity,
   .section_footer .previous_section,
+  .section_footer .next_activity,
   .section_footer .next_section {
     width: 50%;
     vertical-align: top;
@@ -596,6 +728,7 @@ div.fdescription.required {
   width: 100%;
 }
 
+.next_activity,
 .next_section {
   text-align: right;
   min-height: 1px;
@@ -605,7 +738,11 @@ div.fdescription.required {
   text-align: center;
   margin-top: 1em;
 }
+.jumpnav > .jumpmenu #jump-to-activity.custom-select {
+    width: auto;
+}
 
+.previous_activity,
 .previous_section {
   min-height: 1px;
 }
@@ -619,21 +756,26 @@ div.fdescription.required {
   min-width: 50px;
 }
 
+.previous_activity .nav_icon,
 .previous_section .nav_icon {
   margin-right: .3em;
   border-right: 1px solid #eee;
 }
+.previous_activity .text,
 .previous_section .text {
   padding-left: 9px;
 }
+.next_activity .nav_icon,
 .next_section .nav_icon {
   margin-left: .3em;
   border-left: 1px solid #eee;
 }
+.next_activity .text,
 .next_section .text {
   padding-right: 9px;
 }
 
+.activity_footer .text,
 .section_footer .text {
   display: table-cell;
   width: 10007px;
@@ -651,7 +793,7 @@ div.fdescription.required {
 /* Activity styling */
 .block_site_main_menu .mod-indent .activity,
 .block_site_main_menu .main-menu-content .activity {
-    padding: 5px 0px 5px 0px;
+    padding: 5px 0 5px 0;
 }
 
 .section-modchooser {
@@ -679,6 +821,10 @@ div.fdescription.required {
     background-color: [[setting:coursesectionactivityquizbgcolor]];
 }
 
+.activity img.activityicon {
+    margin-right: 0;
+}
+
 /* Label Info */
 .section .activity .availabilityinfo {
     margin-left: 30px;
@@ -700,12 +846,12 @@ div.fdescription.required {
 
 
 /* Activity further information styling */
-.activity-meta-container {
+.ad-activity-meta-container {
     padding: 5px 0 0 0;
-    margin: 0px 10px 0 30px;
+    margin: 0 10px 0 30px;
 }
 
-span.activity-due-date {
+.ad-activity-due-date {
     background-color: #555555;
     color: #ffffff;
     padding: 7px;
@@ -717,49 +863,148 @@ span.activity-due-date {
     white-space: nowrap;
 }
 
-span.activity-due-date a {
-    color: #ffffff !important;
- }
+.ad-activity-due-date a {
+    color: #fff;
+}
 
-span.activity-mod-feedback {
+.ad-activity-mod-feedback {
     padding: 5px 0;
 }
 
-span.activity-mod-feedback i {
+.ad-activity-mod-feedback i {
     font-size: 1.1em;
 }
 
-span.activity-date-overdue {
-    background-color: #ee0000;
+.ad-activity-action {
+    margin: 0 7px;
 }
 
-span.activity-date-submitted {
-    background-color: #00cc00;
+.ad-activity-action i {
+    margin-right: 0.35rem;
 }
 
-span.activity-date-nearly-due {
-    background-color: #f79100;
+.ad-activity-date-overdue {
+    background-color: #f8d7da;
 }
 
-span.activity-mod-feedback i, .activity-mod-engagement i, span.activity-due-date i {
+.ad-activity-date-overdue a {
+    color: #721c24;
+}
+
+.ad-activity-date-overdue .text-warning {
+    color: #721C24 !important;
+}
+
+.ad-activity-date-submitted {
+    background-color: #d4edda;
+}
+
+.ad-activity-date-submitted a {
+    color: #155724;
+}
+
+.ad-activity-date-nearly-due {
+    background-color: #fff3cd;
+}
+
+.ad-activity-date-nearly-due a {
+    color: #856404;
+}
+
+.ad-activity-mod-feedback i,
+.ad-activity-mod-engagement i,
+.ad-activity-due-date i {
     font-size: 1.1em;
 }
 
 li.activity div.actions-right {
-    float: right; padding: 5px;
+    float: right;
+    padding: 5px;
 }
 
-div.activity-wrapper {
+.ad-activity-wrapper {
     margin: [[setting:coursesectionactivitymargintop]] 0 [[setting:coursesectionactivitymarginbottom]] 0;
-    padding: 5px 10px 5px 10px;
+    padding: 5px 10px 5px 0;
 }
 
 .section .activity .mod-indent-outer {
     width: 100%;
 }
 
+.section .label .mod-indent-outer {
+    padding-left: 0;
+}
+
+.section .activity.modtype_label.label {
+    padding: 0;
+}
+
+.topics .section .activity .mod-indent-outer {
+    margin-left: 15px;
+}
+
+.course-content ul.topics li.section .summary {
+    margin: 5px 5px 5px 10px;
+}
+
 .section .activity .actions-right .actions {
     position: absolute;
     right: 17px;
     top: 15px;
+}
+
+.section .activity .activityinstance {
+    min-width: 60%;
+    margin-left: 5px;
+}
+
+.course-content ul.gtopics li.section .content {
+    margin: 0 10px;
+}
+
+.course-content ul.ftopics li.section .content {
+    margin: 0 10px;
+}
+
+.section li.activity {
+    clear: both;
+    padding: 0;
+    margin-bottom: 5px;
+}
+
+.course-content .single-section .section-navigation {
+    padding: .1em;
+}
+
+/* region-main-settings-menu is used on pages other than course pages, but included here to keep the settings together. */
+.context-header-settings-menu,
+.region-main-settings-menu {
+    height: 42px;
+    margin-top: 0;
+}
+.context-header-settings-menu .dropdown-toggle>.icon,
+#region-main-settings-menu .dropdown-toggle>.icon {
+    vertical-align: sub;
+}
+
+#region-main-settings-menu > div {
+    position: static;
+    margin: 0;
+    right: auto;
+}
+
+.section .activity .contentwithoutlink > a,
+.section .activity .activityinstance > a,
+.section .activity .contentwithoutlink .inplaceeditable > a,
+.section .activity .activityinstance .inplaceeditable > a {
+    color: [[setting:coursesectionactivityheadingcolour]];
+}
+
+.section .activity .contentwithoutlink > a > span,
+.section .activity .activityinstance > a > span,
+.section .activity .contentwithoutlink .inplaceeditable > a > span,
+.section .activity .activityinstance .inplaceeditable > a > span {
+    font-size: 1.1em;
+    padding-left: 8px;
+    font-weight: 800;
 }

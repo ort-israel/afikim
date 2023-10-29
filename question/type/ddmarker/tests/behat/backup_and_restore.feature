@@ -27,9 +27,10 @@ Feature: Test duplicating a quiz containing a drag and drop markers question
     When I backup "Course 1" course using this options:
       | Confirmation | Filename | test_backup.mbz |
     And I restore "test_backup.mbz" backup into a new course using this options:
-      | Schema | Course name | Course 2 |
-    And I navigate to "Question bank" node in "Course administration"
-    And I click on "Edit" "link" in the "Drag markers" "table_row"
+      | Schema | Course name       | Course 2 |
+      | Schema | Course short name | C2       |
+    And I navigate to "Question bank" in current page administration
+    And I choose "Edit question" action for "Drag markers" in the question bank
     Then the following fields match these values:
       | Question name                       | Drag markers                                         |
       | Question text                       | Please place the markers on the map of Milton Keynes and be aware that there is more than one railway station. |

@@ -36,9 +36,10 @@ $regions = theme_adaptable_grid($left, $hassidepost);
 ?>
 
 <div id="page" class="container-outercont">
-    <div id="page-content" class="row-fluid">
-        <?php echo $OUTPUT->page_navbar(false); ?>
-
+    <?php
+        echo $OUTPUT->page_navbar();
+    ?>
+    <div id="page-content" class="row<?php echo $regions['direction'];?>">
         <section id="region-main" class="<?php echo $regions['content']; ?>">
             <?php
             echo $OUTPUT->get_course_alerts();
@@ -51,7 +52,9 @@ $regions = theme_adaptable_grid($left, $hassidepost);
             } ?>
         </section>
         <?php
-            echo $OUTPUT->blocks('side-post', $regions['blocks']);
+        if ($hassidepost) {
+            echo $OUTPUT->blocks('side-post', $regions['blocks'].' d-print-none ');
+        }
         ?>
     </div>
 </div>
@@ -60,4 +63,5 @@ $regions = theme_adaptable_grid($left, $hassidepost);
     <?php echo $PAGE->theme->settings->jssection;?>
 </script>
 
-<?php echo $OUTPUT->standard_end_of_body_html()
+<?php
+require_once(dirname(__FILE__) . '/includes/nofooter.php');

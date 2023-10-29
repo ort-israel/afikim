@@ -47,6 +47,11 @@ class core_test_generator_testcase extends advanced_testcase {
         $this->assertInstanceOf('mod_quiz_generator', $generator);
     }
 
+    public function test_get_default_generator() {
+        $generator = $this->getDataGenerator()->get_plugin_generator('block_somethingthatdoesnotexist');
+        $this->assertInstanceOf('default_block_generator', $generator);
+    }
+
     /**
      * Test plugin generator, with no component directory.
      *
@@ -70,7 +75,6 @@ class core_test_generator_testcase extends advanced_testcase {
         $this->assertEquals($count + 1, $DB->count_records('user'));
         $this->assertSame($user->username, core_user::clean_field($user->username, 'username'));
         $this->assertSame($user->email, core_user::clean_field($user->email, 'email'));
-        $this->assertSame(AUTH_PASSWORD_NOT_CACHED, $user->password);
         $this->assertNotEmpty($user->firstnamephonetic);
         $this->assertNotEmpty($user->lastnamephonetic);
         $this->assertNotEmpty($user->alternatename);
@@ -97,7 +101,6 @@ class core_test_generator_testcase extends advanced_testcase {
             'password' => 'password1',
             'email' => 'email@example.com',
             'confirmed' => '1',
-            'lang' => 'cs',
             'maildisplay' => '1',
             'mailformat' => '0',
             'maildigest' => '1',
@@ -128,7 +131,7 @@ class core_test_generator_testcase extends advanced_testcase {
         $this->assertEquals($count + 3, $DB->count_records('user'));
         $this->assertSame('', $user->idnumber);
         $this->assertSame(md5($record['username']), $user->email);
-        $this->assertFalse(context_user::instance($user->id, IGNORE_MISSING));
+        $this->assertEquals(1, $user->deleted);
 
         // Test generating user with interests.
         $user = $generator->create_user(array('interests' => 'Cats, Dogs'));
@@ -156,7 +159,7 @@ class core_test_generator_testcase extends advanced_testcase {
         $this->assertEquals(context_system::instance()->id, $cohort->contextid);
         $this->assertRegExp('/^Cohort \d/', $cohort->name);
         $this->assertSame('', $cohort->idnumber);
-        $this->assertRegExp('/^Test cohort \d/', $cohort->description);
+        $this->assertRegExp("/^Description for '{$cohort->name}' \\n/", $cohort->description);
         $this->assertSame(FORMAT_MOODLE, $cohort->descriptionformat);
         $this->assertSame('', $cohort->component);
         $this->assertLessThanOrEqual(time(), $cohort->timecreated);

@@ -64,6 +64,9 @@ class MoodleQuickForm_editor extends HTML_QuickForm_element implements templatab
     /** @var array values for editor */
     protected $_values     = array('text'=>null, 'format'=>null, 'itemid'=>null);
 
+    /** @var bool if true label will be hidden */
+    protected $_hiddenLabel = false;
+
     /**
      * Constructor
      *
@@ -390,6 +393,20 @@ class MoodleQuickForm_editor extends HTML_QuickForm_element implements templatab
             $subtitle_options->env = 'editor';
             $subtitle_options->itemid = $draftitemid;
 
+            if (has_capability('moodle/h5p:deploy', $ctx)) {
+                // Only set H5P Plugin settings if the user can deploy new H5P content.
+                // H5P plugin.
+                $args->accepted_types = array('.h5p');
+                $h5poptions = initialise_filepicker($args);
+                $h5poptions->context = $ctx;
+                $h5poptions->client_id = uniqid();
+                $h5poptions->maxbytes  = $this->_options['maxbytes'];
+                $h5poptions->areamaxbytes  = $this->_options['areamaxbytes'];
+                $h5poptions->env = 'editor';
+                $h5poptions->itemid = $draftitemid;
+                $fpoptions['h5p'] = $h5poptions;
+            }
+
             $fpoptions['image'] = $image_options;
             $fpoptions['media'] = $media_options;
             $fpoptions['link'] = $link_options;
@@ -481,5 +498,15 @@ class MoodleQuickForm_editor extends HTML_QuickForm_element implements templatab
     function getFrozenHtml() {
 
         return '';
+    }
+
+    /**
+     * Sets label to be hidden.
+     *
+     * @param bool $hiddenLabel Whether the label should be hidden or not.
+     * @return void
+     */
+    function setHiddenLabel($hiddenLabel) {
+        $this->_hiddenLabel = $hiddenLabel;
     }
 }

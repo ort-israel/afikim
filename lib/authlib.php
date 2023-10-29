@@ -758,6 +758,53 @@ class auth_plugin_base {
         }
         return $data;
     }
+
+    /**
+     * Returns information on how the specified user can change their password.
+     *
+     * @param stdClass $user A user object
+     * @return string[] An array of strings with keys subject and message
+     */
+    public function get_password_change_info(stdClass $user) : array {
+
+        global $USER;
+
+        $site = get_site();
+        $systemcontext = context_system::instance();
+
+        $data = new stdClass();
+        $data->firstname = $user->firstname;
+        $data->lastname  = $user->lastname;
+        $data->username  = $user->username;
+        $data->sitename  = format_string($site->fullname);
+        $data->admin     = generate_email_signoff();
+
+        // This is a workaround as change_password_url() is designed to allow
+        // use of the $USER global. See MDL-66984.
+        $olduser = $USER;
+        $USER = $user;
+        if ($this->can_change_password() and $this->change_password_url()) {
+            // We have some external url for password changing.
+            $data->link = $this->change_password_url()->out();
+        } else {
+            // No way to change password, sorry.
+            $data->link = '';
+        }
+        $USER = $olduser;
+
+        if (!empty($data->link) and has_capability('moodle/user:changeownpassword', $systemcontext, $user->id)) {
+            $subject = get_string('emailpasswordchangeinfosubject', '', format_string($site->fullname));
+            $message = get_string('emailpasswordchangeinfo', '', $data);
+        } else {
+            $subject = get_string('emailpasswordchangeinfosubject', '', format_string($site->fullname));
+            $message = get_string('emailpasswordchangeinfofail', '', $data);
+        }
+
+        return [
+            'subject' => $subject,
+            'message' => $message
+        ];
+    }
 }
 
 /**
@@ -828,6 +875,7 @@ function login_attempt_valid($user) {
 /**
  * To be called after failed user login.
  * @param stdClass $user
+ * @throws moodle_exception
  */
 function login_attempt_failed($user) {
     global $CFG;
@@ -839,30 +887,53 @@ function login_attempt_failed($user) {
         return;
     }
 
-    $count = get_user_preferences('login_failed_count', 0, $user);
-    $last = get_user_preferences('login_failed_last', 0, $user);
-    $sincescuccess = get_user_preferences('login_failed_count_since_success', $count, $user);
-    $sincescuccess = $sincescuccess + 1;
-    set_user_preference('login_failed_count_since_success', $sincescuccess, $user);
+    // Force user preferences cache reload to ensure the most up-to-date login_failed_count is fetched.
+    // This is perhaps overzealous but is the documented way of reloading the cache, as per the test method
+    // 'test_check_user_preferences_loaded'.
+    unset($user->preference);
 
-    if (empty($CFG->lockoutthreshold)) {
-        // No threshold means no lockout.
-        // Always unlock here, there might be some race conditions or leftovers when switching threshold.
-        login_unlock_account($user);
-        return;
-    }
+    $resource = 'user:' . $user->id;
+    $lockfactory = \core\lock\lock_config::get_lock_factory('core_failed_login_count_lock');
 
-    if (!empty($CFG->lockoutwindow) and time() - $last > $CFG->lockoutwindow) {
-        $count = 0;
-    }
+    // Get a new lock for the resource, waiting for it for a maximum of 10 seconds.
+    if ($lock = $lockfactory->get_lock($resource, 10)) {
+        try {
+            $count = get_user_preferences('login_failed_count', 0, $user);
+            $last = get_user_preferences('login_failed_last', 0, $user);
+            $sincescuccess = get_user_preferences('login_failed_count_since_success', $count, $user);
+            $sincescuccess = $sincescuccess + 1;
+            set_user_preference('login_failed_count_since_success', $sincescuccess, $user);
 
-    $count = $count+1;
+            if (empty($CFG->lockoutthreshold)) {
+                // No threshold means no lockout.
+                // Always unlock here, there might be some race conditions or leftovers when switching threshold.
+                login_unlock_account($user);
+                $lock->release();
+                return;
+            }
 
-    set_user_preference('login_failed_count', $count, $user);
-    set_user_preference('login_failed_last', time(), $user);
+            if (!empty($CFG->lockoutwindow) and time() - $last > $CFG->lockoutwindow) {
+                $count = 0;
+            }
 
-    if ($count >= $CFG->lockoutthreshold) {
-        login_lock_account($user);
+            $count = $count + 1;
+
+            set_user_preference('login_failed_count', $count, $user);
+            set_user_preference('login_failed_last', time(), $user);
+
+            if ($count >= $CFG->lockoutthreshold) {
+                login_lock_account($user);
+            }
+
+            // Release locks when we're done.
+            $lock->release();
+        } catch (Exception $e) {
+            // Always release the lock on a failure.
+            $lock->release();
+        }
+    } else {
+        // We did not get access to the resource in time, give up.
+        throw new moodle_exception('locktimeout');
     }
 }
 
@@ -979,15 +1050,35 @@ function signup_validate_data($data, $files) {
     if (! validate_email($data['email'])) {
         $errors['email'] = get_string('invalidemail');
 
-    } else if ($DB->record_exists('user', array('email' => $data['email']))) {
-        $errors['email'] = get_string('emailexists') . ' ' .
-                get_string('emailexistssignuphint', 'moodle',
-                        html_writer::link(new moodle_url('/login/forgot_password.php'), get_string('emailexistshintlink')));
+    } else if (empty($CFG->allowaccountssameemail)) {
+        // Emails in Moodle as case-insensitive and accents-sensitive. Such a combination can lead to very slow queries
+        // on some DBs such as MySQL. So we first get the list of candidate users in a subselect via more effective
+        // accent-insensitive query that can make use of the index and only then we search within that limited subset.
+        $sql = "SELECT 'x'
+                  FROM {user}
+                 WHERE " . $DB->sql_equal('email', ':email1', false, true) . "
+                   AND id IN (SELECT id
+                                FROM {user}
+                               WHERE " . $DB->sql_equal('email', ':email2', false, false) . "
+                                 AND mnethostid = :mnethostid)";
+
+        $params = array(
+            'email1' => $data['email'],
+            'email2' => $data['email'],
+            'mnethostid' => $CFG->mnet_localhost_id,
+        );
+
+        // If there are other user(s) that already have the same email, show an error.
+        if ($DB->record_exists_sql($sql, $params)) {
+            $forgotpasswordurl = new moodle_url('/login/forgot_password.php');
+            $forgotpasswordlink = html_writer::link($forgotpasswordurl, get_string('emailexistshintlink'));
+            $errors['email'] = get_string('emailexists') . ' ' . get_string('emailexistssignuphint', 'moodle', $forgotpasswordlink);
+        }
     }
     if (empty($data['email2'])) {
         $errors['email2'] = get_string('missingemail');
 
-    } else if ($data['email2'] != $data['email']) {
+    } else if (core_text::strtolower($data['email2']) != core_text::strtolower($data['email'])) {
         $errors['email2'] = get_string('invalidemail');
     }
     if (!isset($errors['email'])) {
@@ -996,8 +1087,16 @@ function signup_validate_data($data, $files) {
         }
     }
 
+    // Construct fake user object to check password policy against required information.
+    $tempuser = new stdClass();
+    $tempuser->id = 1;
+    $tempuser->username = $data['username'];
+    $tempuser->firstname = $data['firstname'];
+    $tempuser->lastname = $data['lastname'];
+    $tempuser->email = $data['email'];
+
     $errmsg = '';
-    if (!check_password_policy($data['password'], $errmsg)) {
+    if (!check_password_policy($data['password'], $errmsg, $tempuser)) {
         $errors['password'] = $errmsg;
     }
 

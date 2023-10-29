@@ -32,12 +32,15 @@ require_once(dirname(__FILE__) . '/includes/header.php');
 ?>
 
 <div class="container outercont">
-    <div id="page-content" class="row-fluid">
-            <?php echo $OUTPUT->page_navbar(true); ?>
-        <section id="region-main" class="span12">
+    <?php
+        echo $OUTPUT->page_navbar();
+    ?>
+    <div id="page-content" class="row">
+        <section id="region-main" class="col-12">
             <?php
             echo $OUTPUT->course_content_header();
             echo $OUTPUT->main_content();
+            echo $OUTPUT->activity_navigation();
             echo $OUTPUT->course_content_footer();
             ?>
         </section>
@@ -45,5 +48,9 @@ require_once(dirname(__FILE__) . '/includes/header.php');
 </div>
 
 <?php
-// Include footer.
-require_once(dirname(__FILE__) . '/includes/footer.php');
+if (empty($PAGE->layout_options['nofooter'])) {
+    // Include footer.
+    require_once(dirname(__FILE__) . '/includes/footer.php');
+} else {
+    require_once(dirname(__FILE__) . '/includes/nofooter.php');
+}

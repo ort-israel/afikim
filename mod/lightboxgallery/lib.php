@@ -507,8 +507,15 @@ function lightboxgallery_rss_enabled() {
  * @return \core_calendar\local\event\entities\action_interface|null
  */
 function mod_lightboxgallery_core_calendar_provide_event_action(calendar_event $event,
-                                                            \core_calendar\action_factory $factory) {
-    $cm = get_fast_modinfo($event->courseid)->instances['lightboxgallery'][$event->instance];
+                                                            \core_calendar\action_factory $factory,
+                                                            int $userid = 0) {
+    global $USER;
+
+    if (!$userid) {
+        $userid = $USER->id;
+    }
+
+    $cm = get_fast_modinfo($event->courseid, $userid)->instances['lightboxgallery'][$event->instance];
 
     $completion = new \completion_info($cm->get_course());
 

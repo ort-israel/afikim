@@ -29,6 +29,9 @@ defined('MOODLE_INTERNAL') || die();
 use \core_privacy\local\metadata\collection;
 use \core_privacy\local\request\contextlist;
 use \core_privacy\local\request\approved_contextlist;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\writer;
+use \core_privacy\local\request\approved_userlist;
 
 /**
  * Privacy class for requesting user data.
@@ -37,7 +40,11 @@ use \core_privacy\local\request\approved_contextlist;
  * @copyright  2018 Mihail Geshoski <mihail@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements \core_privacy\local\metadata\provider, \core_privacy\local\request\plugin\provider {
+class provider implements
+        \core_privacy\local\metadata\provider,
+        \core_privacy\local\request\core_userlist_provider,
+        \core_privacy\local\request\user_preference_provider,
+        \core_privacy\local\request\plugin\provider {
 
     /**
      * Returns meta data about this system.
@@ -46,6 +53,15 @@ class provider implements \core_privacy\local\metadata\provider, \core_privacy\l
      * @return  collection A listing of user data stored through this system.
      */
     public static function get_metadata(collection $collection) : collection {
+        $messageemailmessages = [
+            'useridto' => 'privacy:metadata:message_email_messages:useridto',
+            'conversationid' => 'privacy:metadata:message_email_messages:conversationid',
+            'messageid' => 'privacy:metadata:message_email_messages:messageid',
+        ];
+        // Note - this data gets deleted once the scheduled task runs.
+        $collection->add_database_table('message_email_messages',
+            $messageemailmessages, 'privacy:metadata:message_email_messages');
+
         $collection->link_external_location('smtp', [
                 'recipient' => 'privacy:metadata:recipient',
                 'userfrom' => 'privacy:metadata:userfrom',
@@ -73,6 +89,14 @@ class provider implements \core_privacy\local\metadata\provider, \core_privacy\l
     }
 
     /**
+     * Get the list of users who have data within a context.
+     *
+     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
+     */
+    public static function get_users_in_context(userlist $userlist) {
+    }
+
+    /**
      * Export all user data for the specified user, in the specified contexts.
      *
      * @param approved_contextlist $contextlist The approved contexts to export information for.
@@ -89,10 +113,35 @@ class provider implements \core_privacy\local\metadata\provider, \core_privacy\l
     }
 
     /**
+     * Delete multiple users within a single context.
+     *
+     * @param   approved_userlist       $userlist The approved context and user information to delete information for.
+     */
+    public static function delete_data_for_users(approved_userlist $userlist) {
+    }
+
+    /**
      * Delete all user data for the specified user, in the specified contexts.
      *
      * @param   approved_contextlist    $contextlist    The approved contexts and user information to delete information for.
      */
     public static function delete_data_for_user(approved_contextlist $contextlist) {
+    }
+
+    /**
+     * Export all user preferences for the plugin
+     *
+     * @param int $userid
+     */
+    public static function export_user_preferences(int $userid) {
+        $preference = get_user_preferences('message_processor_email_email', null, $userid);
+        if (!empty($preference)) {
+            writer::export_user_preference(
+                'message_email',
+                'email',
+                $preference,
+                get_string('privacy:preference:email', 'message_email')
+            );
+        }
     }
 }

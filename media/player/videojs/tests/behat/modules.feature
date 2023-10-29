@@ -7,15 +7,18 @@ Feature: Embed videos without the media filter
   Background:
     Given I log in as "admin"
     And I am on site homepage
-    And I navigate to "Turn editing on" node in "Front page settings"
+    And I navigate to "Turn editing on" in current page administration
 
   @javascript
   Scenario: Add a video in a URL resource. Make sure media filters work
-    When I add a "URL" to section "1" and I fill the form with:
-      | Name | Video URL |
-      | Description | Example of a video url |
-      | External URL | http://download.moodle.org/mediatest/quicktime_320_180.mov |
-    And I follow "Video URL"
+    Given the following "activity" exists:
+      | activity    | url                                                        |
+      | course      | Acceptance test site                                       |
+      | name        | Video URL                                                  |
+      | intro       | Example of a video url                                     |
+      | externalurl | http://download.moodle.org/mediatest/quicktime_320_180.mov |
+      | section     | 1                                                          |
+    When I am on the "Video URL" "url activity" page
     Then ".video-js" "css_element" should exist
     And I am on site homepage
 

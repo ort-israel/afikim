@@ -3,11 +3,11 @@
 /* Custom H5P font to use for icons. */
 @font-face {
   font-family: 'h5p';
-  src:    url('../fonts/h5p-core-18.eot?cb8kvi');
-  src:    url('../fonts/h5p-core-18.eot?cb8kvi#iefix') format('embedded-opentype'),
-  url('../fonts/h5p-core-18.ttf?cb8kvi') format('truetype'),
-  url('../fonts/h5p-core-18.woff?cb8kvi') format('woff'),
-  url('../fonts/h5p-core-18.svg?cb8kvi#h5p') format('svg');
+  src:    url('../fonts/h5p-core-23.eot?mz1lkp');
+  src:    url('../fonts/h5p-core-23.eot?mz1lkp#iefix') format('embedded-opentype'),
+  url('../fonts/h5p-core-23.ttf?mz1lkp') format('truetype'),
+  url('../fonts/h5p-core-23.woff?mz1lkp') format('woff'),
+  url('../fonts/h5p-core-23.svg?mz1lkp#h5p') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -202,7 +202,7 @@ div.h5p-fullscreen {
   color: #999;
   text-decoration: none;
   outline: none;
-  line-height: 23px;
+  line-height: 22px;
 }
 .h5p-actions > .h5p-button:hover {
   color: #666;
@@ -223,12 +223,12 @@ div.h5p-fullscreen {
 .h5p-actions > .h5p-button:before {
   font-family: 'H5P';
   font-size: 20px;
-  line-height: 20px;
-  vertical-align: top;
+  line-height: 23px;
+  vertical-align: bottom;
   padding-right: 0;
 }
 .h5p-actions > .h5p-button.h5p-export:before {
-  content: "\e893";
+  content: "\e90b";
 }
 .h5p-actions > .h5p-button.h5p-copyrights:before {
   content: "\e88f";
@@ -260,7 +260,7 @@ div.h5p-fullscreen {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   z-index: 100;
   padding: 2em;
   box-sizing: border-box;
@@ -297,13 +297,20 @@ div.h5p-fullscreen {
   padding: 0.325em 0.5em 0.25em;
   line-height: 1.25em;
   border-bottom: 1px solid #ccc;
+  z-index: 2;
 }
-.h5p-embed-dialog .h5p-inner {
-  width: 300px;
+.h5p-popup-dialog .h5p-inner > h2 > a {
+  font-size: 12px;
+  margin-left: 1em;
+}
+.h5p-embed-dialog .h5p-inner,
+.h5p-reuse-dialog .h5p-inner,
+.h5p-content-user-data-reset-dialog .h5p-inner {
+  min-width: 316px;
+  max-width: 400px;
   left: 50%;
   top: 50%;
-  margin: 0 0 0 -150px;
-  transition: margin 250ms linear 100ms;
+  transform: translateX(-50%);
 }
 .h5p-embed-dialog .h5p-embed-code-container,
 .h5p-embed-size {
@@ -339,11 +346,14 @@ div.h5p-fullscreen {
   padding: 1em;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
-  height: 100%;
+  color: #555555;
+  z-index: 1;
+}
+.h5p-popup-dialog.h5p-open .h5p-scroll-content {
   overflow: auto;
   overflow-x: hidden;
   overflow-y: auto;
-  color: #555555;
+  height: 100%;
 }
 .h5p-popup-dialog .h5p-scroll-content::-webkit-scrollbar {
   width: 8px;
@@ -357,11 +367,6 @@ div.h5p-fullscreen {
 }
 .h5p-popup-dialog .h5p-close {
   cursor: pointer;
-  outline:none
-}
-.h5p-popup-dialog .h5p-close:after {
-  font-family: 'H5P';
-  content: "\e894";
   font-size: 2em;
   position: absolute;
   right: 0;
@@ -372,6 +377,11 @@ div.h5p-fullscreen {
   color: #656565;
   cursor: pointer;
   text-indent: -0.065em;
+  z-index: 3
+}
+.h5p-popup-dialog .h5p-close:after {
+  font-family: 'H5P';
+  content: "\e894";
 }
 .h5p-popup-dialog .h5p-close:hover:after,
 .h5p-popup-dialog .h5p-close:focus:after {
@@ -402,7 +412,6 @@ div.h5p-fullscreen {
 .h5p-expander {
   cursor: pointer;
   font-size: 1.125em;
-  outline: none;
   margin: 0.5em 0 0;
   display: inline-block;
 }
@@ -455,157 +464,433 @@ div.h5p-fullscreen {
 .h5p-dialog-ok-button:active {
   background: #eeffee;
 }
+.h5p-big-button {
+  line-height: 1.25;
+  display: block;
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+  padding: 1em 1em 1em 3.75em;
+  text-align: left;
+  border: 1px solid #dedede;
+  background: linear-gradient(#ffffff, #f1f1f2);
+  border-radius: 0.25em;
+}
+.h5p-big-button:before {
+  font-family: 'h5p';
+  content: "\e893";
+  line-height: 1;
+  font-size: 3em;
+  color: #2747f7;
+  position: absolute;
+  left: 0.125em;
+  top: 0.125em;
+}
+.h5p-copy-button:before {
+  content: "\e905";
+}
+.h5p-big-button:hover {
+  border: 1px solid #2747f7;
+  background: #eff1fe;
+}
+.h5p-big-button:active {
+  border: 1px solid #dedede;
+  background: #dfe4fe;
+}
+.h5p-button-title {
+  color: #2747f7;
+  font-size: 15px;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+.h5p-button-description {
+  color: #757575;
+}
+.h5p-horizontal-line-text {
+  border-top: 1px solid #dadada;
+  line-height: 1;
+  color: #474747;
+  text-align: center;
+  position: relative;
+  margin: 1.25em 0;
+}
+.h5p-horizontal-line-text > span {
+  background: white;
+  padding: 0.5em;
+  position: absolute;
+  top: -1em;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.h5p-toast {
+  font-size: 0.75em;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  z-index: 110;
+  position: absolute;
+  padding: 0 0.5em;
+  line-height: 2;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  top: 0;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 1s;
+}
+.h5p-toast-disabled {
+  opacity: 0;
+  visibility: hidden;
+}
+.h5p-content code,
+.h5peditor code {
+  color: #3d3d3d;
+  background: #e0e0e0;
+  border-radius: 2px;
+  padding: 0 5px;
+}
+.h5p-content pre > code,
+.h5peditor pre > code {
+  background-color: #fafafa;
+  padding: 5px;
+  display: block;
+  line-height: normal;
+  border: 1px solid #c7c7c7;
+  border-left-width: 4px;
+  max-width: 100%;
+  white-space: pre;
+  overflow: auto;
+}
 
-/* General (major) h5p packages/libraries RTL support 
-   
+
+/* This is loaded as part of Core and not Editor since this needs to be outside the editor iframe */
+.h5peditor-semi-fullscreen {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 101;
+}
+iframe.h5peditor-semi-fullscreen {
+  background: #fff;
+  z-index: 100001;
+}
+
+.h5p-content.using-mouse *:not(textarea):focus {
+  outline: none !important;
+}
+
+/* General (major) h5p packages/libraries RTL support
+
    TODO: Split into each h5p package
 */
 .h5p-dir-rtl,
 .h5peditor-dir-rtl {
-    direction: rtl;
+  direction: rtl;
 }
 /* h5p-multichoice */
 .h5p-dir-rtl.h5p-multichoice .h5p-alternative-container {
-    text-align: right;
-    padding: 0.25em 2.1em 0.25em 0.75em;
+  text-align: right;
+  padding: 0.25em 2.1em 0.25em 0.75em;
 }
 
 .h5p-dir-rtl.h5p-multichoice .h5p-alternative-inner {
-    margin: 0 2em 0 0.75em;
+  margin: 0 2em 0 0.75em;
 }
 .h5p-dir-rtl.h5p-multichoice .h5p-answer .h5p-alternative-container:before {
-    right: 2.5em;
-    left: auto;
+  right: 2.5em;
+  left: auto;
 }
 .h5p-dir-rtl.h5p-multichoice .h5p-question-image {
-    text-align: right;
-    padding-right: 2em;
+  text-align: right;
+  padding-right: 2em;
 }
 .h5p-dir-rtl.h5p-multichoice .h5p-question-image-scalable:before {
-    left: 0.7em;
-    right: auto;
+  left: 0.7em;
+  right: auto;
 }
 
 /* Quiz */
 .h5p-dir-rtl .h5p-multichoice .h5p-alternative-container {
-    text-align: right;
-    padding: 0.25em 2.1em 0.25em 0.75em;
+  text-align: right;
+  padding: 0.25em 2.1em 0.25em 0.75em;
 }
 .h5p-dir-rtl .h5p-multichoice .h5p-alternative-inner {
-    margin: 0 2em 0 0.75em;
+  margin: 0 2em 0 0.75em;
 }
 .h5p-dir-rtl .h5p-multichoice .h5p-answer .h5p-alternative-container:before {
-    right: 2.5em;
-    left: auto;
+  right: 2.5em;
+  left: auto;
 }
 .h5p-dir-rtl.h5p-blanks .h5p-wrong:after {
-    left: 0.5em;
-    right: auto;
+  left: 0.5em;
+  right: auto;
 }
 .h5p-dir-rtl.h5p-blanks .h5p-correct:after {
-    left: 0.5em;
-    right: auto;
+  left: 0.5em;
+  right: auto;
 }
-.h5p-dir-rtl.h5p-blanks .has-tip.h5p-correct:after, 
+.h5p-dir-rtl.h5p-blanks .has-tip.h5p-correct:after,
 .h5p-dir-rtl.h5p-blanks .has-tip.h5p-wrong:after {
-    left: 0.5em;
-    right: auto;
+  left: 0.5em;
+  right: auto;
 }
-.h5p-dir-rtl .h5p-question .h5p-question-prev, 
-.h5p-dir-rtl .h5p-question .h5p-question-finish, 
+.h5p-dir-rtl .h5p-question .h5p-question-prev,
+.h5p-dir-rtl .h5p-question .h5p-question-finish,
 .h5p-dir-rtl .h5p-question .h5p-question-next {
-    float: left;
+  float: left;
 }
 .h5p-dir-rtl .h5p-question .h5p-question-prev:before {
-    content: "\f054";
+  content: "\f054";
 }
 .h5p-dir-rtl .h5p-question .h5p-question-next:before {
-    content: "\f053";
+  content: "\f053";
 }
 .h5p-dir-rtl .h5p-joubelui-button:first-child {
-    margin: 0 0 1em 0.5em;
+  margin: 0 0 1em 0.5em;
+}
+.h5p-dir-rtl .h5p-joubelui-button:before {
+    padding-left: 0.5em;
 }
 
 /* Memory game */
 .h5p-dir-rtl.h5p-memory-game .h5p-status > dt {
-    float: right;
-    margin: 0 0 0 1em;
+  float: right;
+  margin: 0 0 0 1em;
 }
 .h5p-dir-rtl.h5p-memory-game .h5p-status {
-    clear: right;
+  clear: right;
 }
 /* summary */
 .h5p-dir-rtl.h5p-summary .summary-evaluation-content {
-    float: right;
-    padding: 0.1em 0 0.1em 2em;
+  float: right;
+  padding: 0.1em 0 0.1em 2em;
 }
 
 /* Presentation */
 .h5p-dir-rtl.h5p-course-presentation .h5p-footer .h5p-footer-next-slide:after {
-    content: "\F0D9";
+  content: "\F0D9";
 }
 .h5p-dir-rtl.h5p-course-presentation .h5p-footer .h5p-footer-previous-slide:before {
-    font-family: H5PFontAwesome4;
-    content: "\F0DA";
+  font-family: H5PFontAwesome4;
+  content: "\F0DA";
 }
-.h5p-dir-rtl.h5p-course-presentation ol.list-unstyled, .h5p-course-presentation ul.list-unstyled {
+
+.h5p-dir-rtl.h5p-course-presentation ol.list-unstyled,
+.h5p-dir-rtl.h5p-course-presentation ul.list-unstyled {
     padding-right: 0;
+}
+.h5p-dir-rtl.h5p-course-presentation .h5p-footer .h5p-footer-center-adjusted {
+    /*rtl:ignore*/
+    direction: rtl;
+}
+.h5p-dir-rtl.h5p-course-presentation {
+    font-family: Alef, sans-serif;
+}
+.h5p-dir-rtl.h5p-course-presentation .h5p-presentation-wrapper {
+    /*rtl:ignore*/
+    direction: rtl;
+    text-align: right;
+}
+.h5p-dir-rtl .h5p-advanced-text ul,
+.h5p-dir-rtl .h5p-advanced-text ol {
+    text-align: right;
+}
+
+/* fill-in the words, drag and drop */
+.h5p-dir-rtl .h5p-drag-text .h5p-drag-dropzone {
+    padding: 0;
+}
+.h5p-dir-rtl .h5p-drag-text .h5p-drag-droppable-words {
+    direction: rtl;
+    text-align: right;
+    padding-right: 1em;
 }
 
 /* accordion */
-.h5p-dir-rtl .h5p-accordion .h5p-panel-title {
-    padding: 0.8em 2.25em 0.8em 0.8em;
+.h5p-dir-rtl.h5p-accordion .h5p-panel-title {
+  padding: 0.8em 2.25em 0.8em 0.8em;
 }
-.h5p-dir-rtl .h5p-accordion .h5p-panel-title:before {
-    content: "\f104";
-    right: 0.95em;
-    left: auto;
+.h5p-dir-rtl.h5p-accordion .h5p-panel-title:before {
+  content: "\f104";
+  right: 0.95em;
+  left: auto;
 }
 
 .h5p-dir-rtl li.h5p-sc-alternative .h5p-sc-status {
-    left: 0;
-    right: auto;
+  left: 0;
+  right: auto;
 }
 
 /* course presentation (and in general) */
 .h5p-dir-rtl p[dir=rtl] {
-    direction: rtl;
-    text-align: right;
+  direction: rtl;
+  text-align: right;
 }
 .h5p-dir-rtl.h5p-course-presentation .h5p-footer {
-    direction: ltr;
-    flex-direction: inherit;
+  direction: ltr;
+  flex-direction: inherit;
 }
 
-.h5p-dir-rtl .h5p-advanced-text ul li, 
+.h5p-dir-rtl .h5p-advanced-text ul li,
 .h5p-dir-rtl .h5p-advanced-text ol li {
-    margin: 0 1.5em 1em 0;
+  margin: 0 1.5em 1em 0;
 }
 
 /* timeline */
 .h5p-dir-rtl.h5p-timeline .vco-slider .nav-next {
-    float: left;
-    text-align: left;
+  float: left;
+  text-align: left;
 }
 .h5p-dir-rtl.h5p-timeline .vco-slider .nav-previous {
-    float: right;
-    text-align: right;
+  float: right;
+  text-align: right;
 }
 .h5p-dir-rtl.h5p-timeline .vco-slider .nav-previous {
-    left:0;
+  left:0;
 }
 /* not really affective :-( */
 .h5p-dir-rtl.h5p-timeline .vco-timeline:not(.vco-skinny) .vco-slider .slider-item .content .content-container .media {
-    float: left !important;
+  float: left !important;
 }
 .h5p-dir-rtl.h5p-timeline .vco-timeline:not(.vco-skinny) .vco-slider .slider-item .content .content-container .text {
-    float: right;
+  float: right;
+}
+
+.h5p-dir-rtl #h5p-timeline .vco-slider .slider-item .content .text .container {
+  text-align: right;
+}
+.h5p-dir-rtl #h5p-timeline .vco-slider .slider-item .content .content-container {
+  display: inline-block !important;
 }
 
 /* h5p-interactive-video */
 .h5p-dir-rtl.h5p-interactive-video :not([aria-disabled=true]).h5p-slider .ui-slider-handle:before {
-    margin: -5px -20px 0 0;
+  margin: -5px -20px 0 0;
 }
 .h5p-dir-rtl.h5p-interactive-video .h5p-controls {
-    flex-direction: row-reverse;
+  flex-direction: row-reverse;
+}.h5p-dir-rtl .h5p-question-image {
+    text-align: right;
+}
+.h5p-dir-rtl .field.wizard .h5peditor-tab-a span {
+  padding-right: 45px;
+  padding-left: auto;
+}
+.h5p-interactivevideo-editor.h5p-dir-rtl .h5p-controls {
+  direction: ltr;
+}
+.h5p-interactivevideo-editor.h5p-dir-rtl .h5p-editor-table-list {
+  direction: ltr;
+}
+.h5p-dir-rtl .h5p-hub .h5p-hub-client-drop-down .icon-hub-icon:after {
+  margin-left: 1.8em;
+  left: 0;
+  right: auto;
+}
+.h5p-dir-rtl .h5p-metadata-toggler {
+  margin-right: -11px;
+  padding: 0.217rem 0.217rem 0.217rem 0.3rem;
+  border-right: none;
+}
+.h5p-interactivevideo-editor.h5p-dir-rtl .h5p-dialog-buttons {
+  left: 0;
+  right: auto;
+}
+
+/* documentation-tool */
+.h5p-dir-rtl .h5p-documentation-tool-nav-button.next:before {
+  left: -0.5em;
+  right: auto;
+  content: "\f104";
+}
+.h5p-dir-rtl .h5p-documentation-tool-nav-button.prev {
+  margin-left: 3em;
+  margin-right: auto;
+}
+.h5p-dir-rtl .h5p-documentation-tool-nav-button.prev:before {
+  content: "\f105";
+}
+.h5p-dir-rtl .h5p-documentation-tool-nav-button:before {
+  left: -0.375em;
+  right: auto;
+}
+.h5p-dir-rtl.h5p-documentation-tool .h5p-documentation-tool-nav-button {
+  left: 1em;
+  right: auto;
+}
+
+/* Drag n Drop text */
+.h5p-dir-rtl.h5p-drag-text [aria-dropeffect] {
+  padding: .1em 0 .1em 1.65em;
+}
+.h5p-dir-rtl.h5p-drag-text .h5p-drag-correct-feedback:before {
+  left: .5em;
+  right: auto;
+}
+.h5p-dir-rtl .h5p-drag-droppable-words {
+  margin: 0 !important;
+  clear: both;
+}
+.h5p-dir-rtl.h5p-drag-text .h5p-drag-wide-screen {
+  float: right;
+  border: 1px dashed #ccc;
+}
+.h5p-dir-rtl.h5p-drag-text .h5p-drag-draggable-wide-screen {
+  display: inline-block;
+}
+
+/* 360 tour */
+.h5p-dir-rtl .button-wrapper {
+  left: 20px;
+  right: auto;
+}
+
+/* Branching Scenario - switch to LTR in RTL mode, for now */
+.h5p-dir-rtl.h5peditor.h5p-branchingscenario-editor>.h5peditor-form,
+.h5p-dir-rtl .h5peditor-semi-fullscreen {
+  direction: ltr;
+}
+
+/* dialogcards */
+.h5p-dir-rtl .h5p-dialogcards .h5p-dialogcards-prev {
+    right: 1em;
+    left: auto;
+}
+.h5p-dir-rtl .h5p-dialogcards .h5p-dialogcards-prev:before {
+    content: "\F054";
+    margin-left: .2em;
+    margin-right: 0;
+}
+.h5p-dir-rtl .h5p-dialogcards .h5p-dialogcards-next,
+.h5p-dir-rtl .h5p-dialogcards .h5p-dialogcards-retry {
+    left: 1em;
+    right: auto;
+}
+.h5p-dir-rtl .h5p-dialogcards .h5p-dialogcards-next:after {
+    content: "\F053";
+    margin-right: .2em;
+    margin-left: 0;
+}
+
+
+.h5p-dir-rtl .h5p-slide .ui-draggable.h5p-drag-dropped {
+    right: -22%;
+    left: auto !important;
+}
+
+/* Content reset dialog */
+.h5p-dir-rtl .h5p-popup-dialog .h5p-close:after {
+    right: auto;
+    left: 0;
+}
+.h5p-dir-rtl .h5p-embed-dialog .h5p-inner,
+.h5p-dir-rtl .h5p-reuse-dialog .h5p-inner,
+.h5p-dir-rtl .h5p-content-user-data-reset-dialog .h5p-inner {
+    direction: rtl;
+    right: 0;
+    left: auto;
 }

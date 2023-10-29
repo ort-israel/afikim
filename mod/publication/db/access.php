@@ -50,7 +50,7 @@ $capabilities = [
         ],
 
         'mod/publication:upload' => [
-                'captype' => 'read',
+                'captype' => 'write',
                 'contextlevel' => CONTEXT_MODULE,
                 'archetypes' => [
                         'student' => CAP_ALLOW,
@@ -61,7 +61,7 @@ $capabilities = [
         ],
 
         'mod/publication:approve' => [
-                'captype' => 'read',
+                'captype' => 'write',
                 'contextlevel' => CONTEXT_MODULE,
                 'archetypes' => [
                         'teacher' => CAP_ALLOW,
@@ -78,5 +78,15 @@ $capabilities = [
                         'editingteacher' => CAP_ALLOW,
                         'manager' => CAP_ALLOW
                 ]
+        ],
+
+        'mod/publication:receiveteachernotification' => [
+            'captype' => 'read',
+            'contextlevel' => CONTEXT_MODULE,
+            'archetypes' => [
+                'teacher' => CAP_ALLOW,
+                'editingteacher' => CAP_ALLOW,
+                'manager' => CAP_ALLOW
+            ]
         ],
 ];

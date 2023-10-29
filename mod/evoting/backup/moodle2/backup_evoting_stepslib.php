@@ -46,7 +46,7 @@ class backup_evoting_activity_structure_step extends backup_activity_structure_s
         $questions = new backup_nested_element('questions');
 
         $question = new backup_nested_element('question', array('id'), array(
-            'evotingid', 'evotinggraphicid', 'number', 'name', 'activ'));
+            'evotingid', 'evotinggraphicid', 'number', 'name', 'activ', 'multipleanswers'));
 			
         $options = new backup_nested_element('options');
 

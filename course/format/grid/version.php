@@ -17,8 +17,7 @@
 /**
  * Grid Format - A topics based format that uses a grid of user selectable images to popup a light box of the section.
  *
- * @package    course/format
- * @subpackage grid
+ * @package    format_grid
  * @version    See the value of '$plugin->version' in below.
  * @copyright  &copy; 2012 G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://about.me/gjbarnard} and
@@ -30,16 +29,17 @@
 defined('MOODLE_INTERNAL') || die();
 
 // Plugin version.
-$plugin->version = 2018052300;
+$plugin->version = 2020070705;
 
 // Required Moodle version.
-$plugin->requires  = 2018051700.00; // 3.5 (Build: 20180517).
+$plugin->requires  = 2020061500.00; // 3.9 (Build: 20200615).
+$plugin->supported = array(39, 39);
 
 // Full name of the plugin.
 $plugin->component = 'format_grid';
 
 // Software maturity level.
-$plugin->maturity = MATURITY_BETA;
+$plugin->maturity = MATURITY_STABLE;
 
 // User-friendly version number.
-$plugin->release = '3.5.0.1';
+$plugin->release = '3.9.1.4';

@@ -17,8 +17,7 @@
 /**
  * Grid Information
  *
- * @package    course/format
- * @subpackage Grid
+ * @package    format_grid
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2012 G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://about.me/gjbarnard} and
@@ -42,12 +41,11 @@ class restore_format_grid_plugin extends restore_format_plugin {
      * Checks if backup file was made on Moodle before 3.3 and we should respect the 'numsections'
      * and potential "orphaned" sections in the end of the course.
      *
-     * @return bool
+     * @return bool Need to restore numsections.
      */
     protected function need_restore_numsections() {
-        $backupinfo = $this->step->get_task()->get_info();
-        $backuprelease = $backupinfo->backup_release;
-        return version_compare($backuprelease, '3.3', 'lt');
+        $data = $this->connectionpoint->get_data();
+        return (isset($data['tags']['numsections']));
     }
 
     /**
@@ -139,19 +137,16 @@ class restore_format_grid_plugin extends restore_format_plugin {
      * section 1 which was id 129 but now 162 as the debug code told me.  '94' is just the context id.  The url was originally
      * created in '_make_block_icon_topics' of lib.php of the format.
      * Still need courseid in the 'format_grid_icon' table as it is used in discovering what records to remove when deleting a
-     * course, see lib.php 'format_grid_delete_course'.
+     * course.
      */
     public function process_gridsection($data) {
         global $DB;
 
         $data = (object) $data;
 
-        /* We only process this information if the course we are restoring to
-           has 'grid' format (target format can change depending of restore options). */
-        $format = $DB->get_field('course', 'format', array('id' => $this->task->get_courseid()));
-        if ($format != 'grid') {
-            return;
-        }
+        /* Allow this to process even if not in the grid format so that our event observer on 'course_restored'
+           can perform a clean up of restored grid image files after all the data is in place in the database
+           for this to happen properly. */
 
         $data->courseid = $this->task->get_courseid();
         $data->sectionid = $this->task->get_sectionid();
@@ -193,19 +188,28 @@ class restore_format_grid_plugin extends restore_format_plugin {
      * This method is only executed if course configuration was overridden
      */
     public function after_restore_course() {
-        if (!$this->need_restore_numsections()) {
-            // Backup file was made in Moodle 3.3 or later, we don't need to process 'numsecitons'.
-            return;
-        }
-
-        $data = $this->connectionpoint->get_data();
         $backupinfo = $this->step->get_task()->get_info();
-        if ($backupinfo->original_course_format !== 'grid' || !isset($data['tags']['numsections'])) {
-            // Backup from another course format or backup file does not even have 'numsections'.
+        if ($backupinfo->original_course_format !== 'grid') {
+            // Backup from another course format.
             return;
         }
 
         global $DB;
+        if (!$this->need_restore_numsections()) {
+            /* Backup file does not contain 'numsections' so we need to set it from
+               the number of sections we can determine the course has.  The 'default'
+               might be wrong, so there could be an entry in the db already with this
+               wrong value. */
+            $courseid = $this->task->get_courseid();
+            $courseformat = course_get_format($courseid);
+
+            $maxsection = $DB->get_field_sql('SELECT max(section) FROM {course_sections} WHERE course = ?', [$courseid]);
+
+            $courseformat->restore_numsections($maxsection);
+            return;
+        }
+
+        $data = $this->connectionpoint->get_data();
         $numsections = (int)$data['tags']['numsections'];
         foreach ($backupinfo->sections as $key => $section) {
             /* For each section from the backup file check if it was restored and if was "orphaned" in the original

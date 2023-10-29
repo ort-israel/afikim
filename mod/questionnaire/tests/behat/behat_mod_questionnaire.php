@@ -19,7 +19,7 @@
  *
  * @package    mod_questionnaire
  * @category   test
- * @copyright  2016 Mike Churchward - The POET Group
+ * @copyright  2016 Mike Churchward - Poet Open Source
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -38,7 +38,7 @@ use Behat\Behat\Context\Step\Given as Given,
  *
  * @package    mod_questionnaire
  * @category   test
- * @copyright  2016 Mike Churchward - The POET Group
+ * @copyright  2016 Mike Churchward - Poet Open Source
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class behat_mod_questionnaire extends behat_base {
@@ -78,6 +78,18 @@ class behat_mod_questionnaire extends behat_base {
             // first is an identifier and the second is the value.
             foreach ($rows as $key => $row) {
                 if ($row[0] == 'Possible answers') {
+                    $row[1] = str_replace(',', "\n", $row[1]);
+                    $rows[$key] = $row;
+                    break;
+                }
+            }
+            $fielddata = new TableNode($rows);
+        }
+        if (isset($hashrows['Named degrees'])) {
+            // Find the row that contained multiline data and add line breaks. Rows are two item arrays where the
+            // first is an identifier and the second is the value.
+            foreach ($rows as $key => $row) {
+                if ($row[0] == 'Named degrees') {
                     $row[1] = str_replace(',', "\n", $row[1]);
                     $rows[$key] = $row;
                     break;

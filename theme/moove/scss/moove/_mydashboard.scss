@@ -24,7 +24,7 @@
     }
 
     .small-box {
-        border-radius: 2px;
+        border-radius: $card-border-radius;
         position: relative;
         display: block;
         margin-bottom: 20px;
@@ -57,5 +57,34 @@
         z-index: 0;
         font-size: 48px;
         color: rgba(0, 0, 0, 0.15);
+    }
+
+    .progress-chart-container .no-progress {
+        background-color: $brand-primary;
+
+        .fa {
+            color: #fff;
+            font-size: 42px;
+            padding: 14px 8px;
+        }
+    }
+
+    #region-main-box #region-main {
+        .card:not([class*="dashboard-card"]) {
+            border-top: solid 2px $brand-primary;
+        }
+
+        .card.mymaincontent {
+            border: none;
+            background-color: initial;
+
+            > .card-body {
+                padding: 0;
+            }
+        }
+
+        .block .block-cards .progress {
+            margin-left: 0;
+        }
     }
 }

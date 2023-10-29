@@ -18,9 +18,9 @@
  * Version details
  *
  * @package    theme_adaptable
- * @copyright  2015-2016 Jeremy Hopkins (Coventry University)
- * @copyright  2015-2016 Fernando Acedo (3-bits.com)
- * @copyright  2017-2018 Manoj Solanki (Coventry University)
+ * @copyright  2015-2019 Jeremy Hopkins (Coventry University)
+ * @copyright  2015-2019 Fernando Acedo (3-bits.com)
+ * @copyright  2017-2019 Manoj Solanki (Coventry University)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -37,6 +37,13 @@ global $PAGE;
 // page use $frontlayoutregions to avoid losing existing regions that
 // are renamed.
 
+// The plugin internal name.
+$THEME->name = 'adaptable';
+
+// Print sheet.
+$THEME->sheets = array('print');
+
+// The frontpage regions.
 $frontlayoutregions = array('side-post',
         'middle',
         'frnt-footer',
@@ -61,8 +68,14 @@ $frontlayoutregions = array('side-post',
         'frnt-market-s',
         'frnt-market-t',
         'news-slider-a',
-        'course-section-a');
+        'course-tab-one-a',
+        'course-tab-two-a',
+        'my-tab-one-a',
+        'my-tab-two-a',
+        'course-section-a'
+);
 
+// The course page regions.
 $courselayoutregions = array('side-post',
         'middle',
         'frnt-footer',
@@ -71,16 +84,20 @@ $courselayoutregions = array('side-post',
         'course-top-c',
         'course-top-d',
         'news-slider-a',
+        'course-tab-one-a',
+        'course-tab-two-a',
+        'my-tab-one-a',
+        'my-tab-two-a',
         'course-bottom-a',
         'course-bottom-b',
         'course-bottom-c',
         'course-bottom-d',
-        'course-section-a');
+        'course-section-a'
+);
 
 $standardregions = array('side-post');
-
-
 $regions = $standardregions;
+
 if ( (is_object($PAGE)) && ($PAGE->pagelayout) ) {
     switch ($PAGE->pagelayout) {
         case "frontpage":
@@ -95,39 +112,60 @@ if ( (is_object($PAGE)) && ($PAGE->pagelayout) ) {
     }
 }
 
-$THEME->name = 'adaptable';
+// The theme HTML DOCTYPE.
 $THEME->doctype = 'html5';
-$THEME->parents = array('bootstrapbase');
-$THEME->sheets = array( 'adaptable',
-                        'blocks',
-                        'button',
-                        'course',
-                        'extras',
-                        'menu',
-                        'responsive',
-                        'custom');
+
+// Theme parent.
+$THEME->parents = ['boost'];
+
+// Styles.
+$THEME->sheets = array(
+        'adaptable',
+        'backup-restore',
+        'blocks',
+        'bootstrap',
+        'button',
+        'cardblocks',
+        'core',
+        'course',
+        'extras',
+        'form',
+        'header',
+        'login',
+        'menu',
+        'messages',
+        'navigation',
+        'notifications',
+        'responsive',
+        'search',
+        'tabs',
+        'user',
+        'print',
+        'categorycustom',
+        'browser',
+        'custom'
+);
 
 $THEME->supportscssoptimisation = false;
 $THEME->yuicssmodules = array();
-
 $THEME->editor_sheets = array();
 
-$usedashboard = false;
-if ($CFG->version >= 2016052300) {
-    $usedashboard = true;
-}
-
-if (floatval($CFG->version) >= 2013111803.02) {
-    $THEME->enable_dock = true;
-}
-
 $THEME->plugins_exclude_sheets = array(
-    'block' => array(
-        'html',
-    )
+        'block' => array(
+                'html',
+        )
 );
 
+// Dashboard regions.
+$usedashboard = true;
+
+// Disabling block docking.
+$THEME->enable_dock = false;
+
+// Call the renderer.
 $THEME->rendererfactory = 'theme_overridden_renderer_factory';
+
+// Load the theme layouts.
 $THEME->layouts = array(
     // Most backwards compatible layout without the blocks - this is the layout used by default.
     'base' => array(
@@ -162,20 +200,19 @@ $THEME->layouts = array(
     'frontpage' => array(
         'file' => 'frontpage.php',
         'regions' => $regions,
-        'defaultregion' => 'side-post',
-        'options' => array('nonavbar' => true),
+        'defaultregion' => 'side-post'
     ),
     // Server administration scripts.
     'admin' => array(
         'file' => 'columns2.php',
         'regions' => array('side-post'),
-        'defaultregion' => 'side-post',
-        'options' => array('nonavbar' => false),
+        'defaultregion' => 'side-post'
+
     ),
     // My dashboard page.
     'mydashboard' => array(
-        'file' => ( ($usedashboard == true) ? 'dashboard.php' : 'columns2.php'),
-        'regions' => ( ($usedashboard == true) ? $regions : array('side-post')),
+        'file' => 'dashboard.php',
+        'regions' => $regions,
         'defaultregion' => 'side-post',
         'options' => array('langmenu' => true),
     ),
@@ -187,7 +224,7 @@ $THEME->layouts = array(
     ),
     // Login page.
     'login' => array(
-        'file' => 'columns1.php',
+        'file' => 'login.php',
         'regions' => array(),
         'options' => array('langmenu' => true, 'nonavbar' => true),
     ),
@@ -242,8 +279,10 @@ $THEME->layouts = array(
     ),
 );
 
-$THEME->csspostprocess = 'theme_adaptable_process_css';
+// Select the opposite sidebar when switch to RTL.
 $THEME->blockrtlmanipulations = array(
     'side-pre' => 'side-post',
     'side-post' => 'side-pre'
 );
+
+$THEME->csspostprocess = 'theme_adaptable_process_css';

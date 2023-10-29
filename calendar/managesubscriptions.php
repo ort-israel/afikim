@@ -33,6 +33,7 @@ $categoryid = optional_param('category', null, PARAM_INT);
 // Used for processing subscription actions.
 $subscriptionid = optional_param('id', 0, PARAM_INT);
 $pollinterval  = optional_param('pollinterval', 0, PARAM_INT);
+$groupcourseid  = optional_param('groupcourseid', 0, PARAM_INT);
 $action = optional_param('action', '', PARAM_INT);
 
 $url = new moodle_url('/calendar/managesubscriptions.php');
@@ -61,7 +62,22 @@ if (!calendar_user_can_add_event($course)) {
     print_error('errorcannotimport', 'calendar');
 }
 
-$form = new \core_calendar\local\event\forms\managesubscriptions(null, ['courseid' => $course->id]);
+// Populate the 'group' select box based on the given 'groupcourseid', if necessary.
+$groups = [];
+if (!empty($groupcourseid)) {
+    require_once($CFG->libdir . '/grouplib.php');
+    $groupcoursedata = groups_get_course_data($groupcourseid);
+    if (!empty($groupcoursedata->groups)) {
+        foreach ($groupcoursedata->groups as $groupid => $groupdata) {
+            $groups[$groupid] = $groupdata->name;
+        }
+    }
+}
+$customdata = [
+    'courseid' => $course->id,
+    'groups' => $groups,
+];
+$form = new \core_calendar\local\event\forms\managesubscriptions(null, $customdata);
 $form->set_data(array(
     'course' => $course->id
 ));
@@ -111,8 +127,13 @@ $searches = [];
 $params = [];
 
 $usedefaultfilters = true;
-if (!empty($courseid) && $courseid == SITEID && !empty($types['site'])) {
+
+if (!empty($types['site'])) {
     $searches[] = "(eventtype = 'site')";
+    $usedefaultfilters = false;
+}
+
+if (!empty($types['user'])) {
     $searches[] = "(eventtype = 'user' AND userid = :userid)";
     $params['userid'] = $USER->id;
     $usedefaultfilters = false;
@@ -124,9 +145,14 @@ if (!empty($courseid) && !empty($types['course'])) {
     $usedefaultfilters = false;
 }
 
-if (!empty($categoryid) && !empty($types['category'])) {
-    $searches[] = "(eventtype = 'category' AND categoryid = :categoryid)";
-    $params += ['categoryid' => $categoryid];
+if (!empty($types['category'])) {
+    if (!empty($categoryid)) {
+        $searches[] = "(eventtype = 'category' AND categoryid = :categoryid)";
+        $params += ['categoryid' => $categoryid];
+    } else {
+        $searches[] = "(eventtype = 'category')";
+    }
+
     $usedefaultfilters = false;
 }
 
@@ -154,7 +180,7 @@ if ($usedefaultfilters) {
 
     if (!empty($types['category'])) {
         list($categoryinsql, $categoryparams) = $DB->get_in_or_equal(
-                array_keys(\coursecat::make_categories_list('moodle/category:manage')), SQL_PARAMS_NAMED, 'category');
+                array_keys(\core_course_category::make_categories_list('moodle/category:manage')), SQL_PARAMS_NAMED, 'category');
         $searches[] = "(eventtype = 'category' AND categoryid {$categoryinsql})";
         $params += $categoryparams;
     }

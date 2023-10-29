@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This is built using the bootstrapbase template to allow for new theme's using Moodle's new Bootstrap theme engine
+ * This is built using the bootstrap template to allow for new theme's using Moodle's new Bootstrap theme engine
  *
  * @package     theme_adaptable
  * @copyright   2013 Julian Ridden
@@ -46,11 +46,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugins = array(
-    'bootstrap' => array('files' => array('bootstrap-min.js')),
-    'flexslider' => array('files' => array('jquery-flexslider-min.js')),
+    'adaptable' => array('files' => array('adaptable_v2_1_1_2.js')),
     'easing' => array('files' => array('jquery-easing-min.js')),
-    'ticker' => array('files' => array('tickerme.js')),
-    'dropdown' => array('files' => array('dropdown.js')),
-    'adaptable' => array('files' => array('adaptable.js')),
-    'pace' => array('files' => array('pace-min.js'))
+    'flexslider' => array('files' => array('jquery-flexslider-min.js')),
+    'pace' => array('files' => array('pace-min.js')),
+    'ticker' => array('files' => array('tickerme.js'))
 );

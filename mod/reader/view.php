@@ -32,12 +32,14 @@ require_once($CFG->dirroot.'/mod/reader/locallib.php');
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 require_once($CFG->dirroot.'/question/editlib.php');
 
+// get main mReader setting
+$mreadersiteid = get_config('mod_reader', 'mreadersiteid');
+
 $id        = optional_param('id', 0, PARAM_INT); // course module id
 $r         = optional_param('r',  0, PARAM_INT); // reader id
 $v         = optional_param('v', NULL, PARAM_CLEAN);
 $publisher = optional_param('publisher', NULL, PARAM_CLEAN);
 $level     = optional_param('level', NULL, PARAM_CLEAN);
-$series    = optional_param('series', NULL, PARAM_CLEAN);
 $likebook  = optional_param('likebook', NULL, PARAM_CLEAN);
 
 if ($id) {
@@ -425,17 +427,81 @@ if ($reader->readonly) {
     $showform = false;
 } else {
     // get previously unfinished attempts by this user at quizzes in this Reader
-    $params = array('readerid' => $cm->instance, 'userid' => $USER->id, 'timefinish' => 0);
-    if ($attempts = $DB->get_records('reader_attempts', $params, 'timestart DESC')) {
+
+    //$params = array('readerid' => $cm->instance, 'userid' => $USER->id, 'timefinish' => 0);
+    //if ($attempts = $DB->get_records('reader_attempts', $params, 'timestart DESC')) {
+    //    foreach ($attempts as $attempt) {
+    //        $timefinish = ($attempt->timestart + $reader->timelimit);
+    //        if ($timefinish < $timenow) {
+    //            $attempt->timemodified = $timenow;
+    //            $attempt->timefinish   = $timefinish;
+    //            $attempt->passed       = 0; // timed out
+    //            $DB->update_record('reader_attempts', $attempt);
+    //            unset($attempts[$attempt->id]);
+    //        }
+    //    }
+    //    $attempt = end($attempts); // most recent unfinished attempt
+    //} else {
+    //    $attempt = false; // i.e. there are no unfinished attempts
+    //}
+
+    $select = 'readerid = ? AND userid = ? AND deleted = ? AND '.
+              '(timefinish = ? OR state IS NULL OR state = ? OR state = ?)';
+    $params = array($cm->instance, $USER->id, 0, 0, '', 'inprogress');
+    if ($attempts = $DB->get_records_select('reader_attempts', $select, $params, 'timestart DESC')) {
         foreach ($attempts as $attempt) {
-            $timefinish = ($attempt->timestart + $reader->timelimit);
-            if ($timefinish < $timenow) {
-                $attempt->timemodified = $timenow;
-                $attempt->timefinish   = $timefinish;
-                $attempt->passed       = 0; // timed out
+
+            if (empty($attempt->state)) {
+                $state = 'inprogress';
+            } else {
+                $state = $attempt->state;
+            } 
+            if (empty($attempt->timefinish)) {
+                $timefinish = 0;
+            } else {
+                $timefinish = $attempt->timefinish;
+            }
+
+            $deadline = ($attempt->timestart + $reader->timelimit);
+
+            if ($state == 'inprogress') {
+                if ($deadline < $timenow) {
+                    $timefinish = $deadline;
+                    $state = 'abandoned';
+                } else {                
+                    $timefinish = 0;
+                }
+            } else {
+                if ($timefinish == 0) {
+                    $timefinish = min($deadline, $timenow);
+                }
+            }
+
+            $update = false;
+            if ($state != $attempt->state) {
+                $update = true;
+                $attempt->state = $state;
+            }
+            if ($timefinish != $attempt->timefinish) {
+                $update = true;
+                $attempt->timefinish = $timefinish;
+            }
+            if ($update) {
+                $attempt->timemodified = $timenow; 
                 $DB->update_record('reader_attempts', $attempt);
+            }
+            if ($state == 'inprogress') {
+                $attempts[$attempt->id] = $attempt;
+            } else {
                 unset($attempts[$attempt->id]);
             }
+        }
+        while (count($attempts) > 1) {
+            $attempt = array_pop($attempts);
+            $attempt->state = 'abandoned';
+            $attempt->timefinished = $timenow;
+            $attempt->timemodified = $timenow;
+            $DB->update_record('reader_attempts', $attempt);
         }
         $attempt = end($attempts); // most recent unfinished attempt
     } else {
@@ -446,8 +512,10 @@ if ($reader->readonly) {
     $msg = '';
     if ($attempt) {
         $title = get_string('quizattemptinprogress', $plugin);
-        $name = $DB->get_field('reader_books', 'name', array('quizid' => $attempt->quizid));
-        if (empty($SESSION->reader_lastattemptpage)) {
+        $name = $DB->get_field('reader_books', 'name', array('id' => $attempt->bookid));
+        if ($mreadersiteid) {
+            $msg = $reader->mreader_attempt_url($attempt->id);
+        } else if (empty($SESSION->reader_lastattemptpage)) {
             $params = array('attempt' => $attempt->id, 'page' => 1);
             $msg = new moodle_url('/mod/reader/quiz/attempt.php', $params, 'q0');
         } else {
@@ -458,11 +526,9 @@ if ($reader->readonly) {
         $msg = html_writer::tag('ul', $msg);
         $msg = get_string('completequizattempt', $plugin, $name).$msg;
     } else if ($delay = $reader->get_delay()) {
-        if ($timenow < ($lastattemptdate + $delay)) {
-            $title = get_string('delayineffect', $plugin);
-            $msg = userdate($lastattemptdate + $delay);
-            $msg = get_string('youcantakeaquizafter', $plugin, $msg);
-        }
+        $title = get_string('delayineffect', $plugin);
+        $msg = userdate($timenow + $delay);
+        $msg = get_string('youcantakeaquizafter', $plugin, $msg);
     }
 
     if ($msg) {

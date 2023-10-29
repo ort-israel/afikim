@@ -49,16 +49,16 @@ $surl = new moodle_url('/course/search.php');
 
 $footerlogo = !empty(theme_eguru_get_setting('footerblklogo')) ? 1 : 0;
 
-$footnote = !empty(theme_eguru_get_setting('footnote')) ? theme_eguru_get_setting('footnote', 'format_text') : '';
+$footnote = !empty(theme_eguru_get_setting('footnote')) ? theme_eguru_get_setting('footnote', 'format_html') : '';
 $footnote = theme_eguru_lang($footnote);
 
-$footerbtitle2 = !empty(theme_eguru_get_setting('footerbtitle2')) ? theme_eguru_get_setting('footerbtitle2', 'format_text') : '';
+$footerbtitle2 = !empty(theme_eguru_get_setting('footerbtitle2')) ? theme_eguru_get_setting('footerbtitle2', 'format_html') : '';
 $footerbtitle2 = theme_eguru_lang($footerbtitle2);
 
-$footerbtitle3 = !empty(theme_eguru_get_setting('footerbtitle3')) ? theme_eguru_get_setting('footerbtitle3', 'format_text') : '';
+$footerbtitle3 = !empty(theme_eguru_get_setting('footerbtitle3')) ? theme_eguru_get_setting('footerbtitle3', 'format_html') : '';
 $footerbtitle3 = theme_eguru_lang($footerbtitle3);
 
-$footerbtitle4 = !empty(theme_eguru_get_setting('footerbtitle4')) ? theme_eguru_get_setting('footerbtitle4', 'format_text') : '';
+$footerbtitle4 = !empty(theme_eguru_get_setting('footerbtitle4')) ? theme_eguru_get_setting('footerbtitle4', 'format_html') : '';
 $footerbtitle4 = theme_eguru_lang($footerbtitle4);
 
 $footerlinks = theme_eguru_generate_links('footerblink2');
@@ -91,7 +91,7 @@ $phoneno  = theme_eguru_get_setting('phoneno');
 $mail = get_string('footeremail', 'theme_eguru');
 $phone = get_string('phone', 'theme_eguru');
 
-$copyright = theme_eguru_get_setting('copyright');
+$copyright = theme_eguru_get_setting('copyright', 'format_html');
 
 $block1 = ($footerlogo != '' || $footnote != '') ? 1 : 0;
 $block2 = ($footerbtitle2 != '' || $footerlinks != '') ? 1 : 0;
@@ -119,6 +119,14 @@ switch ($blockarrange) {
     default:
         $colclass = 'col-md-3';
     break;
+}
+
+$custom = $OUTPUT->custom_menu();
+
+if ($custom == '') {
+    $class = "navbar-toggler navbar-toggler-right d-lg-none nocontent-navbar";
+} else {
+    $class = "navbar-toggler navbar-toggler-right d-lg-none";
 }
 
 $templatecontext = [
@@ -164,7 +172,8 @@ $templatecontext = [
     'block3' => $block3,
     'block4' => $block4,
     'colclass' => $colclass,
-    'blockarrange' => $blockarrange
+    'blockarrange' => $blockarrange,
+    "customclass" => $class
 ];
 
 $templatecontext['flatnavigation'] = $PAGE->flatnav;

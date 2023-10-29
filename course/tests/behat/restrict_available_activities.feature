@@ -14,6 +14,9 @@ Feature: Restrict activities availability
     And the following "course enrolments" exist:
       | user | course | role |
       | teacher1 | C1 | editingteacher |
+    And the following "activities" exist:
+      | activity | course | name           |
+      | chat     | C1     | Test chat name |
 
   @javascript
   Scenario: Activities can be added with the default permissions
@@ -22,9 +25,6 @@ Feature: Restrict activities availability
     When I add a "Glossary" to section "1" and I fill the form with:
       | Name | Test glossary name |
       | Description | Test glossary description |
-    And I add a "Chat" to section "1" and I fill the form with:
-      | Name of this chat room | Test chat name |
-      | Description | Test chat description |
     Then I should see "Test glossary name"
     And I should see "Test chat name"
 
@@ -39,5 +39,5 @@ Feature: Restrict activities availability
     And I log out
     And I log in as "teacher1"
     When I am on "Course 1" course homepage with editing mode on
-    Then the "Add an activity to section 'Topic 1'" select box should not contain "Chat"
+    Then the "Add a resource to section 'Topic 1'" select box should not contain "Chat"
     Then the "Add an activity to section 'Topic 1'" select box should not contain "Glossary"

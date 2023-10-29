@@ -188,8 +188,8 @@ class lightboxgallery_image {
         $this->delete_file(false);
         $fs = get_file_storage();
         $this->set_stored_file($fs->create_file_from_string($fileinfo, $flipped));
-
         $this->create_thumbnail();
+        return $fileinfo['filename'];
     }
 
     private function get_editing_options() {
@@ -280,7 +280,7 @@ class lightboxgallery_image {
         $flipped = imagecreatetruecolor($this->width, $this->height);
         $w = $this->width;
         $h = $this->height;
-        if ($direction == 'horizontal') {
+        if ($direction == 'vertical') {
             for ($x = 0; $x < $w; $x++) {
                 for ($y = 0; $y < $h; $y++) {
                     imagecopy($flipped, $image, $x, $h - $y - 1, $x, $y, 1, 1);
@@ -299,6 +299,7 @@ class lightboxgallery_image {
     }
 
     private function get_image_resized($height = THUMBNAIL_HEIGHT, $width = THUMBNAIL_WIDTH, $offsetx = 0, $offsety = 0) {
+        raise_memory_limit(MEMORY_EXTRA);
         $image = imagecreatefromstring($this->storedfile->get_content());
         $resized = imagecreatetruecolor($width, $height);
         imagealphablending($resized, false);
@@ -452,6 +453,10 @@ class lightboxgallery_image {
         } else {
             return $DB->insert_record('lightboxgallery_image_meta', $imagemeta);
         }
+    }
+
+    public function copy_content_to_temp() {
+        return $this->storedfile->copy_content_to_temp();
     }
 
     public function set_stored_file($storedfile) {

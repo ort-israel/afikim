@@ -115,6 +115,15 @@ $string['autograde'] = 'Actividad autopuntuable';
 $string['savechanges'] = 'Guardar los cambios';
 $string['discardchanges'] = 'Volver sin guardar';
 
+$string['privacy'] = 'Privacidad de los resultados';
+$string['privacy:metadata:geogebra_attempts'] = 'Informació sobre los intento/s realitzados para cada actividad geogebra';
+$string['privacy:metadata:geogebra_attempts:vars'] = 'Datos relacionados con el intento del usuario';
+$string['privacy:metadata:geogebra_attempts:gradecomment'] = 'El comentario de la nota del intento de la acrividad geogebra.';
+$string['privacy:metadata:geogebra_attempts:userid'] = 'El ID del usuario que ha realitzado el intento.';
+$string['privacy:metadata:geogebra_attempts:finished'] = 'El timestamp que indica la finalitzación del intento del usuario.';
+$string['privacy:metadata:geogebra_attempts:geogebra'] = 'El ID de la activividad geogebra';
+$string['privacy:metadata:geogebra_attempts:dateteacher'] = 'El timestamp que indica la finalitzación por parte del profesor';
+$string['privacy:metadata:geogebra_attempts:datestudent'] = 'El timestamp que indica la finalitzación por parte del estudiante';
 
 /* Revision Moodle 2 */
 $string['modulename_help'] = '<p><a href="http://www.geogebra.org" target="_blank">GeoGebra</a> es una aplicación de matemática dinamica, gratuita, libre y multiplataforma, enfocada a todos los niveles educativos, que engloba la geometría, el álgebra, la hoja de cálculo, la estadística, la probabilidad y el análisis, en un único paquete integrado, muy fácil de utilizar.</p>
@@ -145,7 +154,7 @@ $string['filetypelocal'] = 'Fichero subido';
 $string['invalidgeogebrafile'] = 'Se ha especificado un fichero GeoGebra no válido. El fichero debe tener la extensión ".ggb".';
 $string['invalidurl'] = 'Se ha especificado un URL no válido. El URL debe empezar con http(s) y enlazar a un fichero ".ggb" válido.';
 $string['geogebraurl'] = 'URL';
-$string['geogebraurl_help'] = 'Este parámetro habilita un URL para especificar la actividad GeoGebra en lugar de seleccionarlo a través del selector de archivos.';
+$string['geogebraurl_help'] = 'Localiza la construcción en <a href="https://www.geogebra.org/" target="_blank">geogebra.org</a>, ve a <strong>Detalles</strong>, haz clic con el botón derecho del ratón en <strong>Descargar</strong> y selecciona <strong>Copiar la dirección del enlace</strong>. Finalmente, sitúate en el campo URL y pega el enlace con <strong>Ctrl+V</strong>.<br/>Para un ejemplo paso a paso de esta operación ver: <a href="https://youtu.be/qbp-RuM4NpU" target="_blank">https://youtu.be/qbp-RuM4NpU</a>.';
 $string['geogebrafile'] = 'Fichero GeoGebra';
 $string['geogebrafile_help'] = 'El fichero ".ggb" que contiene la actividad GeoGebra.';
 $string['urledit'] = 'Fichero GeoGebra';

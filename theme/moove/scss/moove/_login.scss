@@ -53,6 +53,14 @@
 
                 .input-group-addon {
                     width: 40px;
+                    line-height: 30px;
+                    padding: 4px 10px;
+                    margin-bottom: 0;
+                    font-size: 1rem;
+                    text-align: center;
+                    background-color: #eceeef;
+                    border: 1px solid rgba(0,0,0,.15);
+                    border-right: 0;
                 }
                 .input-group-username .input-group-addon {
                     border-bottom-left-radius: 0;
@@ -141,10 +149,18 @@
         #page {
             margin-top: 0;
             padding-top: 50px;
+            padding-bottom: 50px;
         }
     }
 }
 
 .potentialidplist .potentialidp {
     margin-bottom: 5px;
+}
+
+#page-login-signup,
+#page-login-index.moove-login {
+    .plugins_standard_footer_html {
+        display: none;
+    }
 }

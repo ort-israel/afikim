@@ -716,9 +716,7 @@ class auth_plugin_mnet extends auth_plugin_base {
 
         foreach($superArray as $subArray) {
             $subArray = array_values($subArray);
-            $instring = "('".implode("', '",$subArray)."')";
-            $query = "select id, session_id, username from {mnet_session} where username in $instring";
-            $results = $DB->get_records_sql($query);
+            $results = $DB->get_records_list('mnet_session', 'username', $subArray, '', 'id, session_id, username');
 
             if ($results == false) {
                 // We seem to have a username that breaks our query:
@@ -735,25 +733,6 @@ class auth_plugin_mnet extends auth_plugin_base {
 
         if (empty($returnString)) return array('code' => 0, 'message' => 'All ok', 'last log id' => $remoteclient->last_log_id);
         return array('code' => 1, 'message' => $returnString, 'last log id' => $remoteclient->last_log_id);
-    }
-
-    /**
-     * Cron function will be called automatically by cron.php every 5 minutes
-     *
-     * @return void
-     */
-    function cron() {
-        global $DB;
-
-        // run the keepalive client
-        $this->keepalive_client();
-
-        $random100 = rand(0,100);
-        if ($random100 < 10) {     // Approximately 10% of the time.
-            // nuke olden sessions
-            $longtime = time() - (1 * 3600 * 24);
-            $DB->delete_records_select('mnet_session', "expires < ?", array($longtime));
-        }
     }
 
     /**

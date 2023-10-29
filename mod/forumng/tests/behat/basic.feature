@@ -36,7 +36,7 @@ Feature: Add forumng activity and test basic functionality
     And I follow "Test forum name"
     Then I should see "Discussion 1" in the ".forumng-subject" "css_element"
     And "//td[1]//img" "xpath_element" should not exist in the "Discussion 1" "table_row"
-    And I should see "1" in the "//table[contains(@class,'forumng-discussionlist')]/tbody/tr[1]//td[3]" "xpath_element"
+    And I should see "1" in the "//table[contains(@class,'forumng-discussionlist')]/tbody/tr[1]//td[4]" "xpath_element"
     Given I add a discussion with the following data:
       | Subject | Discussion 2 |
       | Message | abcdefg |
@@ -95,6 +95,8 @@ Feature: Add forumng activity and test basic functionality
     And ".forumng-p2 a.forumng-next" "css_element" should exist
     And ".forumng-p2 a.forumng-prev" "css_element" should exist
     And ".forumng-p3 a.forumng-next" "css_element" should not exist
+    And ".forumng-p2 .forumng-jumpto .forumng-parent .accesshide" "css_element" should exist
+    And ".forumng-p3 .forumng-jumpto .forumng-parent .accesshide" "css_element" should exist
     Given I reply to post "3" with the following data:
       | Message | REPLY3 |
     Then I should see "REPLY3"
@@ -214,7 +216,7 @@ Feature: Add forumng activity and test basic functionality
     And ".forumng-p2 .forumng-flagpost img" "css_element" should exist
     # Reply3 post
     And ".forumng-p4 .forumng-flagpost img" "css_element" should exist
-    And the "title" attribute of ".forumng-p1 .forumng-flagpost a" "css_element" should contain "Flag this post for future reference"
+    And the "title" attribute of ".forumng-p1 .forumng-flagpost a" "css_element" should contain "Star this post for future reference"
 
     # Click to flag Reply1
     And I click on ".forumng-p2 .forumng-flagpost a" "css_element"
@@ -224,11 +226,11 @@ Feature: Add forumng activity and test basic functionality
     And I expand post "4"
     And I click on ".forumng-p4 .forumng-flagpost a" "css_element"
     And ".forumng-p4 .forumng-flagpost img" "css_element" should exist
-    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Remove flag"
+    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Remove star"
 
     # Check flagged posts display ok on main forum page
     And I follow "Test forum name"
-    And "3 flagged posts" "link" should exist
+    And "Skip to starred posts" "link" should exist
     And ".forumng-flagged-link" "css_element" should exist
     And ".forumng-flagged" "css_element" should exist
     And "REPLY3" "link" should exist
@@ -243,15 +245,15 @@ Feature: Add forumng activity and test basic functionality
 
     # Return to discussion page
     And I follow "Discussion 1"
-    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Remove flag"
+    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Remove star"
     # Click to un-flag Reply1
     And I click on ".forumng-p2 .forumng-flagpost a" "css_element"
     And I expand post "2"
-    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Flag this post for future reference"
+    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Star this post for future reference"
 
     # Check numbner of flagged posts display on main forum page
     And I follow "Test forum name"
-    And "1 flagged posts" "link" should exist
+    And "Skip to starred posts" "link" should exist
     And ".forumng-flagged-link" "css_element" should exist
     And ".forumng-flagged" "css_element" should exist
     And "REPLY2" "link" should exist
@@ -281,7 +283,7 @@ Feature: Add forumng activity and test basic functionality
     And ".forumng-p1 .forumng-flagpost a img" "css_element" should exist
     # Reply3 post
     And ".forumng-p4 .forumng-flagpost a img" "css_element" should exist
-    And the "title" attribute of ".forumng-p4 .forumng-flagpost a" "css_element" should contain "Flag this post for future reference"
+    And the "title" attribute of ".forumng-p4 .forumng-flagpost a" "css_element" should contain "Star this post for future reference"
 
     # Click to flag Reply1.
     And I click on ".forumng-p2 .forumng-flagpost a" "css_element"
@@ -291,11 +293,11 @@ Feature: Add forumng activity and test basic functionality
     And I wait "1" seconds
     # Click to flag Reply3.
     And I click on ".forumng-p4 .forumng-flagpost a" "css_element"
-    And the "title" attribute of ".forumng-p4 .forumng-flagpost a" "css_element" should contain "Remove flag"
+    And the "title" attribute of ".forumng-p4 .forumng-flagpost a" "css_element" should contain "Remove star"
 
     # Check flagged posts display ok on main forum page
     And I follow "Test forum name"
-    And "3 flagged posts" "link" should exist
+    And "Skip to starred posts" "link" should exist
     And ".forumng-flagged-link" "css_element" should exist
     And ".forumng-flagged" "css_element" should exist
     And "REPLY3" "link" should exist
@@ -312,13 +314,13 @@ Feature: Add forumng activity and test basic functionality
     # Return to discussion page
     And I follow "Discussion 1 abc"
     # Click to un-flag Reply1
-    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Remove flag"
+    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Remove star"
     And I click on ".forumng-p2 .forumng-flagpost img" "css_element"
-    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Flag this post for future reference"
+    And the "title" attribute of ".forumng-p2 .forumng-flagpost a" "css_element" should contain "Star this post for future reference"
 
     # Check number of flagged posts display on main forum page.
     And I follow "Test forum name"
-    And "1 flagged posts" "link" should exist
+    And "Skip to starred posts" "link" should exist
     And ".forumng-flagged-link" "css_element" should exist
     And ".forumng-flagged" "css_element" should exist
     And "REPLY3" "link" should not exist
@@ -345,6 +347,7 @@ Feature: Add forumng activity and test basic functionality
     And "Unsubscribe from discussion" "button" should exist
     Given I follow "Test forum name"
     Then I should see "You receive messages from some discussions in"
+    And "Unsubscribe from discussions" "button" should exist
     And I should see "Your email preferences ("
     Given I press "Subscribe to whole forum"
     Then I should see "You receive messages from this forum via email to"
@@ -408,7 +411,7 @@ Feature: Add forumng activity and test basic functionality
       | Message | abc |
     And I reply to post "1" with the following data:
       | Message | REPLY1 |
-    And I click on "Reply" "link"
+    And I click on "Reply" "link" in the ".forumng-p2" "css_element"
     Then ".forumng-p2 .forumng-delete a.forumng-disabled" "css_element" should exist
     Then ".forumng-p2 .forumng-edit a.forumng-disabled" "css_element" should exist
     Then ".forumng-p2 .forumng-replylink a.forumng-disabled" "css_element" should exist
@@ -429,3 +432,126 @@ Feature: Add forumng activity and test basic functionality
     When I edit post "1" with the following data:
       | Subject | Discussion edited |
     And I should see "Discussion edited" in the ".forumng-subject" "css_element"
+
+  @javascript
+  Scenario: Check date validation
+    Given I log in as "admin"
+    And I am on "Course 1" course homepage
+    And I follow "Test forum name"
+    And I navigate to "Edit settings" in current page administration
+    And I click on "#id_postinguntil_enabled" "css_element"
+    And I click on "#id_postingfrom_enabled" "css_element"
+    And I set the field "id_postinguntil_year" to "2011"
+    And I set the field "id_enableratings" to "1"
+    And I set the field "id_ratingthreshold" to "1"
+    And I click on "#id_ratinguntil_enabled" "css_element"
+    And I click on "#id_ratingfrom_enabled" "css_element"
+    And I set the field "id_ratinguntil_year" to "2011"
+    When I press "Save and display"
+    Then I should see "Selection end date cannot be earlier than the start date"
+
+  @javascript
+  Scenario: Show notice message when user can post as anon.
+    Given I log in as "admin"
+    And I am on "Course 1" course homepage
+    And I follow "Test forum name"
+    And I navigate to "Edit settings" in current page administration
+    And I set the field "id_canpostanon" to "2"
+    And I set the field "id_enableratings" to "1"
+    And I set the field "id_ratingthreshold" to "1"
+    When I press "Save and display"
+    Then I should see "Posts to this forum will be identity protected - individuals' names will not be displayed."
+    And I add a discussion with the following data:
+      | Subject | Discussion original |
+      | Message | abc                 |
+    Then I should not see "Posts to this forum will be identity protected - individuals' names will not be displayed."
+    And I log out
+    Given I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Test forum name"
+    Then I should see "Posts to this forum will be identity protected - individuals' names will not be displayed."
+    And I follow "Discussion original"
+    Then I should not see "Posts to this forum will be identity protected - individuals' names will not be displayed."
+    And I log out
+    Given I log in as "admin"
+    And I am on "Course 1" course homepage
+    And I follow "Test forum name"
+    And I navigate to "Edit settings" in current page administration
+    And I set the field "id_canpostanon" to "1"
+    When I press "Save and display"
+    Then I should not see "Posts to this forum will be identity protected - individuals' names will not be displayed."
+    And I log out
+    Given I log in as "student1"
+    And I am on "Course 1" course homepage
+    And I follow "Test forum name"
+    Then I should not see "Posts to this forum will be identity protected - individuals' names will not be displayed."
+
+  Scenario: Scheduled post should display future date after edited
+    Given I log in as "admin"
+    And I am on "Course 1" course homepage
+    And I follow "Test forum name"
+    And I add a discussion with the following data:
+      | Subject            | Discussion 1 original |
+      | Message            | abc                   |
+      | timestart[enabled] | 1                     |
+      | timestart[day]     | 13                    |
+      | timestart[month]   | 11                    |
+      | timestart[year]    | 2030                  |
+    And I edit post "1" with the following data:
+      | Subject | Discussion 1 edited |
+    And I should see "Discussion 1 edited" in the ".forumng-subject" "css_element"
+    And I should see "13 November 2030" in the ".forumng-pic-info" "css_element"
+    And I follow "Test forum name"
+    And I should see "13/11/30" in the ".forumng-lastpost" "css_element"
+
+  Scenario: Check atom and rss links displayed as expected
+    Given the following config values are set as admin:
+      | enablerssfeeds   | 1 |
+      | forumng_feedtype | 2 |
+      | forumng_enablerssfeeds | 1 |
+    Given I log in as "admin"
+    And I am on "Course 1" course homepage
+    When I follow "Test forum name"
+    Then "Atom" "link" should exist
+    And "RSS" "link" should exist
+    When I add a discussion with the following data:
+      | Subject            | Discussion 1 |
+      | Message            | abc          |
+    Then "Atom" "link" should exist
+    And "RSS" "link" should exist
+    Given the following "permission overrides" exist:
+      | capability           | permission | role    | contextlevel | reference |
+      | mod/forumng:showatom | Prevent    | student | System       |           |
+    And I log out
+    Given I log in as "student1"
+    And I am on "Course 1" course homepage
+    When I follow "Test forum name"
+    Then "Atom" "link" should not exist
+    And "RSS" "link" should exist
+    When I follow "Discussion 1"
+    Then "Atom" "link" should not exist
+    And "RSS" "link" should exist
+    Given the following "permission overrides" exist:
+      | capability           | permission | role    | contextlevel | reference |
+      | mod/forumng:showrss  | Prevent    | student | System       |           |
+      | mod/forumng:showatom | Allow      | student | System       |           |
+    And I am on "Course 1" course homepage
+    When I follow "Test forum name"
+    Then "Atom" "link" should exist
+    And "RSS" "link" should not exist
+    When I follow "Discussion 1"
+    Then "Atom" "link" should exist
+    And "RSS" "link" should not exist
+    Given the following "permission overrides" exist:
+      | capability           | permission | role    | contextlevel | reference |
+      | mod/forumng:showrss  | Prevent    | student | System       |           |
+      | mod/forumng:showatom | Prevent    | student | System       |           |
+    And I am on "Course 1" course homepage
+    When I follow "Test forum name"
+    Then "Atom" "link" should not exist
+    And "RSS" "link" should not exist
+    And ".forumng-feedlinks" "css_element" should not exist
+    When I follow "Discussion 1"
+    Then "Atom" "link" should not exist
+    And "RSS" "link" should not exist
+    And ".forumng-feedlinks" "css_element" should not exist

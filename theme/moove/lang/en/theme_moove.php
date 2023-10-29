@@ -41,14 +41,19 @@ $string['stayintouch'] = 'Stay in touch';
 $string['madewitmoodle'] = 'Proudly made with';
 $string['madeby'] = 'Made with';
 $string['by'] = 'by';
-$string['discipline_progress'] = 'Discipline\'s progress';
+$string['discipline_progress'] = 'Topic\'s progress';
 $string['access'] = 'Access';
-$string['cachedef_admininfos'] = 'Site administrator dashboard infos';
+$string['cachedef_admininfos'] = 'Site administrator dashboard infos cache definition';
+$string['cachedef_fontawesomemooveiconmapping'] = 'Theme icon font definition';
 $string['diskusage'] = 'Disk usage(moodledata)';
+$string['notcalculatedyet'] = 'Not calculated yet';
+$string['calculatediskusagetask'] = 'Task to calculate the disk usage';
 $string['totalusers'] = 'Active / Suspended users';
 $string['totalcourses'] = 'Total courses';
 $string['onlineusers'] = 'Online users(last 5 minutes)';
 $string['showhideblocks'] = 'Show/hide blocks';
+$string['prev_activity'] = 'Previous activity';
+$string['next_activity'] = 'Next activity';
 
 // General settings tab.
 $string['generalsettings'] = 'General';
@@ -59,13 +64,17 @@ $string['favicondesc'] = 'Upload your own favicon.  It should be an .ico file.';
 $string['preset'] = 'Theme preset';
 $string['preset_desc'] = 'Pick a preset to broadly change the look of the theme.';
 $string['presetfiles'] = 'Additional theme preset files';
-$string['presetfiles_desc'] = 'Preset files can be used to dramatically alter the appearance of the theme. See <a href=https://docs.moodle.org/dev/Boost_Presets>Boost presets</a> for information on creating and sharing your own preset files, and see the <a href=http://moodle.net/boost>Presets repository</a> for presets that others have shared.';
+$string['presetfiles_desc'] = 'Preset files can be used to dramatically alter the appearance of the theme. See <a href="https://docs.moodle.org/dev/Boost_Presets">Boost presets</a> for information on creating and sharing your own preset files.';
 $string['loginbgimg'] = 'Login page background';
 $string['loginbgimg_desc'] = 'Upload your custom background image for the login page.';
 $string['brandcolor'] = 'Brand colour';
 $string['brandcolor_desc'] = 'The accent colour.';
 $string['navbarheadercolor'] = 'Navbar header color';
 $string['navbarheadercolor_desc'] = 'The top navbar header color';
+$string['navbarbg'] = 'Navbar color';
+$string['navbarbg_desc'] = 'The left navbar color';
+$string['navbarbghover'] = 'Navbar hover color';
+$string['navbarbghover_desc'] = 'The left navbar hover color';
 $string['coursepresentation'] = 'Course presentation';
 $string['coursepresentationdesc'] = '<b>Default presentation:</b> The default course appearence.<br><b>Cover image:</b> Will be showed a cover image on the top of the course page(the first image in course summary files will be used).';
 $string['coursedefault'] = 'Default presentation';
@@ -84,6 +93,8 @@ $string['googleanalyticsdesc'] = 'Please enter your Google Analytics code to ena
 
 // Frontpage settings tab.
 $string['frontpagesettings'] = 'Frontpage';
+$string['disablefrontpageloginbox'] = 'Disable frontpage login box';
+$string['disablefrontpageloginboxdesc'] = 'If you check it, the frontpage login box will be hidden and a link to the login page will be printed in the header bar.';
 $string['headerimg'] = 'Header image';
 $string['headerimgdesc'] = 'Upload your custom header-image here if you want to add it to the header.mage works best if (Image size should be 1500px x 700px)';
 $string['bannerheading'] = 'Banner Heading';
@@ -132,6 +143,8 @@ $string['marketing4content'] = 'Marketing4 Content';
 $string['marketing4contentdesc'] = 'Enter Marketing4 Content Text';
 $string['marketing4url'] = 'Marketing4 URL';
 $string['marketing4urldesc'] = 'Enter Marketing4 URL';
+$string['disableteacherspic'] = 'Disable teachers picture';
+$string['disableteacherspicdesc'] = 'This setting hides the teachers\' pictures from the course cards.';
 
 $string['sliderenabled'] = 'Enable slider';
 $string['sliderenableddesc'] = 'Enable a slider at the top of your home page';
@@ -198,18 +211,16 @@ $string['facebook'] = 'Facebook URL';
 $string['facebookdesc'] = 'Enter the URL of your Facebook. (i.e http://www.facebook.com/moodlehq)';
 $string['twitter'] = 'Twitter URL';
 $string['twitterdesc'] = 'Enter the URL of your twitter. (i.e http://www.twitter.com/moodlehq)';
-$string['googleplus'] = 'Google Plus URL';
-$string['googleplusdesc'] = 'Enter the URL of your Google Plus. (i.e http://www.googleplus.com/moodlehq)';
 $string['linkedin'] = 'Linkedin URL';
 $string['linkedindesc'] = 'Enter the URL of your Linkedin. (i.e http://www.linkedin.com/moodlehq)';
 $string['youtube'] = 'Youtube URL';
 $string['youtubedesc'] = 'Enter the URL of your Youtube. (i.e https://www.youtube.com/user/moodlehq)';
 $string['instagram'] = 'Instagram URL';
 $string['instagramdesc'] = 'Enter the URL of your Instagram. (i.e https://www.instagram.com/moodlehq)';
+$string['whatsapp'] = 'Whatsapp number';
+$string['whatsappdesc'] = 'Enter your whatsapp number for contact.';
 $string['topfooterimg'] = 'Footer image';
 $string['topfooterimgdesc'] = 'Upload your custom footer image here if you want to replace the default image. Recommended size is 1500px x 400px or higher.';
-$string['disablebottomfooter'] = 'Disable bottom footer';
-$string['disablebottomfooterdesc'] = 'Disables the orange bottom footer';
 
 // Forum.
 $string['forumsettings'] = 'Forum';
@@ -220,3 +231,49 @@ $string['forumhtmlemailfooter'] = 'Email footer';
 $string['forumhtmlemailfooterdesc'] = 'Configure the email footer for the forum messages.';
 $string['forumcustomtemplate'] = 'Use a pretty template for forum mails';
 $string['forumcustomtemplatedesc'] = 'Enable that in order to use a pretty template when sending forum messages via email. If not enabled standard formatting of forum mails will be used.';
+
+$string['certificates'] = 'Certificates';
+$string['certificatestitle'] = 'My certificates';
+$string['subtitleallcertificates'] = 'Certificates from all courses';
+$string['subtitlecoursecertificates'] = 'Course certificates';
+$string['nohavecertificates'] = 'You have no certificates yet.';
+$string['coursesections'] = 'Course sections';
+
+// Mypublic page.
+$string['userprofile'] = 'User profile';
+$string['competencyplans'] = 'Competency plans';
+$string['details'] = 'Details';
+$string['startedon'] = 'Started on';
+$string['addcontact'] = 'Add contact';
+$string['removecontact'] = 'Remove contact';
+$string['certificates'] = 'Certificates';
+
+// Theme settings.
+$string['themesettingstitle'] = 'Accessibility settings';
+$string['themesettingsfonttype'] = 'Font type';
+$string['themesettingsdefaultfont'] = 'Default font';
+$string['themesettingsdyslexicfont'] = 'Dyslexic font';
+$string['themesettingsenableaccessibilitytoolbar'] = 'Enable accessibility toolbar';
+$string['themesettinggsavedsuccessfully'] = 'Accessibility settings saved successfully';
+
+// Accessibility features.
+$string['accessibilityfontsize'] = 'Font size';
+$string['accessibilitydecreasefont'] = 'Decrease font size';
+$string['accessibilityresetfont'] = 'Reset font size';
+$string['accessibilityincreasefont'] = 'Increase font size';
+$string['accessibilitysitecolor'] = 'Site color';
+$string['accessibilityresetsitecolor'] = 'Reset site color';
+$string['accessibilitysitecolor2'] = 'Low contrast 1';
+$string['accessibilitysitecolor3'] = 'Low contrast 2';
+$string['accessibilitysitecolor4'] = 'High contrast';
+
+// Data privacy.
+$string['privacy:metadata:preference:accessibilitystyles_fontsizeclass'] = 'The user\'s preference for font size.';
+$string['privacy:metadata:preference:accessibilitystyles_sitecolorclass'] = 'The user\'s preference for site color.';
+$string['privacy:metadata:preference:thememoovesettings_fonttype'] = 'The user\'s preference for font type.';
+$string['privacy:metadata:preference:thememoovesettings_enableaccessibilitytoolbar'] = 'The user\'s preference for enable the accessibility toolbar.';
+
+$string['privacy:accessibilitystyles_fontsizeclass'] = 'The current preference for the font size is: {$a}.';
+$string['privacy:accessibilitystyles_sitecolorclass'] = 'The current preference for the site color is: {$a}.';
+$string['privacy:thememoovesettings_fonttype'] = 'The current preference for the font type is: {$a}.';
+$string['privacy:thememoovesettings_enableaccessibilitytoolbar'] = 'The current preference for enable accessibility toolbar is to show it.';

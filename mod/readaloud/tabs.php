@@ -16,14 +16,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
-* Sets up the tabs at the top of the module view page　for teachers.
-*
-* This file was adapted from the mod/lesson/tabs.php
-*
+ * Sets up the tabs at the top of the module view page　for teachers.
+ *
+ * This file was adapted from the mod/lesson/tabs.php
+ *
  * @package mod_readaloud
  * @copyright  2014 Justin Hunt  {@link http://poodll.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or late
-*/
+ */
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -38,7 +38,7 @@ if (!isset($currenttab)) {
     $currenttab = '';
 }
 if (!isset($cm)) {
-    $cm = get_coursemodule_from_instance(constants::MOD_READALOUD_MODNAME, $moduleinstance->id);
+    $cm = get_coursemodule_from_instance(constants::M_MODNAME, $moduleinstance->id);
     $context = context_module::instance($cm->id);
 }
 if (!isset($course)) {
@@ -46,13 +46,30 @@ if (!isset($course)) {
 }
 
 $tabs = $row = $inactive = $activated = array();
+$config = get_config(constants::M_COMPONENT);
 
+$row[] = new tabobject('view', "$CFG->wwwroot/mod/readaloud/view.php?id=$cm->id", get_string('view', constants::M_COMPONENT),
+        get_string('preview', constants::M_COMPONENT, format_string($moduleinstance->name)));
 
-$row[] = new tabobject('view', "$CFG->wwwroot/mod/readaloud/view.php?id=$cm->id", get_string('view', constants::MOD_READALOUD_LANG), get_string('preview', constants::MOD_READALOUD_LANG, format_string($moduleinstance->name)));
-$row[] = new tabobject('grading', "$CFG->wwwroot/mod/readaloud/grading.php?id=$cm->id", get_string('grading', constants::MOD_READALOUD_LANG), get_string('viewgrading', constants::MOD_READALOUD_LANG));
-//$row[] = new tabobject('machinegrading', "$CFG->wwwroot/mod/readaloud/grading.php?id=$cm->id&action=machinegrading", get_string('machinegrading', constants::MOD_READALOUD_LANG), get_string('viewmachinegrading', constants::MOD_READALOUD_LANG));
-//$row[] = new tabobject('gradesadmin', "$CFG->wwwroot/mod/readaloud/gradesadmin.php?id=$cm->id", get_string('gradesadmin', constants::MOD_READALOUD_LANG), get_string('viewgradesadmin', constants::MOD_READALOUD_LANG));
-//$row[] = new tabobject('reports', "$CFG->wwwroot/mod/readaloud/reports.php?id=$cm->id", get_string('reports', constants::MOD_READALOUD_LANG), get_string('viewreports', constants::MOD_READALOUD_LANG));
+if (has_capability('mod/readaloud:viewreports', $context)) {
+    $row[] = new tabobject('grading', "$CFG->wwwroot/mod/readaloud/grading.php?id=$cm->id",
+            get_string('grading', constants::M_COMPONENT), get_string('viewgrading', constants::M_COMPONENT));
+    //$row[] = new tabobject('machinegrading', "$CFG->wwwroot/mod/readaloud/grading.php?id=$cm->id&action=machinegrading", get_string('machinegrading', constants::M_COMPONENT), get_string('viewmachinegrading', constants::M_COMPONENT));
+    $row[] = new tabobject('reports', "$CFG->wwwroot/mod/readaloud/reports.php?id=$cm->id", get_string('reports', constants::M_COMPONENT), get_string('viewreports', constants::M_COMPONENT));
+
+}
+
+if(has_capability('mod/readaloud:manage',$context) && $config->enablesetuptab) {
+    $row[] = new tabobject('setup', "$CFG->wwwroot/mod/readaloud/setup.php?id=$cm->id",
+            get_string('setup', constants::M_COMPONENT), get_string('setup', constants::M_COMPONENT));
+}
+
+if (has_capability('mod/readaloud:manage', $context)) {
+    $row[] = new tabobject('gradesadmin', "$CFG->wwwroot/mod/readaloud/gradesadmin.php?id=$cm->id",
+            get_string('gradesadmin', constants::M_COMPONENT), get_string('viewgradesadmin', constants::M_COMPONENT));
+    $row[] = new tabobject('modelaudio', "$CFG->wwwroot/mod/readaloud/modelaudio.php?id=$cm->id", get_string('modelaudio', constants::M_COMPONENT), get_string('modelaudio', constants::M_COMPONENT));
+}
+
 $tabs[] = $row;
 
 print_tabs($tabs, $currenttab, $inactive, $activated);

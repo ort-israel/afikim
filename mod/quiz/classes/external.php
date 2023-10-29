@@ -105,8 +105,9 @@ class mod_quiz_external extends external_api {
 
                 if (has_capability('mod/quiz:view', $context)) {
                     // Format intro.
-                    list($quizdetails['intro'], $quizdetails['introformat']) = external_format_text($quiz->intro,
-                                                                    $quiz->introformat, $context->id, 'mod_quiz', 'intro', null);
+                    $options = array('noclean' => true);
+                    list($quizdetails['intro'], $quizdetails['introformat']) =
+                        external_format_text($quiz->intro, $quiz->introformat, $context->id, 'mod_quiz', 'intro', null, $options);
 
                     $quizdetails['introfiles'] = external_util::get_area_files($context->id, 'mod_quiz', 'intro', false, false);
                     $viewablefields = array('timeopen', 'timeclose', 'grademethod', 'section', 'visible', 'groupmode',
@@ -412,10 +413,21 @@ class mod_quiz_external extends external_api {
             require_capability('mod/quiz:viewreports', $context);
         }
 
+        // Update quiz with override information.
+        $quiz = quiz_update_effective_access($quiz, $params['userid']);
         $attempts = quiz_get_user_attempts($quiz->id, $user->id, $params['status'], $params['includepreviews']);
-
+        $attemptresponse = [];
+        foreach ($attempts as $attempt) {
+            $reviewoptions = quiz_get_review_options($quiz, $attempt, $context);
+            if (!has_capability('mod/quiz:viewreports', $context) &&
+                    ($reviewoptions->marks < question_display_options::MARK_AND_MAX || $attempt->state != quiz_attempt::FINISHED)) {
+                // Blank the mark if the teacher does not allow it.
+                $attempt->sumgrades = null;
+            }
+            $attemptresponse[] = $attempt;
+        }
         $result = array();
-        $result['attempts'] = $attempts;
+        $result['attempts'] = $attemptresponse;
         $result['warnings'] = $warnings;
         return $result;
     }
@@ -520,7 +532,23 @@ class mod_quiz_external extends external_api {
         }
 
         $result = array();
-        $grade = quiz_get_best_grade($quiz, $user->id);
+
+        // This code was mostly copied from mod/quiz/view.php. We need to make the web service logic consistent.
+        // Get this user's attempts.
+        $attempts = quiz_get_user_attempts($quiz->id, $user->id, 'all');
+        $canviewgrade = false;
+        if ($attempts) {
+            if ($USER->id != $user->id) {
+                // No need to check the permission here. We did it at by require_capability('mod/quiz:viewreports', $context).
+                $canviewgrade = true;
+            } else {
+                // Work out which columns we need, taking account what data is available in each attempt.
+                [$notused, $alloptions] = quiz_get_combined_reviewoptions($quiz, $attempts);
+                $canviewgrade = $alloptions->marks >= question_display_options::MARK_AND_MAX;
+            }
+        }
+
+        $grade = $canviewgrade ? quiz_get_best_grade($quiz, $user->id) : null;
 
         if ($grade === null) {
             $result['hasgrade'] = false;
@@ -942,8 +970,9 @@ class mod_quiz_external extends external_api {
             if ($displayoptions->marks >= question_display_options::MARK_AND_MAX) {
                 $question['mark'] = $attemptobj->get_question_mark($slot);
             }
-
-            $questions[] = $question;
+            if ($attemptobj->check_page_access($attemptobj->get_question_page($slot), false)) {
+                $questions[] = $question;
+            }
         }
         return $questions;
     }
@@ -1240,8 +1269,11 @@ class mod_quiz_external extends external_api {
         );
         $params = self::validate_parameters(self::process_attempt_parameters(), $params);
 
-        // Do not check access manager rules.
-        list($attemptobj, $messages) = self::validate_attempt($params, false);
+        // Do not check access manager rules and evaluate fail if overdue.
+        $attemptobj = quiz_attempt::create($params['attemptid']);
+        $failifoverdue = !($attemptobj->get_quizobj()->get_quiz()->overduehandling == 'graceperiod');
+
+        list($attemptobj, $messages) = self::validate_attempt($params, false, $failifoverdue);
 
         // Create the $_POST object required by the question engine.
         $_POST = array();
@@ -1296,7 +1328,8 @@ class mod_quiz_external extends external_api {
             if (!$attemptobj->is_finished()) {
                 throw new moodle_quiz_exception($attemptobj->get_quizobj(), 'attemptclosed');
             } else if (!$displayoptions->attempt) {
-                throw new moodle_exception($attemptobj->cannot_review_message());
+                throw new moodle_quiz_exception($attemptobj->get_quizobj(), 'noreview', null, '',
+                    $attemptobj->cannot_review_message());
             }
         } else if (!$attemptobj->is_review_allowed()) {
             throw new moodle_quiz_exception($attemptobj->get_quizobj(), 'noreviewattempt');

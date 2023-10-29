@@ -1042,8 +1042,11 @@ class mod_workshop_external extends external_api {
             return null;
         }
 
-        // Remove the feedback for the reviewer if the feedback phase is not valid or if we don't have enough permissions to see it.
-        if ($workshop->phase < workshop::PHASE_EVALUATION || !($isreviewer || $canviewallassessments)) {
+        // Remove the feedback for the reviewer if:
+        // I can't see it in the evaluation phase because I'm not a teacher or the reviewer AND
+        // I can't see it in the assessment phase because I'm not a teacher.
+        if (($workshop->phase < workshop::PHASE_EVALUATION || !($isreviewer || $canviewallassessments)) &&
+                ($workshop->phase < workshop::PHASE_ASSESSMENT || !$canviewallassessments) ) {
             // Remove all the feedback information (all the optional fields).
             foreach ($properties as $attribute => $settings) {
                 if (!empty($settings['optional'])) {
@@ -1268,10 +1271,7 @@ class mod_workshop_external extends external_api {
             if (!empty($formdata[$typeofdata])) {
                 $alldata = (array) $formdata[$typeofdata];
                 foreach ($alldata as $key => $val) {
-                    if (strpos($key, 'peercomment__idx_') === 0) {
-                        // Format reviewer comment.
-                        list($val, $format) = external_format_text($val, FORMAT_MOODLE, $context->id);
-                    } else if (strpos($key, 'description__idx_')) {
+                    if (strpos($key, 'description__idx_')) {
                         // Format dimension description.
                         $id = str_replace('description__idx_', '', $key);
                         list($val, $format) = external_format_text($val, $alldata['dimensionid__idx_' . $id . 'format'],

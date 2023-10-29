@@ -174,6 +174,13 @@ class mod_forumng {
     // Constants for web services.
     const IPUD_SHORTEN_LENGTH = 160;
 
+    /** Post as normal.*/
+    const CANPOSTAON_NORMAL = 0;
+    /** Allow moderators to post anonymously. */
+    const CANPOSTANON_MODERATOR  = 1;
+    /** Non-moderators always post anonymously */
+    const CANPOSTATON_NONMODERATOR = 2;
+
     // Static methods
     /*///////////////*/
 
@@ -269,6 +276,20 @@ class mod_forumng {
             self::GRADING_MAX => get_string('grading_max', 'forumng'),
             self::GRADING_MIN => get_string('grading_min', 'forumng'),
             self::GRADING_SUM => get_string('grading_sum', 'forumng'));
+    }
+
+    /**
+     * Options for select box canpostanon
+     *
+     * @return array
+     * @throws coding_exception
+     */
+    public static function get_canpostanon_options() {
+        return [
+                self::CANPOSTAON_NORMAL => get_string('canpostanon_normal',  'forumng'),
+                self::CANPOSTANON_MODERATOR => get_string('canpostanon_moderator',  'forumng'),
+                self::CANPOSTATON_NONMODERATOR => get_string('canpostanon_nonmoderator',  'forumng'),
+        ];
     }
 
     /** @return bool True if read-tracking is enabled */
@@ -398,22 +419,11 @@ class mod_forumng {
     }
 
     /**
-     * Creates a Search the rest of this website link using resources search.
+     * Can anonymous posts
      *
-     * @param int $courseid Unique identifier of a course.
-     * @param string $querytext Text to be searched for.
+     * 0: Normal 1: Moderator 2: Non moderator
+     * @return int Anonymous posts
      */
-    public static function create_resources_search_course_link($courseid, $querytext) {
-        $params = ['course' => $courseid, 'query' => $querytext];
-        $restofwebsiteurl = new moodle_url('/blocks/resources_search/search.php', $params);
-        $strrestofwebsite = get_string('restofwebsite', 'local_ousearch');
-        $altlink = html_writer::start_tag('div');
-        $altlink .= html_writer::link($restofwebsiteurl, $strrestofwebsite);
-        $altlink .= html_writer::end_tag('div');
-        echo $altlink;
-    }
-
-    /** @return bool True if anonymous moderator posts enabled */
     public function get_can_post_anon() {
         return $this->forumfields->canpostanon;
     }
@@ -1243,6 +1253,7 @@ WHERE
      *   is just the forum id again)
      */
     public function log($action, $replaceinfo = '') {
+        global $DB;
         $info = $this->forumfields->id;
         if ($replaceinfo !== '') {
             $info = $replaceinfo;
@@ -1263,6 +1274,9 @@ WHERE
                 $params['relateduserid'] = substr($info, 0, strpos($info, ' '));
                 unset($params['objectid']);// Unset forum id as event for subscriptions table.
                 break;
+            case 'read forum':
+                $classname = 'forum_read';
+                break;
             default:
                 $classname = 'course_module_viewed';
                 break;
@@ -1271,7 +1285,13 @@ WHERE
         $event = $class::create($params);
         $event->add_record_snapshot('course_modules', $this->get_course_module());
         $event->add_record_snapshot('course', $this->get_course());
-        $event->add_record_snapshot('forumng', $this->forumfields);
+        $columns = $DB->get_columns('forumng');
+        $missingfields = array_diff(array_keys($columns), array_keys((array)$this->forumfields));
+        if (empty($missingfields)) {
+            // In some cases we only have some forum fields so only snapshot if all available.
+            $event->add_record_snapshot('forumng', $this->forumfields);
+        }
+
         $event->trigger();
     }
 
@@ -1655,6 +1675,8 @@ WHERE $conditions AND m.name = 'forumng' AND $restrictionsql",
         }
 
         $transaction->allow_commit();
+
+        $this->log('read forum');
     }
 
     // Subscriptions
@@ -2480,10 +2502,15 @@ WHERE
             // User must be logged in and able to access the activity. (This
             // call sets up the global course and checks various other access
             // restrictions that apply at course-module level, such as visibility.)
-            if (count((array)$course) == 1) {
-                require_login($course->id, $autologinasguest, $cm);
-            } else {
-                require_login($course, $autologinasguest, $cm);
+            if (!(defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
+                // Because WS_SERVER always = false in PHPUNIT_TEST ENVIRONMENT so this will causing exception error,
+                // We can't use the set_course function after theme has already been set up
+                // When we want to test the webservice in UNIT_TEST, we should disable the require_login.
+                if (count((array)$course) == 1) {
+                    require_login($course->id, $autologinasguest, $cm);
+                } else {
+                    require_login($course, $autologinasguest, $cm);
+                }
             }
         } else {
             // Since require_login is not being called, we need to set up $PAGE->context
@@ -3465,6 +3492,10 @@ ORDER BY
     public static function search_update_all($feedback=false, $courseid=0, $cmid=0,
             \core\progress\base $progress = null) {
         global $DB;
+        if (get_config('local_ousearch', 'ousearchindexingdisabled')) {
+            // Do nothing if the OU Search system is turned off.
+            return;
+        }
         raise_memory_limit(MEMORY_EXTRA);
         // If cmid is specified, only retrieve that one
         if ($cmid) {
@@ -3790,22 +3821,61 @@ WHERE
     }
 
     /**
+     * Display author name in text or html link.
+     *
+     * @param object $user User object
+     * @param int $asmoderator values are ASMODERATOR_IDENTIFY or ASMODERATOR_ANON
+     * @param bool $linkprofile true: with link to user profile
+     * @return string Display author for list flagged post.
+     * @throws coding_exception
+     */
+    public function display_author_name($user, $asmoderator, $linkprofile = true) {
+        global $USER;
+        $authorname = $linkprofile ? $this->display_user_link($user) : $this->display_user_name($user);
+        $moderator = get_string('moderator', 'forumng');
+
+        switch ($asmoderator) {
+            case self::ASMODERATOR_IDENTIFY:
+                $postby = $authorname . ' ' . $moderator;
+                break;
+            case self::ASMODERATOR_ANON:
+                $postby = $this->can_post_anonymously() ? $authorname . ' ' . $moderator : $moderator;
+                break;
+            default:
+                $postby = mod_forumng_utils::display_discussion_list_item_author_anonymously($this, $USER->id) ?
+                        get_string('identityprotected', 'forumng') : $authorname;
+                break;
+        }
+
+        return $postby;
+    }
+
+    /**
      * @param int $groupid Group ID
      * @return string HTML links for RSS/Atom feeds to this discussion (if
      *   enabled etc)
      */
     public function display_feed_links($groupid) {
         global $CFG;
+        $canseeatom = has_capability('mod/forumng:showatom', $this->get_context());
+        $canseerss = has_capability('mod/forumng:showrss', $this->get_context());
 
         // Check they're allowed to see it
-        if ($this->get_effective_feed_option() == self::FEEDTYPE_NONE) {
+        if ($this->get_effective_feed_option() == self::FEEDTYPE_NONE || (!$canseeatom && !$canseerss)) {
             return '';
+        }
+        $atom = '';
+        $rss = '';
+        if ($canseeatom) {
+            $atom = $this->get_feed_url(self::FEEDFORMAT_ATOM, $groupid);
+        }
+        if ($canseerss) {
+            $rss = $this->get_feed_url(self::FEEDFORMAT_RSS, $groupid);
         }
 
         // Icon (decoration only) and Atom link
         $out = mod_forumng_utils::get_renderer();
-        return $out->render_feed_links($this->get_feed_url(self::FEEDFORMAT_ATOM, $groupid),
-                $this->get_feed_url(self::FEEDFORMAT_RSS, $groupid));
+        return $out->render_feed_links($atom, $rss);
     }
 
     /**
@@ -3952,6 +4022,7 @@ WHERE
         $mainstrings = array(
             'rate' => null,
             'expand' => '#',
+            'collapse' => '#',
             'jserr_load' => null,
             'jserr_save' => null,
             'jserr_alter' => null,
@@ -3982,11 +4053,11 @@ WHERE
             'selectorselecteddisc' => null,
             'selectordiscall' => null,
             'selectdiscintro' => null,
-            'flagon' => null,
-            'flagoff' => null,
-            'clearflag' => null,
-            'setflag' => null,
-            'flagpost' => null);
+            'staron' => null,
+            'staroff' => null,
+            'clearstar' => null,
+            'setstar' => null,
+            'starpost' => null);
         if ($this->has_post_quota()) {
             $mainstrings['quotaleft_plural'] = (object)array(
                 'posts'=>'#', 'period' => $this->get_max_posts_period(true, true));
@@ -4082,6 +4153,8 @@ WHERE
 
     /**
      * Gets URL for an Atom/RSS feed.
+     * Returns empty string in the user does not have capability to see the specified feed type.
+     *
      * @param int $feedformat FEEDFORMAT_xx constant
      * @param int $groupid Group ID
      * @param int $userid User ID or 0 for current
@@ -5101,7 +5174,10 @@ WHERE
 
         $anonparams = array();
         $anonwhere = '';
-        if ($ignoreanon) {
+        if ($ignoreanon && $this->get_can_post_anon() == self::CANPOSTATON_NONMODERATOR) {
+            $anonwhere = 'AND fp.asmoderator = ?';
+            $anonparams[] = self::ASMODERATOR_IDENTIFY;
+        } else if ($ignoreanon) {
             $anonwhere = 'AND fp.asmoderator != ?';
             $anonparams[] = self::ASMODERATOR_ANON;
         }
@@ -5494,7 +5570,7 @@ ORDER BY
             }
 
             $rs = $DB->get_records_sql("
-                    SELECT t.*, count(t.id) AS count
+                    SELECT t.id, t.name, t.rawname, count(t.id) AS count
                       FROM {tag} t
                 INNER JOIN {tag_instance} ti ON t.id = ti.tagid
                 INNER JOIN {forumng_discussions} fd ON fd.id = ti.itemid
@@ -5721,6 +5797,31 @@ ORDER BY
         }
         // Try and find another userid.
         return self::get_group_taginstance_userid($groupid, $tagid, $nexttry);
+    }
+
+    /**
+     * Check to allow user search in moodleglobalsearch and mod_forumng/advancedsearch
+     *
+     * @param int $cmid
+     * @return bool true allow
+     * @throws coding_exception
+     */
+    public static function allow_user_search($cmid) {
+        global $USER;
+
+        if (!$cmid) {
+            return true;
+        }
+
+        $context = context_module::instance($cmid);
+        $forumng = self::get_from_cmid($context->instanceid, mod_forumng::CLONE_DIRECT);
+
+        if ($forumng->get_can_post_anon() == self::CANPOSTATON_NONMODERATOR &&
+                !$forumng->can_post_anonymously($USER->id)) {
+            return false;
+        }
+
+        return true;
     }
 
 }

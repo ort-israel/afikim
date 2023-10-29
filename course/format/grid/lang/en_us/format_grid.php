@@ -17,8 +17,7 @@
 /**
  * Grid Format - A topics based format that uses a grid of user selectable images to popup a light box of the section.
  *
- * @package    course/format
- * @subpackage grid
+ * @package    format_grid
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2013 G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://about.me/gjbarnard} and
@@ -77,10 +76,12 @@ $string['defaultsectiontitlealignment_desc'] = 'Set the section title alignment 
 
 // Reset.
 $string['resetgreyouthidden'] = 'Gray out unavailable';
-$string['resetgreyouthidden_desc'] = 'Resets the property \'Grid display show unavailable section images in gray and unlinked.\'';
-$string['resetgreyouthidden_help'] = 'Resets the property \'In Grid display show unavailable section images in gray and unlinked.\'';
+$string['resetgreyouthidden_help'] = 'Resets the property \'In Grid display show unavailable section images in gray and unlinked.\' to follow the site default value.';
+$string['resetallgreyouthidden'] = 'Gray out unavailables';
+$string['resetallgreyouthidden_help'] = 'Resets the property \'In Grid display show unavailable section images in gray and unlinked.\' to follow the site default value.';
 
 // Other.
 $string['greyouthidden'] = 'Gray out unavailable';
-$string['greyouthidden_desc'] = 'In Grid display show unavailable section images in gray and unlinked.';
 $string['greyouthidden_help'] = 'In Grid display show unavailable section images in gray and unlinked.';
+$string['defaultgreyouthidden'] = 'Gray out unavailable';
+$string['defaultgreyouthidden_desc'] = 'In Grid display show unavailable section images in gray and unlinked.';

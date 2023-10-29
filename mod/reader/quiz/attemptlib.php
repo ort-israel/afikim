@@ -110,14 +110,16 @@ class reader_quiz {
             $this->context = reader_get_context(CONTEXT_MODULE, $cm->id);
         }
 
-        $dbman = $DB->get_manager();
-        if ($dbman->table_exists('quiz_slots')) { // Moodle >= 2.7
-            if ($quiz->questions = $DB->get_records_menu('quiz_slots', array('quizid' => $quiz->id), 'page,slot', 'id,questionid')) {
-                $quiz->questions = array_values($quiz->questions);
-                $quiz->questions = array_filter($quiz->questions);
-                $quiz->questions = implode(',', $quiz->questions);
-            } else {
-                $quiz->questions = '';
+        if ($quiz->id > 0) {
+            $dbman = $DB->get_manager();
+            if ($dbman->table_exists('quiz_slots')) { // Moodle >= 2.7
+                if ($quiz->questions = $DB->get_records_menu('quiz_slots', array('quizid' => $quiz->id), 'page,slot', 'id,questionid')) {
+                    $quiz->questions = array_values($quiz->questions);
+                    $quiz->questions = array_filter($quiz->questions);
+                    $quiz->questions = implode(',', $quiz->questions);
+                } else {
+                    $quiz->questions = '';
+                }
             }
         }
 
@@ -142,9 +144,16 @@ class reader_quiz {
         $reader = $DB->get_record('reader', array('id' => $readerid), '*', MUST_EXIST);
         $course = $DB->get_record('course', array('id' => $reader->course), '*', MUST_EXIST);
         $cm = get_coursemodule_from_instance('reader', $reader->id, $course->id, false, MUST_EXIST);
-
         $book = $DB->get_record('reader_books', array('id' => $bookid), '*', MUST_EXIST);
-        $quiz = $DB->get_record('quiz', array('id' => $book->quizid),   '*', MUST_EXIST);
+
+        if ($book->quizid > 0) {
+            $quiz = $DB->get_record('quiz', array('id' => $book->quizid), '*', MUST_EXIST);
+        } else {
+            $quiz = (object)array(
+                'id' => $book->quizid,
+                'questions' => ''
+            );
+        }
 
         $quiz->timeopen           = $reader->availablefrom;
         $quiz->timeclose          = $reader->availableuntil;
@@ -285,7 +294,13 @@ class reader_quiz {
      * @return whether any questions have been added to this reader.
      */
     public function has_questions() {
-        return (empty($this->questionids) ? false : true);
+        if (get_config('mod_reader', 'mreadersiteid')) {
+            return true; // questions exist on mreader.org
+        }
+        if (empty($this->questionids)) {
+            return false; // shouldn't happen !!
+        }
+        return true; // questions exist on local Moodle site
     }
 
     /**
@@ -389,6 +404,18 @@ class reader_quiz {
 
     /**
      * @param int $attemptid the id of an attempt.
+     * @param int $page optional page number to go to in the attempt.
+     * @return string the URL of that attempt.
+     */
+    public function mreader_attempt_url($attemptid) {
+        $url = '/mod/reader/quiz/mreader.php';
+        $params = array('id' => $this->get_cmid(),
+                        'attempt' => $attemptid);
+        return new moodle_url($url, $params);
+    }
+
+    /**
+     * @param int $attemptid the id of an attempt.
      * @return string the URL of the review of that attempt.
      */
     public function review_url($attemptid) {
@@ -441,7 +468,7 @@ class reader_attempt {
     protected $questionpages;
 
     // Fields set later if that data is needed.
-    public $pagelayout; // array page no => array of numbers on the page in order.
+    public $pagelayout; // array (page number => array(question numbers on page))
     public $reviewoptions = null;
 
     /**
@@ -459,6 +486,10 @@ class reader_attempt {
 
         $this->readerquiz = reader_quiz::create($reader->id, $attempt->userid, $attempt->bookid);
         $this->quba = question_engine::load_questions_usage_by_activity($this->attempt->uniqueid);
+
+        if (get_config('mod_reader', 'mreadersiteid')) {
+            return;
+        }
 
         $dbman = $DB->get_manager();
         if ($dbman->table_exists('quiz_slots') && $dbman->table_exists('quiz_sections')) {
@@ -1363,15 +1394,16 @@ class reader_attempt {
     public function finish_attempt($timestamp) {
         global $DB, $USER;
 
-        $this->quba->process_all_actions($timestamp);
-        $this->quba->finish_all_questions($timestamp);
-
-        question_engine::save_questions_usage_by_activity($this->quba);
-
         $this->attempt->timemodified = $timestamp;
         $this->attempt->timefinish   = $timestamp;
-        $this->attempt->sumgrades    = $this->quba->get_total_mark();
-        $this->attempt->percentgrade = round($this->quba->get_total_mark() / $this->readerquiz->quiz->sumgrades * 100);
+
+        if ($this->attempt->layout) {
+            $this->quba->process_all_actions($timestamp);
+            $this->quba->finish_all_questions($timestamp);
+            question_engine::save_questions_usage_by_activity($this->quba);
+            $this->attempt->sumgrades = $this->quba->get_total_mark();
+            $this->attempt->percentgrade = round($this->quba->get_total_mark() / $this->readerquiz->quiz->sumgrades * 100);
+        }
 
         if ($this->attempt->percentgrade >= $this->readerquiz->reader->minpassgrade) {
             $this->attempt->passed = 1;
@@ -1383,7 +1415,7 @@ class reader_attempt {
         $this->attempt->credit = 0;
         $this->attempt->cheated = 0;
         $this->attempt->deleted = 0;
-        $this->attempt->state   = 'finished';
+        $this->attempt->state = 'finished';
 
         $logaction = 'finish attempt: '.substr($this->readerquiz->book->name, 0, 26); // 40 char limit
         $loginfo   = 'readerID '.$this->get_readerid().'; reader quiz '.$this->get_quizid().'; '.$this->attempt->percentgrade.'%/'.$passedlog;
@@ -1425,21 +1457,21 @@ class reader_attempt {
      */
     public function page_and_question_url($script, $slot, $page, $showall, $thispage) {
         // Fix up $page
-        if ($page == -1) {
-            if (! is_null($slot) && ! $showall) {
-                $page = $this->quba->get_question($slot)->_page;
-            } else {
-                $page = 0;
-            }
-        }
 
         if ($showall) {
             $page = 0;
+        } else if ($page == -1) {
+            if (is_null($slot)) {
+                $page = 0;
+            } else {
+                $page = $this->quba->get_question($slot)->_page;
+            }
         }
 
         // Add a fragment to scroll down to the question.
-        $fragment = '';
-        if (! is_null($slot)) {
+        if (is_null($slot) || is_null($this->pagelayout)) {
+            $fragment = '';
+        } else {
             if ($slot == reset($this->pagelayout[$page])) {
                 // First question on page, go to top.
                 $fragment = '#';
@@ -2025,6 +2057,11 @@ class mod_reader_display_options extends question_display_options {
      */
     public static function make_from_reader($quiz, $when, $mark) {
         $options = new self();
+
+        if ($quiz->id < 0) {
+            $options->marks = $mark;
+            return $options;
+        }
 
         $options->attempt = self::extract($quiz->reviewattempt, $when, true, false);
         $options->correctness = self::extract($quiz->reviewcorrectness, $when);

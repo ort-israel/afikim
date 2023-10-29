@@ -27,7 +27,8 @@ require_once ("lib.php");
 require_once ("locallib.php");
 
 $PAGE->requires->jquery();
-$PAGE->requires->js('/mod/evoting/js/google-jsapi.js');
+//$PAGE->requires->js('/mod/evoting/js/google-jsapi.js');
+$PAGE->requires->js('/mod/evoting/js/googlechart.js');
 
 // Get URL QRCODE (client poll)
 $path = dirname($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
@@ -117,7 +118,7 @@ if(!has_capability('mod/evoting:openevoting', $context_course)){
         echo html_writer::start_tag('div',
                 array('id' => 'QrCodeBig', 'style' => 'width: 100%; display: none;text-align: center; padding:25px;'));
         $tagsevoting = html_writer::start_tag('h4', array('id' => 'inigma')) . get_string('scan', 'evoting');
-        $tagsevoting .= html_writer::start_tag('span', array('style' => 'font-weight:bold;')) . 'i-nigma';
+        $tagsevoting .= html_writer::start_tag('span', array('style' => 'font-weight:bold;')) . ' i-nigma';
         $tagsevoting .= html_writer::end_tag('span');
         $tagsevoting .= html_writer::end_tag('h4');
         echo $tagsevoting;
@@ -257,10 +258,10 @@ if(!has_capability('mod/evoting:openevoting', $context_course)){
 	$divCountDown = html_writer::start_div('div', array('id' => 'divCountDown',  'class' => 'pie degree'));
 	$divCountDown .= html_writer::empty_tag('span', array('class'=>'block_time'));
 	$divCountDown .= html_writer::empty_tag('span', array('id'=>'time'));
-	$divCountDown .= html_writer::end_div();
 	$divCountDown .= html_writer::start_div('div', array('id' => 'divCountText'));
 	$divCountDown .= html_writer::end_div();
-	
+	$divCountDown .= html_writer::end_div();
+
 	// Init option list
 	$divOptionList = html_writer::start_tag('div', array('id' => 'divOptions'));
 	$divOptionList .= $divOptionListContext;
@@ -269,7 +270,9 @@ if(!has_capability('mod/evoting:openevoting', $context_course)){
 	$divOptionList .= html_writer::end_tag('div');
 	
 	// Container Chart and countdown div
-	$divContainerChartCountDown = html_writer::start_div('div', array('id' => 'divContainerChartCountDown', "style" => "height:450px ; position:relative")); 
+	$divContainerChartCountDown = html_writer::start_div('div', array('id' => 'divEndText'));
+	$divContainerChartCountDown .= html_writer::end_div();
+	$divContainerChartCountDown .= html_writer::start_div('div', array('id' => 'divContainerChartCountDown', "style" => "height:450px ; position:relative")); 
 	$divContainerChartCountDown .= $divCountDown;
 	$divContainerChartCountDown .= $divChart;
 	$divContainerChartCountDown .= $divOptionList;

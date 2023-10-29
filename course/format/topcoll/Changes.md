@@ -1,5 +1,132 @@
 ﻿Version Information
 ===================
+Version 3.9.1.5 - 02/07/2021
+----------------------------
+  1. Fix 'PHP Notice:  Trying to access array offset on value of type null' when accessing a single section page on PHP 7.4.
+  2. Reset language improvements in line with global default tracking as implemented in 3.10.0.2.
+  3. Improved backup restore with numsections.
+  4. Added 'Toggle blocks location' functionality, thanks to John Joubert (https://github.com/John-Joubert) for the patch - #100.
+  5. Fix 'Section content is in a column when using horizontal columns on a single section page'.
+  6. Fix 'Column orientation combo box strings'.
+  7. Improve activity meta from information gained on #101.
+  8. No longer need 'config.php' because of #100.
+  9. New 'Accessible back to main course link' - #66.
+
+Version 3.9.1.4 - 07/03/2021
+----------------------------
+  1. Fix intended setting values are changed.
+
+Version 3.9.1.3 - 04/03/2021
+----------------------------
+  1. Improve colour picker to show the initial value in the current / preview colour boxes.
+  2. Port of Adaptable fix 'Activity meta information not showing when student first accesses page' - https://moodle.org/mod/forum/discuss.php?d=417731.
+  3. Fix completion progress tooltip not working - https://moodle.org/mod/forum/discuss.php?d=419034.
+
+Version 3.9.1.2 - 02/02/2021
+----------------------------
+  1. Fix 'course settings do not override defaults' - ref: https://moodle.org/mod/forum/discuss.php?d=417589.
+  2. Fix 'Undefined property: stdClass::$groupmember in moodle/course/format/topcoll/classes/activity.php on line 650' - #93.
+
+Version 3.9.1.1 - 23/01/2021
+----------------------------
+  1. Make engagement information optional - #80 and #91 - thanks to Nina Herrmann (https://github.com/NinaHerrmann) for the enhancement.
+  2. All course settings now have an option to track the value of the global default as set by the administrator.  Thus, when they change,
+     then the course changes without any user interaction on the course.  The reset course functionality is still there and will
+     set the value of the setting to the this 'new' default value.  The default colour value is '-' and the colour picker box will
+     show the colour that has been set as the default.  All other settings will state what the default currently is.
+
+Version 3.9.1.0 - 10/11/2020
+----------------------------
+  1. Fix 'Tests fail on PHP7.4' - #77.
+  2. Colour fixes for Adaptable theme version 3.0.0.
+  3. Fix 'Show hidden sections in collapsed form does not reveal section titles to students' - CONTRIB-7510.
+  4. Port of fixes to activity meta from Adaptable - https://gitlab.com/jezhops/moodle-theme_adaptable/-/issues/161.
+  5. Fix 'Lesson meta information shows "Not attempted" even if it has been' - #79.
+  6. Update activity.php from Adaptable.
+  7. Due date label doesn't honor overridden dates for mod_assign - #82 - thanks to https://github.com/golenkovm for the patch.
+  8. Initial Behat test.
+  9. No students port from Adaptable - https://gitlab.com/jezhops/moodle-theme_adaptable/-/issues/185.
+ 10. Fix 'Due date disappears when moving activities' - #87.
+ 11. Fix 'Issue with Assignment Meta-information' - #86.
+ 12. Make show information alert colors accessible - #88 - thanks to https://github.com/haietza for the colours.
+
+Version 3.9.0.4 - 31/07/2020
+----------------------------
+  1. Add 'Duplicate section' functionality from 'onetopic' format, thanks to David Herney Bernal for the code - #72.
+  2. Apply MDL-68330 - #74.
+
+Version 3.9.0.3 - 24/7/2020
+----------------------------
+  1. Fix title.
+
+Version 3.9.0.2 - 21/7/2020
+----------------------------
+  1. Fix logic in restore of backup file for 'numsections' - #73.
+
+Version 3.9.0.1 - 19/7/2020
+----------------------------
+  1. Apply MDL-65539.
+  2. Apply MDL-68231.
+  3. Apply MDL-68235.
+  4. Apply MDL-69065.
+  5. Fix issue where 'numsections' is set to '0' on restore of backup file that does not have it set.
+
+Version 3.8.1.1 - 29/06/2020
+----------------------------
+  1. Added 'Course page further information' functionality from Adaptable theme.
+
+Version 3.8.1.0 - 31/03/2020
+----------------------------
+  1. Fix 'Section edit link is moved on top of previous sections edit link when deleting a section' - CONTRIB-7957.
+  2. Fix 'Multiple columns changes to one column for students when last section is set to hidden' - CONTRIB-8008.
+  3. Fix current section bar overlap.
+
+Version 3.8.0.1
+----------------------------
+  1. Fix Collapsed topics format zoom issue - CONTRIB-7893.
+  2. Adjust position of 'view only' icon.
+  3. More accessible open all / close all - #67.
+  4. Moodle 3.8 version based on V3.7.1.1.
+
+Version 3.7.1.0
+----------------------------
+  1. Add missing Moodle define.
+  2. Fix "Collapsed Topic Content/EditMenu Overlap" - https://moodle.org/mod/forum/discuss.php?d=388969.
+  3. Fix error with analytic - get_section_dates function - thanks to https://github.com/tuanngocnguyen for the patch - #65.
+  4. Improve accessibility by having the 'left', 'content' and 'right' section areas in that order rather than 'left', 'right' and 'content'
+     which makes the tab order wrong.
+
+Version 3.7.0.1
+----------------------------
+  1. Beta version for Moodle 3.7 based on 3.6.0.3.
+
+Version 3.6.0.3
+----------------------------
+  1. Apply MDL-64819 - #61.
+  2. Fix phpunit tests for MDL-64492 - thanks to Rossco Hellmans for the patch - #59.
+  3. Added SVG version of one section icon - thanks to Luca Bösch for the patch - #60.
+  4. New: Accordion/Collapsed Topic aria attributes improvements - thanks to John Y for the patch - #62 and #63.
+  5. Fix position of activity / resource editing menu.
+  6. Change position of the window when clicking on a section anchor such that a navbar would not be in the way.
+     Thanks for the information in the Adaptable theme referencing: https://github.com/twbs/bootstrap/issues/1768.
+  7. Added the course and admin settings to enable or disable the toggle all functionality.  Reset in the 'layout'
+     area with associated capability for non-admins.
+  8. Added the course and admin settings to enable or disable the view single section functionality.  Reset in the
+     'layout' area with associated capability for non-admins.
+
+Version 3.6.0.2
+----------------------------
+  1. Fix invalid HTML in case of zero section elements - thanks to Mario Wehr for raising this - #47.
+  2. Fix: PHP Unit test failure (due to MDL-62680) - thanks to Anupama Dharmajan for the patch - #52.
+  3. Fix: Two strange input fields remain in teacher view when all capabilities are forbidden - thanks to Tobias Reischmann for the patch - #54.
+  4. Fix: Selecting specific topics breaks a section just above the selected topic - CONTRIB-7607.
+  5. New: Improve accessibility of the open and close all buttons - thanks to Rossco Hellmans for the patch - #56.
+  6. New: Based on '5', add key operation of toggles.
+
+Version 3.6.0.1
+----------------------------
+  1. Beta version for Moodle 3.6.
+
 Version 3.5.0.3
   1. Fix CONTRIB-7434:
         With reference to 'global_start_keyboard_drag' and 'find_element_text' in /lib/yui/src/dragdrop/js/dragdrop.js
@@ -9,6 +136,8 @@ Version 3.5.0.3
         allows 'find_element_text' to find the hidden section name first within the 'labelroot' node that is determined.
   2. When accessing a module through a single section page (not the navigation block) then ensure that you are returned
      to the same single section page when using the breadcrumb.
+  3. Fix 'Edit section name button disappearing when moving section and Toggle word added' - #44 - with thanks to
+     Joshua Ebarvia - https://github.com/jebarviabb - for the patch.
 
 Version 3.5.0.2
   1. Tidy up one section icon.
@@ -230,7 +359,7 @@ Version 2.8.2.2
   1. First beta version for Moodle 2.7beta.
 
 17th April 2014 Version 2.6.1.5
-  1. Fixed CONTRIB-4099 with the arrangement of the editing icon and associated functionality such that a better solution is
+  1. Fixed CONTRIB-4999 with the arrangement of the editing icon and associated functionality such that a better solution is
      applied for the specific nature of the format.
 
 28th March 2014 Version 2.6.1.4

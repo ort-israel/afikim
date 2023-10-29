@@ -56,6 +56,8 @@ Feature: A student can update their progress in a checklist
     When I click on "Checklist optional item 4" "text"
     Then I should see "0%" in the "#checklistprogressrequired" "css_element"
     And I should see "20%" in the "#checklistprogressall" "css_element"
+    # Delay to allow AJAX to clear before resetting DB (avoids test-failing popup).
+    And I wait "2" seconds
 
   @javascript
   Scenario: When a student updates their progress and then returns to the page their progress is remembered
@@ -108,15 +110,16 @@ Feature: A student can update their progress in a checklist
     And I log out
     And I log in as "teacher1"
     And I am on "Course 1" course homepage
-    And I navigate to "Edit settings" node in "Course administration"
+    And I navigate to "Edit settings" in current page administration
     And I expand all fieldsets
     And I set the field "Enable completion tracking" to "Yes"
     # For Moodle 2.8 and below, this should read "Save changes"
     And I press "Save and display"
     And I follow "Test checklist"
-    And I navigate to "Edit settings" node in "Checklist administration"
+    And I navigate to "Edit settings" in current page administration
     And I expand all fieldsets
     And I set the field "Completion tracking" to "Show activity as complete when conditions are met"
+    And I set the field "completionusegrade" to "1"
     And I set the field "completionpercentenabled" to "1"
     And I set the field "completionpercent" to "100"
     And I press "Save and return to course"

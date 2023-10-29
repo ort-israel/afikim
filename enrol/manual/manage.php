@@ -29,6 +29,7 @@ $enrolid      = required_param('enrolid', PARAM_INT);
 $roleid       = optional_param('roleid', -1, PARAM_INT);
 $extendperiod = optional_param('extendperiod', 0, PARAM_INT);
 $extendbase   = optional_param('extendbase', 0, PARAM_INT);
+$timeend      = optional_param_array('timeend', [], PARAM_INT);
 
 $instance = $DB->get_record('enrol', array('id'=>$enrolid, 'enrol'=>'manual'), '*', MUST_EXIST);
 $course = $DB->get_record('course', array('id'=>$instance->courseid), '*', MUST_EXIST);
@@ -135,7 +136,10 @@ if ($canenrol && optional_param('add', false, PARAM_BOOL) && confirm_sesskey()) 
                     break;
             }
 
-            if ($extendperiod <= 0) {
+            if ($timeend) {
+                $timeend = make_timestamp($timeend['year'], $timeend['month'], $timeend['day'], $timeend['hour'],
+                        $timeend['minute']);
+            } else if ($extendperiod <= 0) {
                 $timeend = 0;
             } else {
                 $timeend = $timestart + $extendperiod;
@@ -184,7 +188,9 @@ $removeenabled = $canunenrol ? '' : 'disabled="disabled"';
       </td>
       <td id="buttonscell">
           <div id="addcontrols">
-              <input name="add" <?php echo $addenabled; ?> id="add" type="submit" value="<?php echo $OUTPUT->larrow().'&nbsp;'.get_string('add'); ?>" title="<?php print_string('add'); ?>" /><br />
+              <input class="btn btn-secondary" name="add" <?php echo $addenabled; ?> id="add" type="submit"
+                     value="<?php echo $OUTPUT->larrow() . '&nbsp;' . get_string('add'); ?>"
+                     title="<?php print_string('add'); ?>" /><br />
 
               <div class="enroloptions">
 
@@ -201,7 +207,9 @@ $removeenabled = $canunenrol ? '' : 'disabled="disabled"';
           </div>
 
           <div id="removecontrols">
-              <input name="remove" id="remove" <?php echo $removeenabled; ?> type="submit" value="<?php echo get_string('remove').'&nbsp;'.$OUTPUT->rarrow(); ?>" title="<?php print_string('remove'); ?>" />
+              <input class="btn btn-secondary" name="remove" id="remove" <?php echo $removeenabled; ?> type="submit"
+                     value="<?php echo get_string('remove') . '&nbsp;' . $OUTPUT->rarrow(); ?>"
+                     title="<?php print_string('remove'); ?>" />
           </div>
       </td>
       <td id="potentialcell">

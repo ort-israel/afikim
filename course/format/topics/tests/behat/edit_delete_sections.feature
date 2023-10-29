@@ -14,7 +14,7 @@ Feature: Sections can be edited and deleted in topics format
     And the following "activities" exist:
       | activity   | name                   | intro                         | course | idnumber    | section |
       | assign     | Test assignment name   | Test assignment description   | C1     | assign1     | 0       |
-      | book       | Test book name         | Test book description         | C1     | book1       | 1       |
+      | book       | Test book name         |                               | C1     | book1       | 1       |
       | chat       | Test chat name         | Test chat description         | C1     | chat1       | 4       |
       | choice     | Test choice name       | Test choice description       | C1     | choice1     | 5       |
     And the following "course enrolments" exist:
@@ -53,9 +53,7 @@ Feature: Sections can be edited and deleted in topics format
 
   @javascript
   Scenario: Inline edit section name in topics format
-    When I click on "Edit topic name" "link" in the "li#section-1" "css_element"
-    And I set the field "New name for topic Topic 1" to "Midterm evaluation"
-    And I press key "13" in the field "New name for topic Topic 1"
+    When I set the field "Edit topic name" in the "li#section-1" "css_element" to "Midterm evaluation"
     Then I should not see "Topic 1" in the "region-main" "region"
     And "New name for topic" "field" should not exist
     And I should see "Midterm evaluation" in the "li#section-1" "css_element"

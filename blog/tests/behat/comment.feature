@@ -9,6 +9,9 @@ Feature: Comment on a blog entry
       | username | firstname | lastname | email |
       | testuser | Test | User | moodle@example.com |
       | testuser2 | Test2 | User2 | moodle2@example.com |
+    And the following "core_blog > entries" exist:
+      | subject               | body                     | user     |
+      | Blog post from user 1 | User 1 blog post content | testuser |
     And I log in as "admin"
     And I am on site homepage
     And I turn editing mode on
@@ -19,20 +22,13 @@ Feature: Comment on a blog entry
       | Page contexts | Display throughout the entire site |
     And I press "Save changes"
     And I log out
-    And I log in as "testuser"
-    And I navigate to "Site blogs" node in "Site pages"
-    And I follow "Add a new entry"
-    And I set the following fields to these values:
-      | Entry title | Blog post from user 1 |
-      | Blog entry body | User 1 blog post content |
-    And I press "Save changes"
-    And I log out
 
   @javascript
   Scenario: Commenting on my own blog entry
     Given I am on site homepage
     And I log in as "testuser"
-    And I navigate to "Site blogs" node in "Site pages"
+    And I click on "Site pages" "list_item" in the "Navigation" "block"
+    And I click on "Site blogs" "link" in the "Navigation" "block"
     And I follow "Blog post from user 1"
     And I should see "User 1 blog post content"
     And I follow "Comments (0)"
@@ -47,7 +43,8 @@ Feature: Comment on a blog entry
   Scenario: Deleting my own comment
     Given I am on site homepage
     And I log in as "testuser"
-    And I navigate to "Site blogs" node in "Site pages"
+    And I click on "Site pages" "list_item" in the "Navigation" "block"
+    And I click on "Site blogs" "link" in the "Navigation" "block"
     And I follow "Blog post from user 1"
     And I should see "User 1 blog post content"
     And I follow "Comments (0)"
@@ -67,7 +64,8 @@ Feature: Comment on a blog entry
     Given I am on site homepage
     And I log in as "testuser2"
     And I am on site homepage
-    And I navigate to "Site blogs" node in "Site pages"
+    And I click on "Site pages" "list_item" in the "Navigation" "block"
+    And I click on "Site blogs" "link" in the "Navigation" "block"
     And I follow "Blog post from user 1"
     When I follow "Comments (0)"
     And I set the field "content" to "$My own >nasty< \"string\"!"

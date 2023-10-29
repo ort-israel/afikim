@@ -27,16 +27,18 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-    // Fonts Section.
-    $temp = new admin_settingpage('theme_adaptable_font', get_string('fontsettings', 'theme_adaptable'));
-    $temp->add(new admin_setting_heading('theme_adaptable_font', get_string('fontsettingsheading', 'theme_adaptable'),
-                   format_text(get_string('fontdesc', 'theme_adaptable'), FORMAT_MARKDOWN)));
+// Fonts Section.
+if ($ADMIN->fulltree) {
+    $page = new admin_settingpage('theme_adaptable_font', get_string('fontsettings', 'theme_adaptable'));
+
+    $page->add(new admin_setting_heading('theme_adaptable_font', get_string('fontsettingsheading', 'theme_adaptable'),
+        format_text(get_string('fontdesc', 'theme_adaptable'), FORMAT_MARKDOWN)));
 
     // Fonts heading.
     $name = 'theme_adaptable/settingsfonts';
     $heading = get_string('settingsfonts', 'theme_adaptable');
     $setting = new admin_setting_heading($name, $heading, '');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Main Google Font Name.
     $name = 'theme_adaptable/fontname';
@@ -46,7 +48,7 @@ defined('MOODLE_INTERNAL') || die;
     $choices = $fontlist;
     $setting = new admin_setting_configselect($name, $title, $description, $default, $choices);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Main Font Subset.
     $name = 'theme_adaptable/fontsubset';
@@ -54,15 +56,20 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('fontsubsetdesc', 'theme_adaptable');
     $default = '';
     $setting = new admin_setting_configmulticheckbox($name, $title, $description, $default, array(
-        'latin-ext' => "latin-ext",
-        'cyrillic' => "cyrillic",
-        'cyrillic-ext' => "cyrillic-ext",
-        'greek' => "greek",
-        'greek-ext' => "greek-ext",
-        'vietnamese' => "vietnamese",
+        'latin-ext' => "Latin Extended",
+        'cyrillic' => "Cyrillic",
+        'cyrillic-ext' => "Cyrillic Extended",
+        'greek' => "Greek",
+        'greek-ext' => "Greek Extended",
+        'vietnamese' => "Vietnamese",
+        'arabic' => "Arabic",
+        'hebrew' => "Hebrew",
+        'japanese' => "Japanese",
+        'korean' => "Korean",
+        'tamil' => "Tamil",
+        'thai' => "Thai"
     ));
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Main Font size.
     $name = 'theme_adaptable/fontsize';
@@ -70,7 +77,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('fontsizedesc', 'theme_adaptable');
     $setting = new admin_setting_configselect($name, $title, $description, '95%', $from85to110percent);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Main Font weight.
     $name = 'theme_adaptable/fontweight';
@@ -78,7 +85,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('fontweightdesc', 'theme_adaptable');
     $setting = new admin_setting_configselect($name, $title, $description, 400, $from100to900);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Main Font color.
     $name = 'theme_adaptable/fontcolor';
@@ -87,7 +94,7 @@ defined('MOODLE_INTERNAL') || die;
     $previewconfig = null;
     $setting = new admin_setting_configcolourpicker($name, $title, $description, '#333333', $previewconfig);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Top Menu Font Size.
     $name = 'theme_adaptable/topmenufontsize';
@@ -96,7 +103,7 @@ defined('MOODLE_INTERNAL') || die;
     $radchoices = $standardfontsize;
     $setting = new admin_setting_configselect($name, $title, $description, '14px', $radchoices);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Navbar Menu Font Size.
     $name = 'theme_adaptable/menufontsize';
@@ -105,7 +112,7 @@ defined('MOODLE_INTERNAL') || die;
     $radchoices = $standardfontsize;
     $setting = new admin_setting_configselect($name, $title, $description, '14px', $radchoices);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Navbar Menu Padding.
     $name = 'theme_adaptable/menufontpadding';
@@ -114,7 +121,7 @@ defined('MOODLE_INTERNAL') || die;
     $radchoices = $from10to30px;
     $setting = new admin_setting_configselect($name, $title, $description, '20px', $radchoices);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Header Font Name.
     $name = 'theme_adaptable/fontheadername';
@@ -124,7 +131,7 @@ defined('MOODLE_INTERNAL') || die;
     $choices = $fontlist;
     $setting = new admin_setting_configselect($name, $title, $description, $default, $choices);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Header Font weight.
     $name = 'theme_adaptable/fontheaderweight';
@@ -132,7 +139,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('fontheaderweightdesc', 'theme_adaptable');
     $setting = new admin_setting_configselect($name, $title, $description, 400, $from100to900);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Header font color.
     $name = 'theme_adaptable/fontheadercolor';
@@ -141,7 +148,7 @@ defined('MOODLE_INTERNAL') || die;
     $previewconfig = null;
     $setting = new admin_setting_configcolourpicker($name, $title, $description, '#333333', $previewconfig);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Title Font Name.
     $name = 'theme_adaptable/fonttitlename';
@@ -151,7 +158,7 @@ defined('MOODLE_INTERNAL') || die;
     $choices = $fontlist;
     $setting = new admin_setting_configselect($name, $title, $description, $default, $choices);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Title Font size.
     $name = 'theme_adaptable/fonttitlesize';
@@ -161,7 +168,7 @@ defined('MOODLE_INTERNAL') || die;
     $choices = $standardfontsize;
     $setting = new admin_setting_configselect($name, $title, $description, $default, $choices);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Title Font weight.
     $name = 'theme_adaptable/fonttitleweight';
@@ -169,7 +176,7 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('fonttitleweightdesc', 'theme_adaptable');
     $setting = new admin_setting_configselect($name, $title, $description, 400, $from100to900);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Title font color.
     $name = 'theme_adaptable/fonttitlecolor';
@@ -178,7 +185,7 @@ defined('MOODLE_INTERNAL') || die;
     $previewconfig = null;
     $setting = new admin_setting_configcolourpicker($name, $title, $description, '#ffffff', $previewconfig);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Course font color.
     $name = 'theme_adaptable/fonttitlecolorcourse';
@@ -187,6 +194,7 @@ defined('MOODLE_INTERNAL') || die;
     $previewconfig = null;
     $setting = new admin_setting_configcolourpicker($name, $title, $description, '#ffffff', $previewconfig);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    $ADMIN->add('theme_adaptable', $temp);
+    $asettings->add($page);
+}

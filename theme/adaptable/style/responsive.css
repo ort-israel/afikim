@@ -1,5 +1,6 @@
 /*
-* This file is part of Moodle - http://moodle.org/
+* This file is part of Adaptable theme for moodle
+*
 * Moodle is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -14,28 +15,27 @@
 * along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 *
 *
-* Adaptable Responsive Style sheet
+* Adaptable Responsive style sheet
 *
 * @package    theme_adaptable
-* @copyright  2015-2016 Jeremy Hopkins (Coventry University)
-* @copyright  2015-2017 Fernando Acedo (3-bits.com)
-* @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+* @copyright  2015-2019 Jeremy Hopkins (Coventry University)
+* @copyright  2015-2019 Fernando Acedo (3-bits.com)
+* @copyright  2018-2019 Manoj Solanki (Coventry University)
 *
-=====================================================
-Default Bootstrap 2.3.2 Media Queries
-
-Only screen and (max-width : 1200px)
-Only screen and (max-width : 979px)
-Only screen and (max-width : 767px)
-Only screen and (max-width : 480px)
-=======================================================
+* @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 */
+
+/* =====================================================
+Media Queries - max's in reverse
+order for prescidence.
+====================================================== */
 
 /*=====================================================
 1200px
 ======================================================= */
 
-@media only screen and (max-width: 1200px) {
+@media (max-width: 1199px) {
+    .showhideblocksdesc,
     .zoomdesc {
         display: none;
     }
@@ -44,7 +44,11 @@ Only screen and (max-width : 480px)
 /*=====================================================
 979px
 ======================================================= */
-@media only screen and (max-width: 979px) {
+@media (max-width: 979px) {
+    #page-header {
+        min-height: 60px;
+    }
+
     .langdesc {
         display: inline;
     }
@@ -98,7 +102,7 @@ Only screen and (max-width : 480px)
         left: 0 !important;
     }
 
-/* Header */
+    /* Header */
     /* Logo */
     #logocontainer {
         display: block !important;
@@ -133,7 +137,7 @@ Only screen and (max-width : 480px)
         padding: 5px;
         float: none;
         clear: both;
-        margin: 0 auto;
+        margin: 15px auto;
     }
 
     .coursebox .panel-body p {
@@ -145,30 +149,13 @@ Only screen and (max-width : 480px)
         display: none;
     }
 
-    #edittingbutton a,
-    #edittingbutton .btn {
+    #editingbutton a,
+    #editingbutton .btn {
         margin-left: 10px !important;
-    }
-
-    .searchbox {
-        padding-bottom: 5px;
-    }
-
-    .search-box, .searchbox {
-        margin-top: 10px;
-        width: 100%;
-    }
-
-    #search-1 {
-        width: calc(100% - 39px);
     }
 
     .hbl, .sbl, .hbll, .sbll {
         display: none !important;
-    }
-
-    .navbar .dropdown-toggle {
-        height: 38px;
     }
 
     .nav-collapse .nav {
@@ -176,7 +163,7 @@ Only screen and (max-width : 480px)
         margin-left: 0 !important;
     }
 
-    #navwrap {
+    #adaptable-page-header-wrapper #main-navbar {
         border-bottom: 0;
     }
 
@@ -197,12 +184,7 @@ Only screen and (max-width : 480px)
         padding-bottom: 4px;
     }
 
-    .nav-collapse.active > .nav > li > a,
-    .nav-collapse.active > .nav .dropdown-menu li > a {
-        color:[[setting:mobilemenufontcolor]] !important;
-    }
-
-    #edittingbutton {
+    #editingbutton {
         margin-left: 10px;
     }
 
@@ -210,36 +192,60 @@ Only screen and (max-width : 480px)
         float: none;
     }
 
-    /* Messages / Notifications dropdown */
-    .popover-region-container {
-        height: 600px;
-        float: left;
-        left: -100px;
-        top: 30px;
-        width: 300px;
-    }
-    .navbar .nav .dropdown-menu, .headermenu .dropdown-menu, .langmenu .dropdown-menu {
-        min-width: 150px;
+    /* New styles for Adaptable 2. */
+    #adaptable-page-header-wrapper .nav-link {
+        padding: inherit;
     }
 
-.icon {
-    height: 48px;
-    width:  48px;
-}
 
+    #adaptable-page-header-wrapper .topmenuleft {
+        float: left !important;
+        margin: 0;
+        padding: 5px 5px 0 0;
+    }
+
+    #adaptable-page-header-wrapper .navbar .popover-region {
+        margin: 4px 0 0 4px;
+    }
+
+    .has-page-header.page-header-margin.header-style1 #page {
+        margin-top: 40px;
+    }
+
+    .mobiletheme.page-header-margin.header-style1.has-header-bg .headerbgimage {
+        background-image: none !important;
+    }
+
+    .page-header-margin.header-style2 #page {
+        margin-top: 84px;
+    }
+
+    /* Course activity and section layout updates to remove any extra padding on smaller screens. */
+    .section .activity .activityinstance {
+        min-width: 100%;
+    }
+
+    .activity-meta-container {
+        margin: 0 0 0 20px;
+    }
+
+    #region-main,
+    .pagelayout-mydashboard #region-main {
+        padding: 0 15px;
+    }
 }
 
 /*=====================================================
 767px
 ======================================================= */
-@media only screen and (max-width: 767px) {
+@media (max-width: 767px) {
     #page-login-index2 .forgetpass {
         clear: both;
         float: none;
         margin: 0 auto;
+        min-width: 200px;
         text-align: center;
         width: 50%;
-        min-width: 200px;
     }
 
     #ticker-announce {
@@ -249,11 +255,11 @@ Only screen and (max-width : 480px)
     }
 
     #ticker-wrap #newscontent {
+        line-height: normal;
         max-width: inherit;
         overflow: inherit;
-        white-space: normal;
         padding: 10px 10px 10px;
-        line-height: normal;
+        white-space: normal;
     }
 
     #ticker-wrap #newscontent #news {
@@ -265,26 +271,21 @@ Only screen and (max-width : 480px)
     }
 
     .slidestyle2 .flex-caption {
+        background-color: transparent !important;
+        left: 0;
         position: relative;
         top: auto;
-        left: 0;
-        background-color: transparent !important;
-    }
-
-    .slidestyle2 .flex-caption .span6 {
-        margin-left: 0;
     }
 
     .slidestyle2 .flex-caption a.submit {
-        margin: 0;
         float: none;
-        width: auto;
+        margin: 0;
         text-align: center;
+        width: auto;
     }
 
     .slidestyle2 .flex-caption h3 {
-        margin-left: 0;
-        background: #000;
+        background-color: #000;
         margin: 0 !important;
     }
 
@@ -294,49 +295,52 @@ Only screen and (max-width : 480px)
         padding: 10px 0;
     }
 
-    .coursebox .coursebtn {
-        right: 22%;
-        width: auto;
+    /* 1 tile. */
+    .coursebox.col-12 .coursebtn {
+        width: 30% !important;
+    }
+
+    /* 2 tiles. */
+    .coursebox.col-6 .coursebtn {
+        width: 55% !important;
+    }
+
+    /* 3 tiles. */
+    .coursebox.col-4 .coursebtn {
+        width: 70% !important;
+    }
+
+    /* 4 tiles. */
+    .coursebox.col-3 .coursebtn {
+        width: 80% !important;
+    }
+
+    /* 6 tiles. */
+    .coursebox.col-2 .coursebtn {
+        width: 95% !important;
     }
 
     #page-site-index a.submit {
-        display: block;
-        margin: 5px auto;
-        text-align: center;
-        white-space: normal;
         width: auto;
     }
 
-    #region-main {
-        padding: 0;
-    }
-
-    #page-header {
-        min-height: [[setting:pageheaderheight]];
-    }
-
-    .row-fluid .span3 {
-        width: 100%;
-    }
-
     .headermenu2 {
+        clear: both;
         float: none;
         padding: 10px 0;
         text-align: center;
-        clear: both;
     }
 
     .flex-caption {
-        width: 100% !important;
-        padding: 5px 0 !important;
         font-size: 90% !important;
+        padding: 5px 0 !important;
+        width: 100% !important;
     }
 
     .flex-caption p {
         font-size: 90% !important;
-        margin: 0 5px !important;
-        margin-bottom: 5px !important;
         line-height: 1.4em;
+        margin: 0 5px !important;
     }
 
     .flex-caption h3 {
@@ -346,10 +350,10 @@ Only screen and (max-width : 480px)
     }
 
     a.submit {
-        width: 80%;
         display: block;
         margin: 5px auto;
         text-align: center;
+        width: 80%;
     }
 
     .block .header {
@@ -360,8 +364,8 @@ Only screen and (max-width : 480px)
         margin: 50px 0;
     }
 
-    #edittingbutton a,
-    #edittingbutton .btn {
+    #editingbutton a,
+    #editingbutton .btn {
         margin-left: -10px !important;
     }
 
@@ -369,27 +373,10 @@ Only screen and (max-width : 480px)
         margin: 0 10px 0 4px !important;
     }
 
-    .nav .dropdown-menu li a:hover,
-    .navbar .nav > li > a:hover {
-        background-color: #000;
-        background-color: rgba(255, 255, 255, 0.1);
-        color: [[setting:fontcolor]] !important;
-    }
-
-    div.navbar {
-        margin-left: auto;
-    }
-
-    #social-connect, .left-col.size2of16.span2 {
+    #social-connect {
         clear: both;
         float: none;
         width: auto;
-    }
-
-    .socialbox a {
-        color: [[setting:headertextcolor2]];
-        font-size: [[setting:socialsizemobile]];
-        padding-left: 10px;
     }
 
     .message .contactselector {
@@ -408,14 +395,6 @@ Only screen and (max-width : 480px)
     .navbar .nav-collapse.in > .nav > li > a {
         border-radius: 0;
         padding-left: 0 !important;
-    }
-
-    #page-navbar.span12 {
-        background-color: transparent;
-    }
-
-    .dropdown-toggle a {
-        height: 38px !important;
     }
 
     .userhead {
@@ -445,27 +424,59 @@ Only screen and (max-width : 480px)
     .newmenu13,
     .newmenu14,
     .newmenu15,
-    .newmenu16[[setting:hidepagefootermobile]][[setting:hidebreadcrumbmobile]][[setting:hidealertsmobile]][[setting:hidesocialmobile]][[setting:hideheadermobile]][[setting:hidecoursetitlemobile]] {
+    .newmenu16 {
         display: none;
     }
 
     /* Links and Language menu, hide text on small screens. */
-#above-header .langdesc,
-#above-header .linksdesc {
+    #above-header .langdesc,
+    #above-header .linksdesc {
         display: none;
     }
 
+    #above-header {
+        min-height: 37px;
+    }
+
+    #header2,
+    #header2 .row,
+    #adaptable-page-header-wrapper > #header2 > div > div,
+    #adaptable-page-header-wrapper #header2 .navbar-nav {
+        min-height: 46px;
+    }
+
+    .page-header-margin.header-style2 #page {
+        margin-top: 62px;
+    }
+
+    .socialbox a {
+        color: [[setting:headertextcolor2]];
+    }
+
+    .socialbox a i {
+        /* Make at least 29px, values look odd but on inspection they are needed to be so for FontAwesome. */
+        font-size: [[setting:responsivesocialsize]];
+        line-height: [[setting:responsivesocialsize]];
+    }
+    .custom-select {
+        max-width:100%;
+    }
+}
+
+
+/*=====================================================
+576px
+======================================================= */
+@media (max-width: 576px) {
+    .page-header-margin.header-style2 #page {
+        margin-top: 38px;
+    }
 }
 
 /*=====================================================
 480px
 ======================================================= */
-@media only screen and (max-width: 480px) {
-    .dropdown-menu.usermen {
-        left: 35%;
-        top: 15px;
-    }
-
+@media (max-width: 480px) {
     .flex-caption {
         width: auto !important;
         padding: 5px 0 !important;
@@ -477,72 +488,76 @@ Only screen and (max-width : 480px)
     #page-content {
         padding: 0;
         width: auto;
+        margin-top: 15px;
     }
 
     #page-header .userimg {
         display: none;
     }
+}
 
-    #coursesearchbox2 {
-        display: none;
+/* Mins in ascending order.
+
+/*=====================================================
+768px
+======================================================= */
+@media (min-width: 768px) {
+    body.drawer-open-left {
+        margin-left: 0;
     }
+}
 
-    #above-header .headermenu .dropdown-menu {
-        margin-top: 15px;
+/*=====================================================
+1201px or higher / nozoom
+======================================================= */
+
+@media (min-width: 1200px) {
+    .standard .container {
+        max-width: 100%;
+        width: 1170px;
     }
+}
 
+@media (min-width: 992px) and (max-width: 1199px) {
+    .standard .container {
+        max-width: 100%;
+        width: 960px;
+    }
+}
+
+@media (min-width: 1000px) {
+    .narrow .container {
+        max-width: 100%;
+        width: 1000px;
+    }
+}
+
+@media (max-width: 992px) and (max-width: 999px) {
+    .narrow .container {
+        max-width: 100%;
+        width: 960px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    #adaptable-page-header-wrapper .container,
+    .container {
+        max-width: 100%;
+        width: 724px;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767px) {
+    .container {
+        max-width: 100%;
+    }
 }
 
 
 /*=====================================================
 Other.
 ======================================================= */
-@media only screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait) {
-    #coursesearchbox2 {
-        min-width: 140px;
-        margin-top: 5px;
-    }
-}
-
-/* Dropdown */
-@media only screen and (min-width: 481px) {
-    /* On hover only for large screens adjusted to exclude ipad portrait.
-       min-width changed to 481 to avoid problems with dropdown menus in tablets and some mobiles (resolutions under 1024px)
-       probably the best option is remove min-width after testing in several screen resolutions.
-    */
-    .dropdown-menu .sub-menu {
-        left: 100%;
-        position: absolute;
-        top: -10px;
-        visibility: hidden;
-        margin-top: -1px;
-    }
-
-    .newmenus .dropdown-menu {
-        left: 0;
-        position: absolute;
-        visibility: hidden;
-        margin-top: 0;
-    }
-
-    .dropdown-submenu>.dropdown-menu {
-        display: none;
-    }
-
-    .dropdown-menu li:hover .sub-menu,
-    .newmenus:hover .dropdown-menu {
-        visibility: visible;
-    }
-
-    .dropdown:hover>.dropdown-menu {
-        display: block;
-    }
-    /*end on hover hack */
-
-}
-
 @media (min-width: 481px) {
-
     /* Activity chooser styling. Desktop styling. */
     .jsenabled .choosercontainer #chooseform .alloptions {
         overflow-x: hidden;
@@ -597,13 +612,6 @@ Other.
         margin-top: 10px;
         margin-right: 10px;
     }
-    .moodle-dialogue-base .chooserdialogue .moodle-dialogue-wrap .moodle-dialogue-hd .yui3-widget-buttons button.yui3-button.closebutton {
-        -webkit-box-shadow: none;
-        box-shadow: none;
-        background-color: #fff;
-        opacity: 0.4;
-        filter: alpha(opacity=40);
-    }
 
     .moodle-dialogue-base .chooserdialogue .moodle-dialogue-wrap .moodle-dialogue-hd .yui3-widget-buttons button.yui3-button.closebutton:hover {
         opacity: 1;
@@ -612,16 +620,20 @@ Other.
 
     .chooserdialogue .moodle-dialogue-wrap .moodle-dialogue-bd {
         padding: 0;
-        border-bottom-right-radius: 0px;
-        border-bottom-left-radius: 0px;
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
     }
 
     /* End Activity chooser styling. */
 
 }
 
-@media only screen and (min-width: 768px) {
+@media (min-width: 768px) {
     #above-header .linksmenu {
-        margin-left: 0px;
+        margin-left: 0;
+    }
+
+    .adaptable-drawer {
+        display: none;
     }
 }

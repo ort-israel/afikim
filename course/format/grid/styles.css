@@ -26,10 +26,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-.course-content .grid_title {
-    font-size: 160%;
-    font-weight: bold;
-}
 .course-content ul.gtopics h3.sectionname {
     background: transparent;
     border: 0 none;
@@ -38,6 +34,7 @@
     padding: 0;
     padding-bottom: 5px;
 }
+
 .course-content ul.gtopics-0 #section-0 {
     background: transparent;
     border: 0 none;
@@ -64,11 +61,11 @@ div#gridmiddle-column > ul {
 .course-content ul.gtopics li.section {
     list-style: none;
     margin: 5px 0 0 0;
-    padding:0;
+    padding: 0;
 }
 
 .course-content ul.gtopics li.section .content {
-    margin:0 40px;
+    margin: 0 40px;
 }
 
 .course-content ul.gtopics li.section .side {
@@ -109,7 +106,8 @@ div#gridmiddle-column > ul {
 .dir-rtl #gridiconcontainer ul.gridicons li {
     text-align: right;
 }
-#gridiconcontainer ul.gridicons.content_inside li {
+
+#gridiconcontainer ul.gridicons li {
     position: relative;
 }
 
@@ -136,6 +134,7 @@ div#gridmiddle-column > ul {
     background-color: white;
     color: black;
     height: 40px;
+    margin: auto;
     opacity: 0.8;
     overflow-wrap: break-word;
     padding: 10px;
@@ -143,49 +142,50 @@ div#gridmiddle-column > ul {
     text-overflow: inherit;
     white-space: pre-wrap;
     word-wrap: break-word;
+    z-index: 1;
 }
+
+.course-content ul.gridicons li .icon_content.content_inside.top {
+    left: 0;
+    right: 0;
+    top: 0;
+}
+
 .course-content ul.gridicons li .icon_content.content_inside.middle {
     bottom: 0;
     left: 0;
-    margin: auto;
     right: 0;
     top: 0;
 }
 .course-content ul.gridicons li .icon_content.content_inside.bottom {
     bottom: 0;
     left: 0;
-    margin: auto;
     right: 0;
 }
 
-.course-content ul.gridicons li .gridicon_link .tooltip {
+.course-content ul.gridicons li .tooltip {
     font-size: 14px;
 }
 
-/* Set the width of the tooltip when the section summary is 'Inside', thus within the 'image_holder'. */
-.course-content ul.gridicons li .gridicon_link .image_holder .tooltip {
-    width: 100%;
-}
-
-.course-content ul.gridicons li .gridicon_link .tooltip-inner {
+.course-content ul.gridicons li .tooltip-inner {
     background-color: #ffc540;
     color: #3b53ad;
     max-width: none;
 }
 
-.course-content ul.gridicons li .gridicon_link .tooltip.top .tooltip-arrow {
+.course-content ul.gridicons li .tooltip.top .tooltip-arrow {
     border-top-color: #ffc540;
 }
 
-.course-content ul.gridicons li .gridicon_link .tooltip.bottom .tooltip-arrow {
+.course-content ul.gridicons li .tooltip.bottom .tooltip-arrow {
     border-bottom-color: #ffc540;
 }
 
-.course-content ul.gridicons li .gridicon_link .tooltip.left .tooltip-arrow {
+.course-content ul.gridicons li .tooltip.left .tooltip-arrow {
     border-left-color: #ffc540;
 }
 
-.course-content ul.gridicons li .gridicon_link .tooltip.right .tooltip-arrow {
+.course-content ul.gridicons li .tooltip.right .tooltip-arrow {
     border-right-color: #ffc540;
 }
 
@@ -197,12 +197,14 @@ div#gridmiddle-column > ul {
             box-sizing: content-box;
     overflow: visible;
     position: relative;
-    text-align: center;
-    vertical-align: middle;
 }
 
-.course-content ul.gridicons li img {
-    margin-top: 0;
+.course-content ul.gridicons li .image_holder img {
+    /*rtl:ignore*/
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .course-content ul.gridicons li img.info {
@@ -297,7 +299,7 @@ body.jsenabled #gridshadebox_content.hide_content {
 
 #gridshadebox_content ul li ol li {
     list-style: decimal outside none;
-} 
+}
 
 .gridcursor #gridshadebox_close {
     /*rtl:ignore*/
@@ -328,7 +330,7 @@ body.jsenabled #gridshadebox_content.hide_content {
     opacity: 0.9;
 }
 
-.gridshadebox_area  {
+.gridshadebox_area {
     height: 100%;
     position: absolute;
     top: 0;
@@ -448,7 +450,8 @@ body.jsenabled #gridshadebox_content.hide_content {
     right: -18px;
 }
 
-.gridshadebox_arrow.gridshadebox_mobile, .gridshadebox_arrow.gridshadebox_mobile:hover {
+.gridshadebox_arrow.gridshadebox_mobile,
+.gridshadebox_arrow.gridshadebox_mobile:hover {
     opacity: 1;
 }
 
@@ -476,7 +479,8 @@ body.jsenabled #gridshadebox_content.hide_content {
     right: -31px;
 }
 
-.gridshadebox_arrow.gridshadebox_tablet, .gridshadebox_arrow.gridshadebox_tablet:hover {
+.gridshadebox_arrow.gridshadebox_tablet,
+.gridshadebox_arrow.gridshadebox_tablet:hover {
     opacity: 1;
 }
 
@@ -488,13 +492,19 @@ body.jsenabled #gridshadebox_content.hide_content {
 .course-content ul.gridicons li .image_holder.inaccessible {
     background-color: #999;
     border-color: #aaa;
-    -webkit-filter: grayscale(100%);
-    -moz-filter: grayscale(100%);
-    -ms-filter: grayscale(100%);
-    -o-filter: grayscale(100%);
-    filter: grayscale(100%);
-    filter: gray; /* IE 6-9 */
-    filter: alpha(opacity=70);
     opacity: 0.7;
 }
 /* @end */
+
+/* Colour picker */
+.gfcolourpopupbox {
+    border: 1px solid black;
+    cursor: pointer;
+    margin: 0 0 0 2px;
+    padding: 0 8px;
+}
+
+.gfcolourpopupsel {
+    position: absolute;
+    z-index: 500;
+}

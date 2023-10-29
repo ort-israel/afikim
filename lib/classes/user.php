@@ -82,6 +82,13 @@ class core_user {
         'alternatename'
     ];
 
+    /** @var int Indicates that user profile view should be prevented */
+    const VIEWPROFILE_PREVENT = -1;
+    /** @var int Indicates that user profile view should not be prevented */
+    const VIEWPROFILE_DO_NOT_PREVENT = 0;
+    /** @var int Indicates that user profile view should be allowed even if Moodle would prevent it */
+    const VIEWPROFILE_FORCE_ALLOW = 1;
+
     /** @var stdClass keep record of noreply user */
     public static $noreplyuser = false;
 
@@ -375,7 +382,7 @@ class core_user {
     protected static function get_enrolled_sql_on_courses_with_capability($capability) {
         // Get all courses where user have the capability.
         $courses = get_user_capability_course($capability, null, true,
-                'ctxid, ctxpath, ctxdepth, ctxlevel, ctxinstance');
+                implode(',', array_values(context_helper::get_preload_record_columns('ctx'))));
         if (!$courses) {
             return [null, null];
         }
@@ -517,18 +524,17 @@ class core_user {
     }
 
     /**
-     * Return true is user id is greater than self::NOREPLY_USER and
-     * alternatively check db.
+     * Return true if user id is greater than 0 and alternatively check db.
      *
      * @param int $userid user id.
      * @param bool $checkdb if true userid will be checked in db. By default it's false, and
-     *                      userid is compared with NOREPLY_USER for performance.
+     *                      userid is compared with 0 for performance.
      * @return bool true is real user else false.
      */
     public static function is_real_user($userid, $checkdb = false) {
         global $DB;
 
-        if ($userid < 0) {
+        if ($userid <= 0) {
             return false;
         }
         if ($checkdb) {
@@ -595,33 +601,35 @@ class core_user {
             // The user has chosen to delete the selected users picture.
             $fs->delete_area_files($context->id, 'user', 'icon'); // Drop all images in area.
             $newpicture = 0;
+        }
 
-        } else {
-            // Save newly uploaded file, this will avoid context mismatch for newly created users.
-            file_save_draft_area_files($usernew->imagefile, $context->id, 'user', 'newicon', 0, $filemanageroptions);
-            if (($iconfiles = $fs->get_area_files($context->id, 'user', 'newicon')) && count($iconfiles) == 2) {
-                // Get file which was uploaded in draft area.
-                foreach ($iconfiles as $file) {
-                    if (!$file->is_directory()) {
-                        break;
-                    }
+        // Save newly uploaded file, this will avoid context mismatch for newly created users.
+        if (!isset($usernew->imagefile)) {
+            $usernew->imagefile = 0;
+        }
+        file_save_draft_area_files($usernew->imagefile, $context->id, 'user', 'newicon', 0, $filemanageroptions);
+        if (($iconfiles = $fs->get_area_files($context->id, 'user', 'newicon')) && count($iconfiles) == 2) {
+            // Get file which was uploaded in draft area.
+            foreach ($iconfiles as $file) {
+                if (!$file->is_directory()) {
+                    break;
                 }
-                // Copy file to temporary location and the send it for processing icon.
-                if ($iconfile = $file->copy_content_to_temp()) {
-                    // There is a new image that has been uploaded.
-                    // Process the new image and set the user to make use of it.
-                    // NOTE: Uploaded images always take over Gravatar.
-                    $newpicture = (int)process_new_icon($context, 'user', 'icon', 0, $iconfile);
-                    // Delete temporary file.
-                    @unlink($iconfile);
-                    // Remove uploaded file.
-                    $fs->delete_area_files($context->id, 'user', 'newicon');
-                } else {
-                    // Something went wrong while creating temp file.
-                    // Remove uploaded file.
-                    $fs->delete_area_files($context->id, 'user', 'newicon');
-                    return false;
-                }
+            }
+            // Copy file to temporary location and the send it for processing icon.
+            if ($iconfile = $file->copy_content_to_temp()) {
+                // There is a new image that has been uploaded.
+                // Process the new image and set the user to make use of it.
+                // NOTE: Uploaded images always take over Gravatar.
+                $newpicture = (int)process_new_icon($context, 'user', 'icon', 0, $iconfile);
+                // Delete temporary file.
+                @unlink($iconfile);
+                // Remove uploaded file.
+                $fs->delete_area_files($context->id, 'user', 'newicon');
+            } else {
+                // Something went wrong while creating temp file.
+                // Remove uploaded file.
+                $fs->delete_area_files($context->id, 'user', 'newicon');
+                return false;
             }
         }
 
@@ -674,7 +682,7 @@ class core_user {
         $fields['lastname'] = array('type' => PARAM_NOTAGS, 'null' => NULL_NOT_ALLOWED);
         $fields['surname'] = array('type' => PARAM_NOTAGS, 'null' => NULL_NOT_ALLOWED);
         $fields['email'] = array('type' => PARAM_RAW_TRIMMED, 'null' => NULL_NOT_ALLOWED);
-        $fields['emailstop'] = array('type' => PARAM_INT, 'null' => NULL_NOT_ALLOWED);
+        $fields['emailstop'] = array('type' => PARAM_INT, 'null' => NULL_NOT_ALLOWED, 'default' => 0);
         $fields['icq'] = array('type' => PARAM_NOTAGS, 'null' => NULL_NOT_ALLOWED);
         $fields['skype'] = array('type' => PARAM_NOTAGS, 'null' => NULL_ALLOWED);
         $fields['aim'] = array('type' => PARAM_NOTAGS, 'null' => NULL_NOT_ALLOWED);
@@ -701,7 +709,7 @@ class core_user {
         $fields['lastlogin'] = array('type' => PARAM_INT, 'null' => NULL_NOT_ALLOWED);
         $fields['currentlogin'] = array('type' => PARAM_INT, 'null' => NULL_NOT_ALLOWED);
         $fields['lastip'] = array('type' => PARAM_NOTAGS, 'null' => NULL_NOT_ALLOWED);
-        $fields['secret'] = array('type' => PARAM_RAW, 'null' => NULL_NOT_ALLOWED);
+        $fields['secret'] = array('type' => PARAM_ALPHANUM, 'null' => NULL_NOT_ALLOWED);
         $fields['picture'] = array('type' => PARAM_INT, 'null' => NULL_NOT_ALLOWED);
         $fields['url'] = array('type' => PARAM_URL, 'null' => NULL_NOT_ALLOWED);
         $fields['description'] = array('type' => PARAM_RAW, 'null' => NULL_ALLOWED);
@@ -980,11 +988,19 @@ class core_user {
                 global $USER;
                 return $USER->id == $user->id && has_capability('moodle/blog:view', context_system::instance());
             });
+        $preferences['user_home_page_preference'] = array('type' => PARAM_INT, 'null' => NULL_ALLOWED, 'default' => HOMEPAGE_MY,
+            'choices' => array(HOMEPAGE_SITE, HOMEPAGE_MY),
+            'permissioncallback' => function ($user, $preferencename) {
+                global $CFG, $USER;
+                return $user->id == $USER->id &&
+                    (!empty($CFG->defaulthomepage) && ($CFG->defaulthomepage == HOMEPAGE_USER));
+            }
+        );
 
         // Core components that may want to define their preferences.
         // List of core components implementing callback is hardcoded here for performance reasons.
         // TODO MDL-58184 cache list of core components implementing a function.
-        $corecomponents = ['core_message', 'core_calendar'];
+        $corecomponents = ['core_message', 'core_calendar', 'core_contentbank'];
         foreach ($corecomponents as $component) {
             if (($pluginpreferences = component_callback($component, 'user_preferences')) && is_array($pluginpreferences)) {
                 $preferences += $pluginpreferences;

@@ -16,8 +16,7 @@
 /**
  * Grid Format - A topics based format that uses a grid of user selectable images to popup a light box of the section.
  *
- * @package    course/format
- * @subpackage grid
+ * @package    format_grid
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2012 onwards G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://about.me/gjbarnard} and
@@ -56,10 +55,12 @@ M.format_grid = M.format_grid || {
  * @param {String}  the_section_redirect If set will contain a URL prefix for the section page redirect functionality
  *                  and not show the shade box.
  * @param {Integer} the_num_sections the number of sections in the course.
+ * @param {Integer} the_initial_section the initial section to show.
  * @param {Array}   the_shadebox_shown_array States what sections are not shown (value of 1) and which are (value of 2)
  *                  index is the section no.
  */
-M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_sections, the_shadebox_shown_array) {
+M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_sections, the_initial_section,
+    the_shadebox_shown_array) {
     "use strict";
     this.ourYUI = Y;
     this.editing_on = the_editing_on;
@@ -72,7 +73,11 @@ M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_s
     });
 
     if (this.num_sections > 0) {
-        this.set_selected_section(this.num_sections, true, true);  // Section 0 can be in the grid.
+        if (the_initial_section > -1) {
+            M.format_grid.tab(the_initial_section);
+        } else if (!the_editing_on) {
+            this.set_selected_section(this.num_sections, true, true);  // Section 0 can be in the grid.
+        }
     } else {
         this.selected_section_no = -1;
     }
@@ -122,6 +127,7 @@ M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_s
     if (this.shadebox_content) {
         this.shadebox_content.removeClass('hide_content'); // Content 'flash' prevention.
     }
+
     // Show the shadebox of a named anchor in the URL where it is expected to be of the form:
     // #section-X.
     if ((this.section_redirect === null) && (window.location.hash) && (!the_editing_on)) {
@@ -134,6 +140,8 @@ M.format_grid.init = function(Y, the_editing_on, the_section_redirect, the_num_s
             M.format_grid.tab(idx);
             M.format_grid.grid_toggle();
         }
+    } else if ((this.num_sections > 0) && (the_initial_section > -1)) { // Section has been specified so show it.
+        M.format_grid.grid_toggle();
     }
 };
 
@@ -366,9 +374,9 @@ M.format_grid.shadebox.initialize_shadebox = function() {
     var gridshadebox_content = M.format_grid.ourYUI.one('#gridshadebox_content');
     if (gridshadebox_content.hasClass('absolute')) {
         var top = 50;
-        var pageelement = M.format_grid.ourYUI.one('#page'); // Boost theme.
+        var pageelement = M.format_grid.ourYUI.one('#page-content'); // All themes.
         if (!pageelement) {
-            pageelement = M.format_grid.ourYUI.one('#region-main');
+            pageelement = M.format_grid.ourYUI.one('#region-main'); // Fallback.
         }
         if (pageelement) {
             var pageelementDOM = pageelement.getDOMNode();

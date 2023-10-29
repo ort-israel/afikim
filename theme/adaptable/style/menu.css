@@ -19,207 +19,230 @@
 *
 * @package    theme_adaptable
 * @copyright  2015-2016 Jeremy Hopkins (Coventry University)
-* @copyright  2015-2017 Fernando Acedo (3-bits.com)
+* @copyright  2015-2019 Fernando Acedo (3-bits.com)
 * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 *
 */
 
-#navwrap {
-    clear: both;
+/* Navwrap */
+#adaptable-page-header-wrapper #main-navbar {
+    background-color: [[setting:menubkcolor]];
     border-bottom: 3px solid [[setting:menubordercolor]];
+    clear: both;
+    z-index: 100;
 }
 
-#navwrap.affix {
+#adaptable-page-header-wrapper #main-navbar .navbar .navbar-nav > li:first-child > a.dropdown-toggle {
+    margin-left: -[[setting:menufontpadding]];
+}
+
+#adaptable-page-header-wrapper #main-navbar .navbar .navbar-nav > li:last-child > a.dropdown-toggle {
+    margin-right: -[[setting:menufontpadding]];
+}
+
+/* Remove caret from main navbar menu. */
+#adaptable-page-header-wrapper #main-navbar .dropdown-toggle::after,
+#adaptable-page-header-wrapper #nav-drawer .dropdown-toggle::after {
+    content: none;
+}
+
+/* Used to add padding to top of page when sticky top menu is used */
+/* .page-header-margin {
+    padding-top: 30px;
+} */
+
+.adaptable-page-header-wrapper#affix {
     top: 0;
     width: 100%;
     z-index: 1010;
 }
 
-.navbar {
-    clear: none;
-    float: none;
-    margin-bottom: 0;
-    min-width: 40%;
-    margin-top: 0;
-    margin-left: -20px;
+/* General menu styling */
+
+/* Sticky navbar */
+
+/* The sticky class is added to the navbar with JS when it reaches its scroll position */
+#adaptable-page-header-wrapper .adaptable-navbar-sticky {
+  position: fixed;
+  top: 0;
+  width: 100%;
 }
 
-.navbar-inner {
+/* Add some top padding to the page content to prevent sudden quick movement (as the navigation bar gets a new position at the top of the page (position:fixed and top:0) */
+#adaptable-page-header-wrapper .adaptable-navbar-sticky + .adaptable-navbar-sticky-content-padding {
+  padding-top: 60px;
+}
+
+/* Page content */
+#adaptable-page-header-wrapper .adaptable-navbar-sticky-content-padding {
+  padding: 16px;
+}
+
+
+#adaptable-page-header-wrapper .navbar-nav .dropdown li a i,
+#adaptable-page-header-wrapper #above-header a i {
+    text-align: center;
+    width: 22px;
+}
+
+a.dropdown-item.i.fa.fa-users.fa-lg {
+    marging-right: 3px;
+}
+
+/* New main navbar styling */
+#adaptable-page-header-wrapper #main-navbar .navbar-nav > li > a.nav-link,
+#adaptable-page-header-wrapper #main-navbar .navbar-nav > li > div.nav-link,
+#adaptable-page-header-wrapper #main-navbar .navbar-nav .context-header-settings-menu .action-menu-trigger a.dropdown-toggle,
+#adaptable-page-header-wrapper #main-navbar .navbar-nav .context-header-settings-menu .action-menu-trigger a.dropdown-toggle:hover,
+#adaptable-page-header-wrapper #main-navbar .navbar-nav .region-main-settings-menu .action-menu-trigger a.dropdown-toggle,
+#adaptable-page-header-wrapper #main-navbar .navbar-nav .region-main-settings-menu .action-menu-trigger a.dropdown-toggle:hover {
     background-color: transparent;
-    background-image: none;
-    background-repeat: repeat-x;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-    min-height: 40px;
-    padding-left: 0;
-    padding-right: 0;
-    filter: none;
-    border-top: 0;
-    border-bottom: 0;
-    box-shadow: none;
-}
-
-.navbar .nav > li > a {
-    color: [[setting:menufontcolor]] !important;
-    line-height: 40px;
-    float: none;
-    padding: 0 [[setting:menufontpadding]] 0 [[setting:menufontpadding]];
+    color: [[setting:menufontcolor]];
+    font-size: [[setting:menufontsize]];
+    font-weight: 400;
+    line-height: 42px;
+    padding: 0 [[setting:menufontpadding]];
     text-decoration: none;
     text-shadow: none;
-    font-weight: 400;
-    font-size: [[setting:menufontsize]];
     text-transform: none;
-    border-right: 0;
-    background-color: transparent !important;
-}
-
-.navbar .nav > li > a:hover {
-    color: [[setting:menufontcolor]];
-    background-color: [[setting:menuhovercolor]] !important;
-    text-decoration: none;
-}
-
-.navbar .dropdown-submenu .dropdown-toggle{
-    height: 28px;
-}
-
-.navbar .nav li.dropdown.open > .dropdown-toggle,
-.navbar .nav li.dropdown.active > .dropdown-toggle,
-.navbar .nav li.dropdown.open.active > .dropdown-toggle {
-    background-color: transparent;
-    color: #fff;
-    font-size: [[setting:menufontsize]];
-}
-
-.navbar .btn-navbar,
-.navbar .btn-navbar:hover,
-.navbar .btn-navbar:active {
-    background-color: #001e3c;
-    background: #001e3c !important;
-}
-
-.navbar .pull-right a {
-    padding: 4px 15px;
-    border-left: 0;
-}
-
-.navbar .nav > li > .dropdown-menu:before, .navbar .nav > li > .dropdown-menu:after {
-    display: none;
-}
-
-.dropdown-toggle a {
-    height: 38px !important;
-}
-
-.dropdown-menu {
-    border: 1px solid #c0c0c0;
-    border-radius: 0;
-    font-size: [[setting:menufontsize]];
-    top: 40px;
-    background-clip: padding-box;
-    background-color: #fff;
-    display: block;
-    float: right;
-    list-style: outside none none;
-    margin: 2px 0;
-    padding: 5px 0;
-    position: absolute;
-    right: 0;
-    min-width: 250px;
-    top: 26px;
-    z-index: 1000;
-    border-radius: [[setting:navbardropdownborderradius]];
-
-}
-
-/* If another dropdown menu is added, please check the below two as definitions may need to be added
-   to ensure dropdown is hidden and displayed appropriately. */
-.navbar .nav .dropdown-menu, .headermenu .dropdown-menu, .langmenu .dropdown-menu  {
-    max-height: 0;
-
-    visibility:hidden;
-    -webkit-transition: all [[setting:navbardropdowntransitiontime]];
     -moz-transition: all [[setting:navbardropdowntransitiontime]];
     -ms-transition: all [[setting:navbardropdowntransitiontime]];
     -o-transition: all [[setting:navbardropdowntransitiontime]];
+    -webkit-transition: all [[setting:navbardropdowntransitiontime]];
     transition: all [[setting:navbardropdowntransitiontime]];
-
-    overflow: hidden;
-    opacity: 0;
 }
 
-.navbar .dropdown:hover .dropdown-menu, .headermenu .dropdown:hover .dropdown-menu,
-.langmenu:hover .dropdown-menu {
-    max-height: 800px;
-    opacity: 1;
-    overflow: visible;
-    visibility: visible;
+#adaptable-page-header-wrapper .dropdown-menu ul {
+    padding: 0;
+    margin: 0;
 }
 
-#above-header .nav li.dropdown {
-    line-height: 24px;
+#adaptable-page-header-wrapper #dropdownlangmenu0.dropdown-menu {
+    left: auto;
+    right: 0;
 }
 
-.navbar .nav .dropdown-menu {
-    margin-top: 14px !important;
+#adaptable-page-header-wrapper #main-navbar ul.navbar-nav > li > a.nav-link:hover,
+#adaptable-page-header-wrapper #main-navbar li div.nav-link:hover,
+#adaptable-page-header-wrapper #main-navbar li #editingbutton input[type="submit"]:hover {
+    background-color: [[setting:menuhovercolor]];
+    text-decoration: none;
 }
 
-.navbar .nav .dropdown .dropdown-menu .dropdown-submenu .dropdown-menu {
-    margin-top: 2px !important;
+#adaptable-page-header-wrapper #main-navbar li .action-menu-trigger a.dropdown-toggle:hover {
+    background-color: transparent;
+    color: [[setting:menuhovercolor]];
 }
 
-.nav .dropdown-menu .icon-time{
-    margin-left: 4px;
-    background-position: -48px -24px;
+#adaptable-page-header-wrapper #main-navbar .input-group {
+    display: flex;
+    align-items: center
 }
 
-.nav .dropdown-menu li a {
-    color: [[setting:linkcolor]] !important;
-    font-size: 13px;
-    font-weight: 400;
-    padding: 6px 10px;
-    border-bottom: 1px !important;
+#adaptable-page-header-wrapper #main-navbar .navbar-nav>.nav-item .dropdown-menu .dropdown-toggle:hover:after {
+    border-left-color: [[setting:navbardropdowntexthovercolor]];
 }
 
-.navbar .nav > li > a:hover {
-    background-color: #fff;
-    color: #333;
+#adaptable-page-header-wrapper #above-header li a:hover {
+    background-color: transparent;
 }
 
-.nav .dropdown-menu li a:hover {
-    background-color: [[setting:navbardropdownhovercolor]];
-    color: #333;
-}
-
-.dropdown-submenu:hover > a, .dropdown-submenu:focus > a {
-    background-color: #fff;
-}
-
-.dropdown-submenu>.dropdown-menu {
-    top: 0;
-    left: 100%;
-    margin-top: -6px;
-    margin-left: -1px;
-    border-radius: [[setting:navbardropdownborderradius]];
-}
-
-.nav-tabs .dropdown-menu, .nav-pills .dropdown-menu, .navbar .dropdown-menu {
-    margin-top: 0;
+#adaptable-page-header-wrapper #above-header .navbar button {
+    margin: 3px 1px 1px 0;
+    padding: 2px 2px;
+    font-size: 16px;
 }
 
 .navbar .nav > li:last-child > a {
     border-right: 0 !important;
 }
 
-.dropdown .fa.fa-briefcase {
+#adaptable-page-header-wrapper .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba(0, 0, 0, 0.5)' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E"); }
+
+/* New top header menu styling (includes #aboveheader css previously in adaptable.css). */
+
+#above-header {
+    background-color: [[setting:headerbkcolor]];
+    border-bottom: 1px solid [[setting:dividingline]];
+}
+
+#adaptable-page-header-wrapper #above-header .dropdown-item {
+    padding: .3rem 0.65rem;
+}
+
+#adaptable-page-header-wrapper #above-header .navbar-nav > li > a,
+#adaptable-page-header-wrapper #header2 .navbar-nav > div > li > a,
+#adaptable-page-header-wrapper #header2 .navbar-nav > li > a,
+#adaptable-page-header-wrapper #header2 .navbar-nav > a {
+    color: [[setting:headertextcolor]];
+    font-size: [[setting:topmenufontsize]];
+    text-decoration: none;
+}
+
+#adaptable-page-header-wrapper #above-header .navbar .popover-region-toggle i,
+#adaptable-page-header-wrapper #header2 .navbar .popover-region-toggle i {
+    color: [[setting:headertextcolor]];
+    font-size: 1.2em;
+}
+
+#adaptable-page-header-wrapper #above-header .navbar > li {
+    line-height: 23px;
+}
+
+#adaptable-page-header-wrapper .nav-link {
+    padding: .1rem .2rem .1rem .2rem;
+}
+
+#adaptable-page-header-wrapper .dropdown-menu .dropdown .dropdown-toggle {
+    padding: .25rem 1.5rem;
+}
+
+#adaptable-page-header-wrapper #above-header .dropdown-toggle a,
+#adaptable-page-header-wrapper #above-header .dropdown-menu a,
+#adaptable-page-header-wrapper #header2 .dropdown-menu a,
+#adaptable-page-header-wrapper #header2 .dropdown-toggle a,
+#adaptable-page-header-wrapper #header2 .popover-region-container {
+    color: [[setting:linkcolor]];
+    font-family: [[setting:fontname]], sans-serif;
+    font-size: [[setting:topmenufontsize]];
+}
+
+#adaptable-page-header-wrapper #above-header .dropdown-toggle a i,
+#adaptable-page-header-wrapper #header2 .dropdown-menu a i,
+#adaptable-page-header-wrapper #header2 .dropdown-toggle a i,
+#adaptable-page-header-wrapper #above-header .dropdown-menu a i {
+    color: [[setting:linkcolor]];
+}
+
+#adaptable-page-header-wrapper #above-header .linksmenu {
+    margin: 2px 15px 0 15px;
+}
+
+#adaptable-page-header-wrapper #above-header .langdesc,
+#adaptable-page-header-wrapper #above-header .linksdesc,
+#adaptable-page-header-wrapper #header2 .langdesc,
+#adaptable-page-header-wrapper #header2 .linksdesc {
+    color: [[setting:headertextcolor]];
+    font-size: [[setting:topmenufontsize]];
+}
+
+#adaptable-page-header-wrapper #above-header .navbar .popover-region i
+#adaptable-page-header-wrapper #above-header a i {
+    color: [[setting:headertextcolor]];
+}
+
+#adaptable-page-header-wrapper #header2 .popover-region-container a i {
+    color: inherit;
+}
+
+#adaptable-page-header-wrapper #header2 a i {
     padding-right: 4px;
 }
 
-.navbar .btn-group {
-    margin-top: 3px;
+#adaptable-page-header-wrapper #above-header a.dropdown-toggle {
+    margin-top: 2px;
 }
-
 
 /* New menus styles */
 
@@ -250,12 +273,14 @@
     background-color: #eee;
 }
 
-.newmenus .dropdown-toggle:hover, .newmenus .dropdown-toggle:active, .pull-left .usermenu2.nav a:hover {
+.newmenus .dropdown-toggle:hover,
+.newmenus .dropdown-toggle:active,
+.pull-left .usermenu2.nav a:hover {
     background-color: transparent !important;
 }
 
 .newmenus .dropdown-toggle::after {
-    font-family:FontAwesome;
+    font-family:"Font Awesome";
     margin-left:5px;
     content:"\f107";
     font-weight: normal;
@@ -264,12 +289,6 @@
 
 .newmenus .dropdown-menu .dropdown-toggle::after {
     color: transparent;
-}
-
-.container-fluid {
-    max-width: 100%;
-    padding-right: 0;
-    padding-left: 0;
 }
 
 .menutitle {
@@ -289,6 +308,7 @@
     overflow-x: hidden; /* Disable horizontal scroll */
     transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
 }
+
 .overlaymenu.open {
     height: 100%;
 }
@@ -316,7 +336,8 @@
 }
 
 .overlay-content li > a:hover {
-    color: [[setting:linkhover]] !important;
+    /* color: [[setting:linkhover]] !important; */
+    color: [[setting:linkhover]];
 }
 
 .overlay-content ul.overlaylist {
@@ -342,11 +363,317 @@
 }
 
 /* When the height of the screen is less than 450 pixels, change the font-size of the links and position the close button again, so they don't overlap */
-@media screen and (max-height: 450px) {
+@media (max-height: 450px) {
     .overlaymenu a {font-size: 20px}
     .overlaymenu .closebtn {
         font-size: 40px;
         top: 15px;
         right: 35px;
     }
+}
+
+/* Styling the top menu link when it's configured not to appear on the right. */
+#adaptable-page-header-wrapper .topmenuleft {
+    float: left;
+    margin: 0;
+    padding: 10px 0 0 0;
+}
+
+/* New dropdown-related classes.  These are mainly for settings. */
+
+.navbar {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+/* #adaptable-page-header-wrapper .navwrap .navbar > li > a {
+    color: [[setting:menufontcolor]] /* !important */;
+/*    line-height: 40px;
+    float: none;
+    padding: 0 [[setting:menufontpadding]] 0 [[setting:menufontpadding]];
+    text-decoration: none;
+    text-shadow: none;
+    font-weight: 400;
+    font-size: [[setting:menufontsize]];
+    text-transform: none;
+    border-right: 0;
+    background-color: transparent !important;
+}
+
+#adaptable-page-header-wrapper .navbar > li > a:hover {
+    color: [[setting:menufontcolor]];
+    background-color: [[setting:menuhovercolor]] !important;
+    text-decoration: none;
+} */
+
+.navbar li.dropdown.open > .dropdown-toggle,
+.navbar li.dropdown.active > .dropdown-toggle,
+.navbar li.dropdown.open.active > .dropdown-toggle {
+    font-size: [[setting:menufontsize]];
+}
+
+#adaptable-page-header-wrapper .navbar .dropdown-menu {
+    font-size: [[setting:menufontsize]];
+    border-radius: [[setting:navbardropdownborderradius]];
+    -webkit-transition: all [[setting:navbardropdowntransitiontime]];
+    -moz-transition: all [[setting:navbardropdowntransitiontime]];
+    -ms-transition: all [[setting:navbardropdowntransitiontime]];
+    -o-transition: all [[setting:navbardropdowntransitiontime]];
+    transition: all [[setting:navbardropdowntransitiontime]];
+}
+
+#region-main-settings-menu .dropdown-menu {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.adaptable-navbar-sticky #region-main-settings-menu .dropdown-menu {
+    max-height: calc(100vh - 44px);
+}
+
+.dropdown-menu.fade {
+    display: block;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.show > .dropdown-menu.fade {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+/* Bootstrap hides/shows dropdowns onclick via the class .show */
+.dropdown-menu.show {
+    display: block !important; /* SHAME - using important as this seems to be overwriten elsewhere. */
+}
+
+#adaptable-page-header-wrapper .nav .dropdown-menu li a {
+    color: [[setting:linkcolor]];
+    background-color: none;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus,
+.dropdown-item:focus-within,
+.dropdown-item:active,
+.dropdown-item.active,
+.dropdown-submenu:hover > a,
+.dropdown-submenu:focus > a,
+.block a.dropdown-item.active {
+    background-color: [[setting:navbardropdownhovercolor]];
+    color: [[setting:navbardropdowntexthovercolor]];
+}
+
+.dropdown-item:focus-within a {
+    color: [[setting:navbardropdowntexthovercolor]];
+}
+
+.dropdown-menu a,
+.dropdown-menu > .active,
+.dropdown-menu > .active > a,
+.dropdown-submenu > a
+#adaptable-page-header-wrapper .dropdown-menu li a {
+    color: [[setting:navbardropdowntextcolor]];
+}
+
+.dropdown-item:hover > a,
+.dropdown-item:focus > a,
+.dropdown-menu > .active > a:hover,
+.dropdown-menu > .active > a:focus,
+#adaptable-page-header-wrapper .dropdown-menu li a:hover {
+    background-color: [[setting:navbardropdownhovercolor]];
+    background-image: none !important;
+    color: [[setting:navbardropdowntexthovercolor]];
+}
+
+.dropdown-submenu>.dropdown-menu {
+    border-radius: [[setting:navbardropdownborderradius]];
+}
+
+#adaptable-page-header-wrapper #main-navbar .navbar-nav > .nav-item .dropdown-menu .dropdown-toggle:after {
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: [[setting:linkcolor]];
+    margin-top: 9px;
+    margin-right: -12px;
+}
+
+#adaptable-page-header-wrapper #main-navbar .navbar-nav .nav-item .dropdown-menu > .nav-item .dropdown-menu {
+    max-height: 400px;
+    overflow-x: auto;
+    top: -1px;
+}
+
+/* New bootstrap related css classes for hover menus. The below added for Adaptable for Moodle 3.6 onwards. */
+
+/*=-====Bootstrapthemes.co btco-hover-menu=====*/
+
+#adaptable-page-header-wrapper .navbar-nav {
+    margin-bottom: 0;
+}
+
+#adaptable-page-header-wrapper .navbar .popover-region-toggle {
+    width: inherit;
+}
+
+#adaptable-page-header-wrapper .navbar .popover-region {
+    margin: 0 0 0 4px;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: rgb(64, 64, 64);
+}
+.btco-hover-menu a ,  .navbar > li > a {
+/*    text-transform: capitalize; */
+/*    padding: 10px 15px; */
+}
+
+/* Drop-down menu for hover. */
+#adaptable-page-header-wrapper .btco-hover-menu {
+    background: none;
+    margin: 0;
+    padding: 0;
+}
+
+#adaptable-page-header-wrapper #main-navbar .action-menu .dropdown-toggle::after {
+    display: inline-block;
+    content: normal;
+    width: 0;
+    height: 0;
+    margin-left: .255em;
+    vertical-align: .255em;
+    content: "";
+    border-top: .3em solid;
+    border-right: .3em solid transparent;
+    border-bottom: 0;
+    border-left: .3em solid transparent;
+}
+
+#adaptable-page-header-wrapper #main-navbar .action-menu a.dropdown-toggle i {
+    padding: 0;
+}
+
+
+@media (max-width: 991px) {
+    #adaptable-page-header-wrapper .btco-hover-menu .show > .dropdown-toggle::after{
+        transform: rotate(-90deg);
+    }
+}
+
+@media (min-width: 991px) {
+    #adaptable-page-header-wrapper .btco-hover-menu .collapse ul li {
+        position:relative;
+    }
+
+    #adaptable-page-header-wrapper .btco-hover-menu .collapse ul li:hover > ul,
+    #adaptable-page-header-wrapper .btco-hover-menu .collapse ul ul.dropdown-menu li:hover > ul {
+        display: block;
+    }
+
+    #adaptable-page-header-wrapper .btco-hover-menu .collapse ul ul.dropdown-menu {
+        display: none;
+        margin-top: 0;
+        min-width: 180px;
+        padding: 0;
+        position: absolute;
+    }
+
+    #adaptable-page-header-wrapper .btco-hover-menu .collapse ul ul.dropdown-menu ul {
+        display: none;
+        left: 100%;
+        min-width: 180px;
+        position: absolute;
+        top: 0;
+    }
+
+    #adaptable-page-header-wrapper .btco-hover-menu .collapse ul ul.dropdown-menu ul ul {
+        left: -100%;
+        z-index: 1;
+    }
+
+    #adaptable-page-header-wrapper #above-header .btco-hover-menu .collapse ul ul.dropdown-menu {
+        min-width: 60px;
+    }
+
+    #adaptable-page-header-wrapper #above-header .btco-hover-menu .collapse ul [id^='langmenu'] {
+        min-width: 135px;
+    }
+}
+
+/* Increase width slightly of default nav-drawer. */
+[data-region="drawer"] {
+    width: 300px;
+}
+
+/* Adjust height according to header style. */
+.header-style1 [data-region="drawer"] {
+    height: calc(100% - 105px);
+    top: 105px;
+}
+
+.header-style2 [data-region="drawer"] {
+    height: calc(100% - 46px);
+    top: 46px;
+}
+
+@media screen and (min-width: 768px) {
+    .header-style2 [data-region="drawer"] {
+        height: calc(100% - 72px);
+        top: 72px;
+    }
+}
+
+/* When the nav-drawer is closed take it out of the dom so it is not read by screenreaders. */
+#nav-drawer.closed #nav-drawer-inner {
+    display: none;
+}
+
+.nav-link img.userpicture {
+    margin-right: 0;
+}
+
+
+#adaptable-page-header-wrapper button[aria-controls="nav-drawer"] {
+    font-size: 1.2em;
+}
+
+#adaptable-page-header-wrapper #main-navbar .nav-item .nav-link .fa {
+    margin-right: 2px;
+}
+
+#adaptable-page-header-wrapper #main-navbar .nav-item .fa-circle {
+    font-size: 10px;
+    margin-right: .25rem;
+}
+
+#adaptable-page-header-wrapper #main-navbar .nav-item i.only {
+    padding-right: 0;
+}
+
+#adaptable-page-header-wrapper #adaptable-page-header-nav-drawer button {
+    border: 0;
+    background: none;
+    font-size: 1.5em;
+    color: [[setting:headertextcolor]];
+}
+
+#adaptable-page-header-nav-drawer button {
+    cursor: pointer;
+}
+
+#adaptable-page-header-wrapper .icon {
+    height: 14px;
+    margin-right: 0;
+    padding-right: 4px;
+    width: 14px;
+}
+
+#adaptable-page-header-wrapper .context-header-settings-menu .icon {
+    width: auto;
 }

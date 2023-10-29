@@ -16,6 +16,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * mod/reader/locallib.php
+ *
+ * @package    mod
+ * @subpackage reader
+ * @copyright  2013 Gordon Bateson (gordon.bateson@gmail.com)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since      Moodle 2.0
+ */
+
+/**
  * Library of internal classes and functions for module reader
  *
  * All the reader specific functions, needed to implement the module
@@ -538,7 +548,7 @@ class mod_reader {
     /**
      * @return moodle_url of this reader's view page
      */
-    public function view_url($cm=null) {
+    public function view_url($params=null, $cm=null) {
         if ($cm===null) {
             $url = '/mod/reader/view.php';
         } else {
@@ -556,6 +566,19 @@ class mod_reader {
             $params['framename'] = $framename;
         }
         return $this->url('/mod/reader/attempt.php', $params, $cm);
+    }
+
+    /**
+     * @param int $attemptid the id of an attempt.
+     * @param int $page optional page number to go to in the attempt.
+     * @return string the URL of that attempt.
+     */
+    public function mreader_attempt_url($attemptid, $cm=null) {
+        $params = array();
+        if ($attemptid) {
+            $params['attempt'] = $attemptid;
+        }
+        return $this->url('/mod/reader/quiz/mreader.php', $params, $cm);
     }
 
     /**
@@ -843,8 +866,11 @@ class mod_reader {
     /*
      * get_delay
      *
-     * @param integer $userid
-     * @return boolean
+     * calculate the remaining delay (in seconds) until the next quiz can be taken
+     *
+     * @param integer $userid (optional, default = 0)
+     * @param integer $groupid (optional, default = 0)
+     * @return integer the delay (in seconds) until the next quiz can be taken
      **/
     public function get_delay($userid=0, $groupid=0) {
         // no delays for admins and teachers
@@ -1062,11 +1088,13 @@ class mod_reader {
         $timecheckstate = 0;
         if ($readerattempt->timefinish) {
             if (defined('quiz_attempt::FINISHED')) {
+                // Moodle >= 2.3
                 $state = quiz_attempt::FINISHED; // "finished"
                 $timecheckstate = $readerattempt->timefinish;
             }
         } else {
             if (defined('quiz_attempt::IN_PROGRESS')) {
+                // Moodle >= 2.3
                 $state = quiz_attempt::IN_PROGRESS; // "inprogress"
                 $timecheckstate = $readerattempt->timemodified;
             }

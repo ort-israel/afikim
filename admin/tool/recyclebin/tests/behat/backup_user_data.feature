@@ -19,14 +19,13 @@ Feature: Backup user data
     And the following config values are set as admin:
       | coursebinenable | 1 | tool_recyclebin |
       | autohide | 0 | tool_recyclebin |
+    And the following "activities" exist:
+      | activity | course | section | name   | intro                 |
+      | quiz     | C1     | 1       | Quiz 1 | Test quiz description |
 
   @javascript
   Scenario: Delete and restore a quiz with user data
-    Given I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Quiz" to section "1" and I fill the form with:
-      | Name        | Quiz 1                |
-      | Description | Test quiz description |
+    Given I am on the "Quiz 1" "quiz activity" page logged in as teacher1
     And I add a "True/False" question to the "Quiz 1" quiz with:
       | Question name                      | TF1                          |
       | Question text                      | First question               |
@@ -41,10 +40,10 @@ Feature: Backup user data
       | Correct answer                     | False                                   |
       | Feedback for the response 'True'.  | So you think it is true                 |
       | Feedback for the response 'False'. | So you think it is false                |
+    And I set the field "maxgrade" to "10.0"
+    And I press "savechanges"
     And I log out
-    And I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Quiz 1"
+    When I am on the "Quiz 1" "quiz activity" page logged in as student1
     And I press "Attempt quiz now"
     And I click on "True" "radio" in the "First question" "question"
     And I click on "False" "radio" in the "Second question" "question"
@@ -57,7 +56,7 @@ Feature: Backup user data
     And I am on "Course 1" course homepage with editing mode on
     And I delete "Quiz 1" activity
     And I run all adhoc tasks
-    And I navigate to "Recycle bin" node in "Course administration"
+    And I navigate to "Recycle bin" in current page administration
     And I should see "Quiz 1"
     And I click on "Restore" "link" in the "region-main" "region"
     And I log out

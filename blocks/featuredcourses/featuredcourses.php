@@ -23,7 +23,6 @@
  */
 
 require_once('../../config.php');
-require_once($CFG->libdir.'/coursecatlib.php');
 require_once($CFG->dirroot.'/blocks/moodleblock.class.php');
 require_once($CFG->dirroot.'/blocks/featuredcourses/block_featuredcourses.php');
 require_once($CFG->dirroot.'/blocks/featuredcourses/featuredcourses_form.php');
@@ -39,7 +38,7 @@ $PAGE->set_url('/blocks/featuredcourses/featuredcourses.php');
 $PAGE->set_context($systemcontext);
 
 $args = array(
-    'availablecourses' => coursecat::get(0)->get_courses(array('recursive' => true)),
+    'availablecourses' => core_course_category::get(0)->get_courses(array('recursive' => true)),
     'featuredcourses' => block_featuredcourses::get_featured_courses()
 );
 
