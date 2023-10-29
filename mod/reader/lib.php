@@ -28,6 +28,8 @@
 /** Prevent direct access to this script */
 defined('MOODLE_INTERNAL') || die();
 
+
+
 define('READER_GRADEHIGHEST', '1');
 define('READER_GRADEAVERAGE', '2');
 define('READER_ATTEMPTFIRST', '3');
@@ -2284,7 +2286,7 @@ function reader_add_to_log($courseid, $module, $action, $url='', $info='', $cmid
  * @param xxx $cmid
  * @param xxx $reader
  * @param xxx $userid
- * @param xxx $hasquiz (TRUE  : require quizid > 0,
+ * @param xxx $hasquiz (TRUE  : require quizid <> 0,
  *                      FALSE : require quizid == 0,
  *                      NULL  : require quizid >= 0)
  * @return array($from, $where, $params)
@@ -2296,11 +2298,11 @@ function reader_available_sql($cmid, $reader, $userid, $hasquiz=null) {
     if (reader_can('viewallbooks', $cmid, $userid)) {
         $from = '{reader_books} rb';
         if ($hasquiz===true) {
-            $where = 'rb.quizid > ?';
+            $where = 'rb.quizid <> ?';
         } else if ($hasquiz===false) {
             $where = 'rb.quizid = ?';
         } else {
-            $where = 'rb.quizid >= ?';
+            $where = 'ABS(rb.quizid) >= ?';
         }
         $where .= ' AND rb.hidden = ? AND rb.level <> ?';
         $params = array(0, 0, 99);
@@ -2324,7 +2326,7 @@ function reader_available_sql($cmid, $reader, $userid, $hasquiz=null) {
     // "id" values of books whose quizzes this user has already attempted
     $recordids  = 'SELECT rb.id '.
                   'FROM {reader_attempts} ra LEFT JOIN {reader_books} rb ON ra.bookid = rb.id '.
-                  'WHERE ra.userid = ? AND ra.deleted <> ? AND rb.id IS NOT NULL AND rb.quizid > ?';
+                  'WHERE ra.userid = ? AND ra.deleted <> ? AND rb.id IS NOT NULL AND rb.quizid <> ?';
 
     // "sametitle" values for books whose quizzes this user has already attempted
     $sametitles = 'SELECT DISTINCT rb.sametitle '.
@@ -2632,7 +2634,10 @@ function reader_create_attempt($reader, $attemptnumber, $book, $adduniqueid=fals
         // we are not building on last attempt so create a new attempt
 
         // save the list of question ids (for use in quiz/attemptlib.php)
-        if ($use_quiz_slots) {
+        if (get_config('mod_reader', 'mreadersiteid')) {
+            // questions will be shown on mreader.org
+            $reader->questions = false;
+        } else if ($use_quiz_slots) {
             // Moodle >= 2.7
             if ($reader->questions = $DB->get_records_menu('quiz_slots', array('quizid' => $book->quizid), 'page,slot', 'id,questionid')) {
                 $reader->questions = array_values($reader->questions);
@@ -2644,9 +2649,10 @@ function reader_create_attempt($reader, $attemptnumber, $book, $adduniqueid=fals
             $reader->questions = $DB->get_field('quiz', 'questions', array('id' => $book->quizid));
         }
         if ($reader->questions===false) {
-            $reader->questions = ''; // shouldn't happen !!
+            $reader->questions = '';
         }
 
+        // initialize new attempt
         $attempt = (object)array(
             'readerid' => $reader->id,
             'userid'   => $USER->id,
@@ -2768,11 +2774,17 @@ function reader_get_student_attempts($userid, $reader, $allreaders = false, $boo
     $select = 'ra.id, ra.uniqueid, ra.readerid, ra.userid, ra.bookid, ra.quizid, ra.attempt, '.
               'ra.sumgrades, ra.percentgrade, ra.passed, ra.credit, ra.cheated, ra.deleted, '.
               'ra.timefinish, ra.state, ra.bookrating, rb.name, rb.publisher, rb.level, '.
-              'rb.points, rb.image, rb.difficulty, rb.words, rb.sametitle';
+              'rb.points, rb.image, rb.difficulty, rb.words, rb.sametitle, '.
+              '(CASE WHEN ra.state = :finished   THEN 4 '.
+                    'WHEN ra.state = :abandoned  THEN 3 '.
+                    'WHEN ra.state = :overdue    THEN 2 '.
+                    'WHEN ra.state = :inprogress THEN 1 ELSE 0 END) AS sortorder';
     $from   = '{reader_attempts} ra LEFT JOIN {reader_books} rb ON ra.bookid = rb.id';
     $where  = 'ra.userid = :userid AND ra.deleted = :deleted AND ra.timefinish > :ignoredate';
-    $order  = 'ra.timefinish';
-    $params = array('userid' => $userid, 'deleted' => 0, 'ignoredate' => $ignoredate);
+    $order  = 'sortorder DESC, ra.timefinish ASC';
+    $params = array('finished' => 'finished', 'abandoned' => 'abandoned',
+                    'overdue' => 'overdue', 'inprogress' => 'inprogress', 
+                    'userid' => $userid, 'deleted' => 0, 'ignoredate' => $ignoredate);
     if (! $allreaders) {
         $where .= ' AND ra.readerid = :readerid';
         $params['readerid'] = $reader->id;
@@ -2788,6 +2800,7 @@ function reader_get_student_attempts($userid, $reader, $allreaders = false, $boo
 
     $returndata = array();
     $bestattemptids = array();
+    $bookpercentmaxgrade = array();
 
     // these are the grand totals for ALL attempts
     $totals = array();
@@ -2845,15 +2858,26 @@ function reader_get_student_attempts($userid, $reader, $allreaders = false, $boo
         if (isset($bookpercentmaxgrade[$attempt->bookid])) {
             list($totals['bookpercent'], $totals['bookmaxgrade']) = $bookpercentmaxgrade[$attempt->bookid];
         } else {
-            $totalgrade = 0;
-            $answersgrade = $DB->get_records ('reader_question_instances', array('quiz' => $attempt->quizid)); // Count Grades (TotalGrade)
-            foreach ($answersgrade as $answersgrade_) {
-                $totalgrade += $answersgrade_->grade;
+            if ($attempt->quizid > 0) {
+                $totalgrade = 0;
+                if ($instances = $DB->get_records ('reader_question_instances', array('quiz' => $attempt->quizid))) {
+                    foreach ($instances as $instance) {
+                        $totalgrade += $instance->grade;
+                    }
+                }
+            } else {
+                $totalgrade = intval($attempt->percentgrade);
             }
-            //$totals['bookpercent']  = round(($attempt->sumgrades/$totalgrade) * 100, 2).'%';
-            $totals['bookpercent']  = round($attempt->percentgrade).'%';
+            if (is_numeric($attempt->percentgrade)) {
+                $totals['bookpercent']  = round($attempt->percentgrade).'%';
+            } else if (is_numeric($attempt->sumgrades) && $totalgrade) {
+                $totals['bookpercent']  = round(($attempt->sumgrades/$totalgrade) * 100, 2).'%';
+            } else {
+                $totals['bookpercent']  = '0%';
+            }
             $totals['bookmaxgrade'] = $totalgrade * $bookpoints;
-            $bookpercentmaxgrade[$attempt->bookid] = array($totals['bookpercent'], $totals['bookmaxgrade']);
+            $bookpercentmaxgrade[$attempt->bookid] = array($totals['bookpercent'],
+                                                           $totals['bookmaxgrade']);
         }
 
         if ($attempt->credit == 1) {

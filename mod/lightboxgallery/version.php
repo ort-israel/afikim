@@ -24,10 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2018062700;  // The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires = 2017051500;  // Requires this Moodle version.
-$plugin->cron     = 0;           // Period for cron to check this plugin (secs).
+$plugin->version  = 2020061800;  // The current plugin version (Date: YYYYMMDDXX).
+$plugin->requires = 2019051100;  // Requires this Moodle version.
 
 $plugin->component = 'mod_lightboxgallery';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->release = '3.3.0.6';
+$plugin->release = '3.7.2';

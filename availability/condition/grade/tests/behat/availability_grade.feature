@@ -16,18 +16,20 @@ Feature: availability_grade
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
+    # Add an assignment.
+    And the following "activity" exists:
+      | activity                            | assign |
+      | course                              | C1     |
+      | section                             | 1      |
+      | name                                | A1     |
+      | intro                               | x      |
+      | assignsubmission_onlinetext_enabled | 1      |
 
   @javascript
   Scenario: Test condition
     # Basic setup.
     Given I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on
-
-    # Add an assignment.
-    And I add a "Assignment" to section "1" and I fill the form with:
-      | Assignment name     | A1 |
-      | Description         | x  |
-      | Online text         | 1  |
 
     # Add a Page with a grade condition for 'any grade'.
     And I add a "Page" to section "2"
@@ -86,13 +88,12 @@ Feature: availability_grade
     And I set the field "Minimum grade percentage (inclusive)" to "10"
     And I press "Save and return to course"
 
+    And I log out
+
     # Log in as student without a grade yet.
-    When I log out
-    And I log in as "student1"
-    And I am on "Course 1" course homepage
+    When I am on the "A1" "assign activity" page logged in as student1
 
     # Do the assignment.
-    And I follow "A1"
     And I click on "Add submission" "button"
     And I set the field "Online text" to "Q"
     And I click on "Save changes" "button"
@@ -103,26 +104,23 @@ Feature: availability_grade
     And I should not see "P3" in the "region-main" "region"
     And I should not see "P4" in the "region-main" "region"
     And I should see "A1" in the "region-main" "region"
+    And I log out
 
     # Log back in as teacher.
-    When I log out
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage
+    When I am on the "A1" "assign activity" page logged in as teacher1
 
     # Give the assignment 40%.
-    And I follow "A1"
     And I navigate to "View all submissions" in current page administration
     # Pick the grade link in the row that has s@example.com in it.
     And I click on "Grade" "link" in the "s@example.com" "table_row"
     And I set the field "Grade out of 100" to "40"
     And I click on "Save changes" "button"
-    And I press "Ok"
+    And I press "OK"
     And I click on "Edit settings" "link"
+    And I log out
 
     # Log back in as student.
-    And I log out
-    And I log in as "student1"
-    And I am on "Course 1" course homepage
+    And I am on the "Course 1" course page logged in as student1
 
     # Check pages are visible.
     Then I should see "P2" in the "region-main" "region"

@@ -48,11 +48,7 @@ class mod_lightboxgallery_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
-        if ($CFG->branch < 29) {
-            $this->add_intro_editor(true, get_string('description'));
-        } else {
-            $this->standard_intro_elements();
-        }
+        $this->standard_intro_elements();
 
         // Advanced options.
 

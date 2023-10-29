@@ -56,12 +56,20 @@ $rss = $format == 'rss';
 
 // Load forum
 if ($d) {
-    $discussion = mod_forumng_discussion::get_from_id($d, $cloneid);
+    try {
+        $discussion = mod_forumng_discussion::get_from_id($d, $cloneid);
+    } catch (\dml_exception $ex) {
+        redirect(new moodle_url('/local/error/http-error.php', ['test' => '404']));
+    }
     $forum = $discussion->get_forum();
     $groupid = $discussion->get_group_id();
     $url = $discussion->get_url(mod_forumng::PARAM_PLAIN);
 } else {
-    $forum = mod_forumng::get_from_cmid($cmid, $cloneid);
+    try {
+        $forum = mod_forumng::get_from_cmid($cmid, $cloneid);
+    } catch (\moodle_exception $e) {
+        redirect(new moodle_url('/local/error/http-error.php', ['test' => '404']));
+    }
     $url = $forum->get_url(mod_forumng::PARAM_PLAIN);
     if ($groupid == 'unspecified') {
         $groupid = $forum->get_group_mode() == SEPARATEGROUPS
@@ -174,12 +182,7 @@ if (isset($discussions)) {
 
         // Remaining details straightforward
         $data->description = $post->get_formatted_message();
-        if ($post->get_asmoderator() == mod_forumng::ASMODERATOR_NO ||
-                $forum->can_post_anonymously()) {
-            $data->author = $forum->display_user_name($post->get_user());
-        } else {
-            $data->author = get_string('moderator', 'forumng');
-        }
+        $data->author = $post->get_forum()->display_author_name($post->get_user(), $post->get_asmoderator(), false);
         $data->link = $post->get_url();
         $data->pubdate = $post->get_modified();
 

@@ -26,45 +26,46 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-    // Social links.
-    $temp = new admin_settingpage('theme_adaptable_social', get_string('socialsettings', 'theme_adaptable'));
+// Social links.
+if ($ADMIN->fulltree) {
+    $page = new admin_settingpage('theme_adaptable_social', get_string('socialsettings', 'theme_adaptable'));
 
-    $temp->add(new admin_setting_heading('theme_adaptable_social', get_string('socialheading', 'theme_adaptable'),
+    $page->add(new admin_setting_heading('theme_adaptable_social', get_string('socialheading', 'theme_adaptable'),
     format_text(get_string('socialtitledesc', 'theme_adaptable'), FORMAT_MARKDOWN)));
 
     $name = 'theme_adaptable/socialsize';
     $title = get_string('socialsize', 'theme_adaptable');
-    $description = get_string('socialsize', 'theme_adaptable');
-    $setting = new admin_setting_configselect($name, $title, $description, '32px', $from14to42px);
+    $description = get_string('socialsizedesc', 'theme_adaptable');
+    $setting = new admin_setting_configselect($name, $title, $description, '37px', $from14to46px);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    $name = 'theme_adaptable/socialsizemobile';
-    $title = get_string('socialsizemobile', 'theme_adaptable');
-    $description = get_string('socialsizemobile', 'theme_adaptable');
-    $setting = new admin_setting_configselect($name, $title, $description, '22px', $from14to42px);
+    $name = 'theme_adaptable/socialpaddingside';
+    $title = get_string('socialpaddingside', 'theme_adaptable');
+    $description = get_string('socialpaddingsidedesc', 'theme_adaptable');
+    $setting = new admin_setting_configselect($name, $title, $description, 16, $from10to30pxnovalueunit);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     $name = 'theme_adaptable/socialpaddingtop';
     $title = get_string('socialpaddingtop', 'theme_adaptable');
-    $description = get_string('socialpaddingtop', 'theme_adaptable');
+    $description = get_string('socialpaddingtopdesc', 'theme_adaptable');
     $setting = new admin_setting_configselect($name, $title, $description, '0%', $from0to2point5percent);
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     $name = 'theme_adaptable/socialtarget';
     $title = get_string('socialtarget', 'theme_adaptable');
     $description = get_string('socialtargetdesc', 'theme_adaptable');
     $setting = new admin_setting_configselect($name, $title, $description, '_self', $htmltarget);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     $name = 'theme_adaptable/socialiconlist';
     $title = get_string('socialiconlist', 'theme_adaptable');
     $default = '';
     $description = get_string('socialiconlistdesc', 'theme_adaptable');
     $setting = new admin_setting_configtextarea($name, $title, $description, $default, PARAM_RAW, '50', '10');
-    $temp->add($setting);
+    $page->add($setting);
 
-    $ADMIN->add('theme_adaptable', $temp);
+    $asettings->add($page);
+}

@@ -11,7 +11,7 @@ Feature: View gradebook when single item scales are used
     And I set the following administration settings values:
       | grade_report_showranges    | 1 |
       | grade_aggregations_visible | Mean of grades,Weighted mean of grades,Simple weighted mean of grades,Mean of grades (with extra credits),Median of grades,Lowest grade,Highest grade,Mode of grades,Natural |
-    And I navigate to "Scales" node in "Site administration > Grades"
+    And I navigate to "Grades > Scales" in site administration
     And I press "Add a new scale"
     And I set the following fields to these values:
       | Name  | <span lang="en" class="multilang">EN</span><span lang="fr" class="multilang">FR</span> Singleitem |
@@ -39,10 +39,7 @@ Feature: View gradebook when single item scales are used
       | assign   | C1     | a1       | Test assignment one | Submit something! | <span lang="en" class="multilang">EN</span><span lang="fr" class="multilang">FR</span> Sub category 1 |
     And the "multilang" filter is "on"
     And the "multilang" filter applies to "content and headings"
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Test assignment one"
-    And I navigate to "Edit settings" in current page administration
+    And I am on the "Test assignment one" "assign activity editing" page logged in as teacher1
     And I expand all fieldsets
     And I set the field "grade[modgrade_type]" to "Scale"
     And I set the field "grade[modgrade_scale]" to "EN Singleitem"
@@ -51,7 +48,7 @@ Feature: View gradebook when single item scales are used
     And I click on "Grade" "link" in the "Student 1" "table_row"
     And I set the field "Grade" to "A"
     And I press "Save changes"
-    And I press "Ok"
+    And I press "OK"
     And I am on "Course 1" course homepage
     And I navigate to "Setup > Course grade settings" in the course gradebook
     And I set the field "Show weightings" to "Show"

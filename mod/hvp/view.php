@@ -27,6 +27,9 @@ global $PAGE, $DB, $CFG, $OUTPUT;
 
 $id = required_param('id', PARAM_INT);
 
+// Lea 2020 - add isembeded functionality
+$isembeded = optional_param('isembedded', false, PARAM_BOOL);
+
 // Verify course context.
 $cm = get_coursemodule_from_id('hvp', $id);
 if (!$cm) {
@@ -39,6 +42,11 @@ if (!$course) {
 require_course_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/hvp:view', $context);
+
+// Lea 2018 - add isembeded functionality
+if ($isembeded) {
+   $PAGE->set_pagelayout('embedded');
+}
 
 // Set up view assets.
 $view    = new \mod_hvp\view_assets($cm, $course);
@@ -60,7 +68,7 @@ echo $OUTPUT->heading(format_string($content['title']));
 echo '<div class="clearer"></div>';
 
 // Output introduction.
-if (trim(strip_tags($content['intro']))) {
+if (trim(strip_tags($content['intro'], '<img>'))) {
     echo $OUTPUT->box_start('mod_introbox', 'hvpintro');
     echo format_module_intro('hvp', (object) array(
         'intro'       => $content['intro'],
@@ -74,4 +82,19 @@ if (trim(strip_tags($content['intro']))) {
 \mod_hvp\framework::printMessages('error', \mod_hvp\framework::messages('error'));
 
 $view->outputview();
+
+// HACK: Add customized CSS to each H5P activity (library).
+// Clean CSS (as JS do not like newline and linebreak chars)
+$content['css'] = str_replace(array("\n", "\r"), '', $content['css']);
+$PAGE->requires->js_amd_inline("
+
+require(['jquery'], function($) {
+//debugger;
+    var head = $('.h5p-iframe').contents().find('head');
+    var css = '<style type=\"text/css\">".$content['css']."</style>';
+    $(head).append(css);
+});
+
+");
+
 echo $OUTPUT->footer();

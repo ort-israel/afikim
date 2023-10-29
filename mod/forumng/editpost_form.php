@@ -33,7 +33,7 @@ class mod_forumng_editpost_form extends moodleform {
         $replyoptions = !empty($this->_customdata['replyoption']) ? $this->_customdata['replyoption'] : array(
             'subject' => true,
             'attachments' => true,
-            'markposts' => true,
+            'markimportant' => 'setimportant',
             'postas' => true,
             'cancelbutton' => true,
             'postasdraftbutton' => true,
@@ -162,14 +162,17 @@ class mod_forumng_editpost_form extends moodleform {
 
             // If you can mail now, we show this option.
             $attachmentlist = '';
-            if ($forum->can_set_important() && !$isdiscussion && !$isroot && !$islock && !empty($replyoptions['markposts'])) {
+            if ($forum->can_set_important() && !$isdiscussion && !$isroot && !$islock && !empty($replyoptions['markimportant'])) {
                 $mform->addElement('checkbox', 'setimportant',
-                        get_string('setimportant', 'forumng'));
+                        get_string($replyoptions['markimportant'], 'forumng'));
             }
             // Only add moderator element to post edit form if op1 or op2 available.
             if (($forum->can_post_anonymously() || $forum->can_indicate_moderator()) && !empty($replyoptions['postas'])) {
                 $options=array();
                 $options[mod_forumng::ASMODERATOR_NO] = get_string('asmoderator_post', 'forumng');
+                if ($forum->get_can_post_anon() == mod_forumng::CANPOSTATON_NONMODERATOR) {
+                    $options[mod_forumng::ASMODERATOR_NO] = get_string('asmoderator_post_anon', 'forumng');
+                }
                 if ($forum->can_indicate_moderator()) {
                     $options[mod_forumng::ASMODERATOR_IDENTIFY] = get_string('asmoderator_self', 'forumng');
                 }
@@ -382,6 +385,25 @@ class mod_forumng_editpost_form extends moodleform {
                 } else {
                     $errors['subject'] = get_string('error_identityinsubject_reply', 'forumng');
                 }
+            }
+        }
+        if (!empty($data['asmoderator'])) {
+            $forum = $this->_customdata['forum'];
+            $capability = '';
+            $stringidentifier = '';
+            switch ($data['asmoderator']) {
+                case 1:
+                    $capability = 'mod/forumng:postasmoderator';
+                    $stringidentifier = 'error_postasmoderator';
+                    break;
+                case 2:
+                    $capability = 'mod/forumng:postanon';
+                    $stringidentifier = 'error_postanon';
+                    break;
+            }
+
+            if (!has_capability($capability, $forum->get_context(), $USER->id)) {
+                $errors['asmoderator'] = get_string($stringidentifier, 'forumng');
             }
         }
         return $errors;

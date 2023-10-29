@@ -64,7 +64,7 @@ if (isloggedin()) {
     ];
 
     // Improve boost navigation.
-    theme_moove_boostnavigation_extend_navigation($PAGE->navigation);
+    theme_moove_extend_flat_navigation($PAGE->flatnav);
 
     $templatecontext['flatnavigation'] = $PAGE->flatnav;
 
@@ -73,7 +73,7 @@ if (isloggedin()) {
     echo $OUTPUT->render_from_template('theme_moove/frontpage', $templatecontext);
 } else {
     $sliderfrontpage = false;
-    if (theme_moove_get_setting('sliderfrontpage', true) == true) {
+    if ((theme_moove_get_setting('sliderenabled', true) == true) && (theme_moove_get_setting('sliderfrontpage', true) == true)) {
         $sliderfrontpage = true;
         $extraclasses[] = 'slideshow';
     }
@@ -108,6 +108,12 @@ if (isloggedin()) {
         $shoulddisplaymarketing = true;
     }
 
+    $disablefrontpageloginbox = false;
+    if (theme_moove_get_setting('disablefrontpageloginbox', true) == true) {
+        $disablefrontpageloginbox = true;
+        $extraclasses[] = 'disablefrontpageloginbox';
+    }
+
     $bodyattributes = $OUTPUT->body_attributes($extraclasses);
     $regionmainsettingsmenu = $OUTPUT->region_main_settings_menu();
 
@@ -116,6 +122,7 @@ if (isloggedin()) {
         'output' => $OUTPUT,
         'bodyattributes' => $bodyattributes,
         'hasdrawertoggle' => false,
+        'canloginasguest' => $CFG->guestloginbutton and !isguestuser(),
         'cansignup' => $CFG->registerauth == 'email' || !empty($CFG->registerauth),
         'bannerheading' => $bannerheading,
         'bannercontent' => $bannercontent,
@@ -123,7 +130,9 @@ if (isloggedin()) {
         'sliderfrontpage' => $sliderfrontpage,
         'numbersfrontpage' => $numbersfrontpage,
         'sponsorsfrontpage' => $sponsorsfrontpage,
-        'clientsfrontpage' => $clientsfrontpage
+        'clientsfrontpage' => $clientsfrontpage,
+        'disablefrontpageloginbox' => $disablefrontpageloginbox,
+        'logintoken' => \core\session\manager::get_login_token()
     ];
 
     $templatecontext = array_merge($templatecontext, $themesettings->footer_items(), $themesettings->marketing_items());

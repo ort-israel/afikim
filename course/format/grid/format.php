@@ -17,8 +17,7 @@
 /**
  * Grid Format - A topics based format that uses a grid of user selectable images to popup a light box of the section.
  *
- * @package    course/format
- * @subpackage grid
+ * @package    format_grid
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2012 G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://about.me/gjbarnard} and
@@ -62,8 +61,8 @@ if (($marker >= 0) && has_capability('moodle/course:setcurrentsection', $coursec
     course_set_marker($course->id, $marker);
 }
 
-// Make sure section 0 is created.
-course_create_sections_if_missing($course, 0);
+// Make sure all sections are created.
+course_create_sections_if_missing($course, range(0, $course->numsections));
 
 $renderer = $PAGE->get_renderer('format_grid');
 
@@ -78,8 +77,8 @@ if ($devicetype == "mobile") {
 $renderer->set_portable($portable);
 
 $gfsettings = $courseformat->get_settings();
-$imageproperties = $courseformat->calculate_image_container_properties(
-$gfsettings['imagecontainerwidth'], $gfsettings['imagecontainerratio'], $gfsettings['borderwidth']);
+$imageproperties = \format_grid\toolbox::calculate_image_container_properties(
+    $gfsettings['imagecontainerwidth'], $gfsettings['imagecontainerratio'], $gfsettings['borderwidth']);
 
 echo '<style type="text/css" media="screen">';
 echo '/* <![CDATA[ */';
@@ -196,7 +195,7 @@ if ($gfsettings['sectiontitleboxposition'] == 1) { // Inside.
     echo '}';
 }
 
-echo '.course-content ul.gridicons li .gridicon_link .tooltip-inner {';
+echo '.course-content ul.gridicons li .tooltip-inner {';
 echo 'background-color: ';
 if ($gfsettings['sectiontitlesummarybackgroundcolour'][0] != '#') {
     echo '#';
@@ -210,7 +209,7 @@ echo $gfsettings['sectiontitlesummarytextcolour'].';';
 echo '}';
 
 $tooltiparrowposition = $courseformat->get_set_show_section_title_summary_position();
-echo '.course-content ul.gridicons li .gridicon_link .tooltip.'.$tooltiparrowposition.' .tooltip-arrow {';
+echo '.course-content ul.gridicons li .tooltip.'.$tooltiparrowposition.' .tooltip-arrow {';
 echo 'border-'.$tooltiparrowposition.'-color: ';
 if ($gfsettings['sectiontitlesummarybackgroundcolour'][0] != '#') {
     echo '#';
@@ -218,7 +217,7 @@ if ($gfsettings['sectiontitlesummarybackgroundcolour'][0] != '#') {
 echo $gfsettings['sectiontitlesummarybackgroundcolour'].';';
 echo '}';
 
-echo '.course-content ul.gridicons li .gridicon_link .image_holder .tooltip {';
+echo '.course-content ul.gridicons li .tooltip.in {';
 echo 'opacity: '.$gfsettings['sectiontitlesummarybackgroundopacity'].';';
 echo '}';
 
@@ -230,15 +229,23 @@ echo '}';
 echo '/* ]]> */';
 echo '</style>';
 
-$sectionparam = optional_param('section', -1, PARAM_INT);
+if ($sectionid) {
+    /* The section id has been specified so use the value of $displaysection as that
+       will be set to the actual section number. */
+    $sectionparam = $displaysection;
+} else {
+    $sectionparam = optional_param('section', -1, PARAM_INT);
+}
 if ($sectionparam != -1) {
     if (($sectionparam == 0) && $courseformat->is_section0_attop() && ($gfsettings['setsection0ownpagenogridonesection'] == 1)) {
         // Don't allow an old section 0 link to work.
         $sectionparam = -1;
     } else if ($gfsettings['coursedisplay'] == COURSE_DISPLAY_SINGLEPAGE) {
-        // Don't allow an old single page link to work.
+        // Don't allow an old single page link to work, but set the current section.
+        $renderer->set_initialsection($sectionparam);
         $sectionparam = -1;
     } else {
+        $renderer->set_initialsection($sectionparam);
         $displaysection = $sectionparam;
     }
 }

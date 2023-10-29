@@ -124,12 +124,12 @@ $where = array();
 $where_params = array();
 
 if ($sifirst !== 'all') {
-    $where[] = $DB->sql_like('u.firstname', ':sifirst', false);
+    $where[] = $DB->sql_like('u.firstname', ':sifirst', false, false);
     $where_params['sifirst'] = $sifirst.'%';
 }
 
 if ($silast !== 'all') {
-    $where[] = $DB->sql_like('u.lastname', ':silast', false);
+    $where[] = $DB->sql_like('u.lastname', ':silast', false, false);
     $where_params['silast'] = $silast.'%';
 }
 
@@ -210,8 +210,13 @@ $pagingbar = '';
 // Initials bar.
 $prefixfirst = 'sifirst';
 $prefixlast = 'silast';
-$pagingbar .= $OUTPUT->initials_bar($sifirst, 'firstinitial', get_string('firstname'), $prefixfirst, $url);
-$pagingbar .= $OUTPUT->initials_bar($silast, 'lastinitial', get_string('lastname'), $prefixlast, $url);
+
+// The URL used in the initials bar should reset the 'start' parameter.
+$initialsbarurl = new moodle_url($url);
+$initialsbarurl->remove_params('start');
+
+$pagingbar .= $OUTPUT->initials_bar($sifirst, 'firstinitial', get_string('firstname'), $prefixfirst, $initialsbarurl);
+$pagingbar .= $OUTPUT->initials_bar($silast, 'lastinitial', get_string('lastname'), $prefixlast, $initialsbarurl);
 
 // Do we need a paging bar?
 if ($total > COMPLETION_REPORT_PAGE) {
@@ -310,7 +315,11 @@ foreach($activities as $activity) {
     $datepassedclass = $datepassed ? 'completion-expired' : '';
 
     if ($activity->completionexpected) {
-        $datetext=userdate($activity->completionexpected,get_string('strftimedate','langconfig'));
+        if ($csv) {
+            $datetext = userdate($activity->completionexpected, "%F %T");
+        } else {
+            $datetext = userdate($activity->completionexpected, get_string('strftimedate', 'langconfig'));
+        }
     } else {
         $datetext='';
     }
@@ -351,13 +360,14 @@ if ($csv) {
 foreach($progress as $user) {
     // User name
     if ($csv) {
-        print csv_quote(fullname($user));
+        print csv_quote(fullname($user, has_capability('moodle/site:viewfullnames', $context)));
         foreach ($extrafields as $field) {
             echo $sep . csv_quote($user->{$field});
         }
     } else {
-        print '<tr><th scope="row"><a href="'.$CFG->wwwroot.'/user/view.php?id='.
-            $user->id.'&amp;course='.$course->id.'">'.fullname($user).'</a></th>';
+        print '<tr><th scope="row"><a href="' . $CFG->wwwroot . '/user/view.php?id=' .
+            $user->id . '&amp;course=' . $course->id . '">' .
+            fullname($user, has_capability('moodle/site:viewfullnames', $context)) . '</a></th>';
         foreach ($extrafields as $field) {
             echo '<td>' . s($user->{$field}) . '</td>';
         }
@@ -405,11 +415,14 @@ foreach($progress as $user) {
         $a=new StdClass;
         $a->state=$describe;
         $a->date=$date;
-        $a->user=fullname($user);
+        $a->user = fullname($user, has_capability('moodle/site:viewfullnames', $context));
         $a->activity = $formattedactivities[$activity->id]->displayname;
         $fulldescribe=get_string('progress-title','completion',$a);
 
         if ($csv) {
+            if ($date != '') {
+                $date = userdate($thisprogress->timemodified, "%F %T");
+            }
             print $sep.csv_quote($describe).$sep.csv_quote($date);
         } else {
             $celltext = $OUTPUT->pix_icon('i/' . $completionicon, s($fulldescribe));
@@ -422,7 +435,7 @@ foreach($progress as $user) {
                                                                      'data-activityname' => $a->activity,
                                                                      'data-userfullname' => $a->user,
                                                                      'data-completiontracking' => $completiontrackingstring,
-                                                                     'aria-role' => 'button'));
+                                                                     'role' => 'button'));
             }
             print '<td class="completion-progresscell '.$formattedactivities[$activity->id]->datepassedclass.'">'.
                 $celltext . '</td>';
@@ -441,7 +454,6 @@ if ($csv) {
 }
 print '</tbody></table>';
 print '</div>';
-print $pagingbar;
 
 print '<ul class="progress-actions"><li><a href="index.php?course='.$course->id.
     '&amp;format=csv">'.get_string('csvdownload','completion').'</a></li>

@@ -137,10 +137,17 @@ if ($mform->is_cancelled()) {
             $dataobject->timecreated = $file->get_timecreated();
             $dataobject->fileid = $file->get_id();
             $dataobject->studentapproval = 1; // Upload always means user approves.
+            $dataobject->teacherapproval = $publication->get_instance()->obtainteacherapproval == 1 ? 3 : 1;
             $dataobject->filename = $file->get_filename();
             $dataobject->type = PUBLICATION_MODE_UPLOAD;
 
-            $DB->insert_record('publication_file', $dataobject);
+            $dataobject->id = $DB->insert_record('publication_file', $dataobject);
+
+            if ($publication->get_instance()->notifyteacher) {
+                publication::send_teacher_notification_uploaded($cm, $file, null, $publication);
+            }
+
+            \mod_publication\event\publication_file_uploaded::create_from_object($cm, $dataobject)->trigger();
         }
     }
 
@@ -155,6 +162,8 @@ if ($mform->is_cancelled()) {
         }
 
         if (!$found) {
+            $dataobject = $DB->get_record('publication_file', ['id' => $row->id]);
+            \mod_publication\event\publication_file_deleted::create_from_object($cm, $dataobject)->trigger();
             $DB->delete_records('publication_file', ['id' => $row->id]);
         }
     }

@@ -22,17 +22,24 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['event:discussioncopied'] = 'Copy discussion';
 $string['event:discussioncreated'] = 'Add discussion';
 $string['event:discussiondeleted'] = 'Delete discussion';
 $string['event:discussionlocked'] = 'Lock discussion';
 $string['event:discussionmerged'] = 'Merge discussion';
+$string['event:discussionmoved'] = 'Move discussion';
 $string['event:discussionpermdeleted'] = 'Permanently delete discussion';
+$string['event:discussionprint'] = 'Print discussion';
+$string['event:discussionread'] = 'Marked discussion read';
+$string['event:discussionreaders'] = 'Readers viewed';
 $string['event:discussionundeleted'] = 'Undelete discussion';
 $string['event:discussionunlocked'] = 'Unlock discussion';
 $string['event:discussionviewed'] = 'View discussion';
+$string['event:forumread'] = 'Marked forum read';
 $string['event:mailsent'] = 'Mail sent ok';
 $string['event:postcreated'] = 'Add reply';
 $string['event:postdeleted'] = 'Delete post';
+$string['event:postread'] = 'Marked post read';
 $string['event:postundeleted'] = 'Undelete post';
 $string['event:postupdated'] = 'Edit post';
 $string['event:postreported'] = 'Report post';
@@ -76,7 +83,7 @@ $string['subscribelong'] = 'Subscribe to whole forum';
 $string['unsubscribegroup'] = 'Unsubscribe from this group\'s forum';
 $string['unsubscribegroup_partial'] = 'Unsubscribe from discussions in this group';
 $string['unsubscribeshort'] = 'Unsubscribe';
-$string['unsubscribelong'] = 'Unsubscribe from the forum';
+$string['unsubscribelong'] = 'Unsubscribe from discussions';
 $string['subscribediscussion'] = 'Subscribe to discussion';
 $string['unsubscribediscussion'] = 'Unsubscribe from discussion';
 $string['subscribeddiscussionall'] = 'All';
@@ -292,6 +299,7 @@ $string['replytopost'] = 'Reply to post: {$a}';
 $string['editpost'] = 'Edit post: {$a}';
 $string['editdiscussionoptions'] = 'Edit discussion options: {$a}';
 $string['optionalsubject'] = 'Change subject (optional)';
+$string['requiredsubject'] = 'Change subject';
 $string['attachmentnum'] = 'Attachment {$a}';
 $string['sticky'] = 'Sticky discussion?';
 $string['sticky_no'] = 'Discussion is sorted normally';
@@ -308,7 +316,9 @@ $string['text_desc'] = 'Z-A';
 $string['sortby'] = 'Sort by {$a}';
 $string['rate'] = 'Rate';
 $string['expand'] = 'Expand<span class=\'accesshide\'> post {$a}</span>';
+$string['collapse'] = 'Collapse<span class=\'accesshide\'> post {$a}</span>';
 $string['expand_text'] = 'Expand post';
+$string['collapse_text'] = 'Collapse post';
 $string['postnum'] = 'Post {$a->num}';
 $string['postnumreply'] = 'Post {$a->num}{$a->info} in reply to {$a->parent}';
 $string['postinfo_short'] = 'summarised';
@@ -417,6 +427,8 @@ $string['forumng:setimportant'] = 'Mark posts as important';
 $string['forumng:managediscussions'] = 'Manage discussion options';
 $string['forumng:viewallposts'] = 'View hidden and deleted posts';
 $string['forumng:viewreadinfo'] = 'See who has read a post';
+$string['forumng:showatom'] = 'Can see the atom link';
+$string['forumng:showrss'] = 'Can see the rss link';
 $string['editlimited'] = 'Warning: You must save any changes to this post before {$a}. After that
 time you will no longer be allowed to edit the post.';
 $string['badbrowser'] = '<h3>Reduced forum features</h3>&nbsp;<p>You are using {$a}. If you\'d
@@ -453,6 +465,8 @@ $string['selectdiscintro'] = 'Tick the box beside each discussion you want to in
 scroll to the bottom and click &lsquo;Confirm selection&rsquo;.';
 $string['setimportant'] = 'Mark posts as important';
 $string['important'] = 'Important post';
+$string['setimportant_ipud'] = 'Highlight post';
+$string['important_ipud'] = 'Highlighted post';
 $string['flaggeddiscussions'] = 'Flagged discussions';
 $string['flaggeddiscussionslink'] = '{$a} flagged discussions';
 $string['flaggedposts'] = 'Flagged posts';
@@ -576,6 +590,7 @@ $string['externaldashboardadd'] = 'Add forum to dashboard';
 $string['externaldashboardremove'] = 'Remove forum from dashboard';
 
 // New error strings.
+$string['timestartenderror'] = 'Selection end date cannot be earlier than the start date';
 $string['error_new_discussion_ipud'] = 'You can not start a new discussion in In-page discussion forum';
 $string['error_reply_ipud'] = 'You can not reply to level two post.'.
 $string['error_fileexception'] = 'A file processing error occurred. This is likely to be caused by
@@ -880,15 +895,21 @@ $string['gradingscale'] = 'Grading scale';
 $string['moderator'] = 'Moderator';
 $string['anonymousmoderator'] = 'Anonymous moderator';
 $string['canpostanon'] = 'Enable anonymous moderator posts';
-$string['canpostanon_help'] = 'Allows users that have postanon capability to make their post anonymous by hiding their name from students.';
+$string['canpostanon_normal'] = 'Post as normal';
+$string['canpostanon_moderator'] = 'Allow moderators to post anonymously';
+$string['canpostanon_nonmoderator'] = 'Non-moderators always post anonymously';
+$string['canpostanon_help'] = 'Allows users that have postanon capability to make their post anonymous by hiding their name from students. <br />
+Note that anonymous post authors will display in site-wide searches (where users have the moodle/search:query capability).';
 $string['asmoderator'] = 'Post as?';
 $string['asmoderator_post'] = 'Standard Post';
-$string['asmoderator_self'] = 'Identify self as moderator';
+$string['asmoderator_post_anon'] = 'Standard Post (name hidden)';
+$string['asmoderator_self'] = 'Identify self as moderator (name displayed)';
 $string['asmoderator_anon'] = 'Identify self as moderator (name hidden from students)';
 $string['asmoderator_help'] = 'This option will enable certain users to be able to identify themselves as a forum
 moderator or post as a moderator with their profile hidden from students.';
 $string['createdbymoderator'] = 'This is a post created by moderator {$a} with their name hidden from students.';
-
+$string['identityprotected'] = 'Identity protected';
+$string['identityprotectedmessage'] = 'Posts to this forum will be identity protected - individuals\' names will not be displayed.';
 $string['lockedtitle'] = 'This discussion is now closed';
 $string['autolockedmessage'] = 'This discussion has been closed automatically as the maximum time permitted to be open has passed.';
 $string['alert_intro'] = 'You can use the Alert link if you need to bring a post in this forum to the attention of a moderator.';
@@ -951,8 +972,9 @@ $string['forumngcrontaskdigest'] = 'Forumng email digest job';
 
 $string['error_identityinsubject_discussion'] = 'You have set the subject line to your login details. (This may have been done automatically by your browser or password manager.) To continue, change the subject text.';
 $string['error_identityinsubject_reply'] = 'You have set the subject line to your login details. (This may have been done automatically by your browser or password manager.) To continue, delete or change the subject text.';
+$string['error_postasmoderator'] = 'You do not have permission to post as moderator.';
+$string['error_postanon'] = 'You do not have permission to post as anonymous moderator.';
 $string['error_form_validation'] = '{$a}'; // Form error in json format.
-
 $string['tooltip_show_features'] = 'Show other options';
 
 $string['emailafter'] = 'Email after delay';
@@ -1030,3 +1052,54 @@ $string['forumngreadposts'] = 'Read posts';
 $string['forumngflagposts'] = 'Flag posts';
 $string['privacy_you'] = 'You';
 $string['privacy_somebodyelse'] = 'Somebody else';
+
+$string['erroremptymessage'] = 'Message cannot be empty';
+$string['erroremptysubject'] = 'Subject cannot be empty.';
+$string['cannotcreatediscussion'] = 'Could not create discussion.';
+$string['cannotcreatereply'] = 'Could not create reply.';
+$string['errormaximumsubjectcharacter'] = 'Maximum of 255 characters';
+
+$string['sortbydateoflastpost'] = 'Sort by date of last post';
+$string['sortbytitle'] = 'Sort by title (A to Z)';
+$string['sortbymostunreadposts'] = 'Sort by most unread posts';
+$string['date'] = 'Date';
+$string['markallasread'] = 'Mark all as read';
+$string['displayoption'] = '<span class="mma-forumng-boldtitle">Discussion options</span> (Show as sticky)';
+$string['displayperiodmobile'] = '<span class="mma-forumng-boldtitle">Display period:</span> Only show from';
+$string['postasmobile'] = '<span class="mma-forumng-boldtitle">Post as:</span>';
+$string['dateformat'] = '%d %B %Y';
+$string['noselection'] = 'No selection';
+$string['leavemessage'] = 'Changes you have made have not been saved. Are you sure you want to leave the page?';
+$string['lock'] = 'Lock';
+$string['lockdiscussion'] = 'Lock discussion';
+$string['cannotlockdiscussion'] = 'Could not lock discussion.';
+$string['expandallpost'] = 'Expand all posts';
+$string['collapseallpost'] = 'Collapse all posts';
+$string['editpostmobile'] = 'Edit post';
+$string['cannotcreatedraft'] = 'Could not create draft';
+$string['cannotuploadfile'] = 'File name already exists';
+$string['sortdiscussions'] = 'Sort discussions';
+$string['unread'] = 'Unread post';
+$string['required'] = 'Required';
+$string['forumintroduction'] = 'Introduction';
+$string['starreddiscussions'] = 'Starred discussions';
+$string['starreddiscussionslink'] = 'Skip to starred discussions';
+$string['starreddiscussions_help'] = 'Starred discussions appear in this list. To jump to a starred discussion,
+click on it.
+
+To remove the star from a discussion, click on the star icon (here or the \'Remove star\' button in the discussion).';
+$string['starredposts'] = 'Starred posts';
+$string['starredpostslink'] = 'Skip to starred posts';
+$string['starredposts_help'] = 'Starred posts appear in this list. To jump to a starred post,
+click on it.
+
+To remove the star from a post, click on the star icon (here or in the post).';
+$string['clearstar'] = 'Remove star';
+$string['starpost'] = 'Star post';
+$string['setstar'] = 'Star this post for future reference';
+$string['staron'] = 'You have starred this post';
+$string['staroff'] = 'Not starred';
+$string['showmore'] = 'Show more';
+$string['showless'] = 'Show less';
+$string['subscriptionhelptitle'] = 'Email subscription';
+$string['eqn'] = '[eqn]';

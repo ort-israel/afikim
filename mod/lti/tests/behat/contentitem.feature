@@ -15,7 +15,7 @@ Feature: Content-Item support
       | user | course | role |
       | teacher1 | C1 | editingteacher |
     And I log in as "admin"
-    And I navigate to "Manage tools" node in "Site administration > Plugins > Activity modules > External tool"
+    And I navigate to "Plugins > Activity modules > External tool > Manage tools" in site administration
     # Create tool type that supports content-item.
     And I follow "configure a tool manually"
     And I set the field "Tool name" to "Teaching Tool 1"
@@ -24,6 +24,7 @@ Feature: Content-Item support
     And I expand all fieldsets
     And I set the field "Content-Item Message" to "1"
     And I press "Save changes"
+    And I should see "Teaching Tool 1"
     And I log out
 
   @javascript
@@ -51,13 +52,14 @@ Feature: Content-Item support
   @javascript
   Scenario: Changing preconfigured tool selection
     Given I log in as "admin"
-    And I navigate to "Manage tools" node in "Site administration > Plugins > Activity modules > External tool"
+    And I navigate to "Plugins > Activity modules > External tool > Manage tools" in site administration
     And I follow "configure a tool manually"
     And I set the field "Tool name" to "Teaching Tool 2"
     And I set the field "Tool URL" to local url "/mod/lti/tests/fixtures/tool_provider.php"
     And I set the field "Tool configuration usage" to "Show in activity chooser and as a preconfigured tool"
     And I expand all fieldsets
     And I press "Save changes"
+    And I should see "Teaching Tool 2"
     And I log out
     When I log in as "teacher1"
     And I am on "Course 1" course homepage with editing mode on

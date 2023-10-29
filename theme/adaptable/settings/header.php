@@ -26,27 +26,19 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-    // Header heading.
-    $temp = new admin_settingpage('theme_adaptable_header', get_string('headersettings', 'theme_adaptable'));
-    $temp->add(new admin_setting_heading('theme_adaptable_header', get_string('headersettingsheading', 'theme_adaptable'),
+// Header heading.
+if ($ADMIN->fulltree) {
+    $page = new admin_settingpage('theme_adaptable_header', get_string('headersettings', 'theme_adaptable'));
+
+    $page->add(new admin_setting_heading('theme_adaptable_header', get_string('headersettingsheading', 'theme_adaptable'),
     format_text(get_string('headerdesc', 'theme_adaptable'), FORMAT_MARKDOWN)));
 
     // Header image.
-    $name = 'theme_adaptable/headerbgimage';
+    $name = 'theme_adaptable/headerbgimage'; // TODO - served by 'theme_adaptable_pluginfile'?
     $title = get_string('headerbgimage', 'theme_adaptable');
     $description = get_string('headerbgimagedesc', 'theme_adaptable');
     $setting = new admin_setting_configstoredfile($name, $title, $description, 'headerbgimage');
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
-
-    // Enable front page login form in header.
-    $name = 'theme_adaptable/frontpagelogin';
-    $title = get_string('frontpagelogin', 'theme_adaptable');
-    $description = get_string('frontpagelogindesc', 'theme_adaptable');
-    $default = true;
-    $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Select type of login.
     $name = 'theme_adaptable/displaylogin';
@@ -58,34 +50,22 @@ defined('MOODLE_INTERNAL') || die;
         'no' => get_string('displayloginno', 'theme_adaptable')
     );
     $setting = new admin_setting_configselect($name, $title, $description, 'button', $choices);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    // Enable messaging menu in header.
-    $name = 'theme_adaptable/enablemessagemenu';
-    $title = get_string('enablemessagemenu', 'theme_adaptable');
-    $description = get_string('enablemessagemenudesc', 'theme_adaptable');
+    // Show username.
+    $name = 'theme_adaptable/showusername';
+    $title = get_string('showusername', 'theme_adaptable');
+    $description = get_string('showusernamedesc', 'theme_adaptable');
     $default = true;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
-
-    // Filter admin messages.
-    $name = 'theme_adaptable/filteradminmessages';
-    $title = get_string('filteradminmessages', 'theme_adaptable');
-    $description = get_string('filteradminmessagesdesc', 'theme_adaptable');
-    $default = false;
-    $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Logo.
     $name = 'theme_adaptable/logo';
     $title = get_string('logo', 'theme_adaptable');
     $description = get_string('logodesc', 'theme_adaptable');
     $setting = new admin_setting_configstoredfile($name, $title, $description, 'logo');
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Page Header Height.
     $name = 'theme_adaptable/pageheaderheight';
@@ -93,25 +73,23 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('pageheaderheightdesc', 'theme_adaptable');
     $setting = new admin_setting_configtext($name, $title, $description, '72px');
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Course page header title.
     $name = 'theme_adaptable/coursepageheaderhidesitetitle';
     $title = get_string('coursepageheaderhidesitetitle', 'theme_adaptable');
     $description = get_string('coursepageheaderhidesitetitledesc', 'theme_adaptable');
     $setting = new admin_setting_configcheckbox($name, $title, $description, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Favicon file setting.
     $name = 'theme_adaptable/favicon';
     $title = get_string('favicon', 'theme_adaptable');
     $description = get_string('favicondesc', 'theme_adaptable');
     $setting = new admin_setting_configstoredfile($name, $title, $description, 'favicon');
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    // Display Course title in the header.
+    // Site title.
     $name = 'theme_adaptable/sitetitle';
     $title = get_string('sitetitle', 'theme_adaptable');
     $description = get_string('sitetitledesc', 'theme_adaptable');
@@ -121,62 +99,46 @@ defined('MOODLE_INTERNAL') || die;
         'custom' => get_string('sitetitlecustom', 'theme_adaptable')
     );
     $setting = new admin_setting_configselect($name, $title, $description, 'default', $radchoices);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    // Site title.
+    // Site title text.
     $name = 'theme_adaptable/sitetitletext';
     $title = get_string('sitetitletext', 'theme_adaptable');
     $description = get_string('sitetitletextdesc', 'theme_adaptable');
     $default = '';
-    $setting = new adaptable_setting_confightmleditor($name, $title, $description, $default);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $setting = new admin_setting_confightmleditor($name, $title, $description, $default);
+    $page->add($setting);
 
     // Display Course title in the header.
     $name = 'theme_adaptable/enableheading';
     $title = get_string('enableheading', 'theme_adaptable');
     $description = get_string('enableheadingdesc', 'theme_adaptable');
     $radchoices = array(
-        'fullname' => get_string('breadcrumbtitlefullname', 'theme_adaptable'),
-        'shortname' => get_string('breadcrumbtitleshortname', 'theme_adaptable'),
-        'off' => get_string('hide'),
+        'fullname' => get_string('coursetitlefullname', 'theme_adaptable'),
+        'shortname' => get_string('coursetitleshortname', 'theme_adaptable'),
+        'off' => get_string('hide')
     );
     $setting = new admin_setting_configselect($name, $title, $description, 'fullname', $radchoices);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    // Site Title Padding Top.
-    $name = 'theme_adaptable/sitetitlepaddingtop';
-    $title = get_string('sitetitlepaddingtop', 'theme_adaptable');
-    $description = get_string('sitetitlepaddingtopdesc', 'theme_adaptable');
-    $setting = new admin_setting_configtext($name, $title, $description, '0px');
-    $setting = new admin_setting_configselect($name, $title, $description, '0px', $from0to20px);
-    $temp->add($setting);
-
-    // Site Title Padding Left.
-    $name = 'theme_adaptable/sitetitlepaddingleft';
-    $title = get_string('sitetitlepaddingleft', 'theme_adaptable');
-    $description = get_string('sitetitlepaddingleftdesc', 'theme_adaptable');
-    $setting = new admin_setting_configselect($name, $title, $description, '0px', $from0to20px);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
-
-    // Site Title Maximum Width.
-    $name = 'theme_adaptable/sitetitlemaxwidth';
-    $title = get_string('sitetitlemaxwidth', 'theme_adaptable');
-    $description = get_string('sitetitlemaxwidthdesc', 'theme_adaptable');
-    $setting = new admin_setting_configselect($name, $title, $description, '50%', $from35to80percent);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    // Display Breadcrumb or Course title where the breadcrumb normally is.
+    $name = 'theme_adaptable/breadcrumbdisplay';
+    $title = get_string('breadcrumbdisplay', 'theme_adaptable');
+    $description = get_string('breadcrumbdisplaydesc', 'theme_adaptable');
+    $radchoices = array(
+        'breadcrumb' => get_string('breadcrumb', 'theme_adaptable'),
+        'fullname' => get_string('coursetitlefullname', 'theme_adaptable'),
+        'shortname' => get_string('coursetitleshortname', 'theme_adaptable')
+    );
+    $setting = new admin_setting_configselect($name, $title, $description, 'breadcrumb', $radchoices);
+    $page->add($setting);
 
     // Course Title Maximum Width.
     $name = 'theme_adaptable/coursetitlemaxwidth';
     $title = get_string('coursetitlemaxwidth', 'theme_adaptable');
     $description = get_string('coursetitlemaxwidthdesc', 'theme_adaptable');
     $setting = new admin_setting_configtext($name, $title, $description, '20', PARAM_INT);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Breadcrumb home.
     $name = 'theme_adaptable/breadcrumbhome';
@@ -187,37 +149,37 @@ defined('MOODLE_INTERNAL') || die;
         'icon' => get_string('breadcrumbhomeicon', 'theme_adaptable')
     );
     $setting = new admin_setting_configselect($name, $title, $description, 'icon', $radchoices);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Breadcrumb separator.
     $name = 'theme_adaptable/breadcrumbseparator';
     $title = get_string('breadcrumbseparator', 'theme_adaptable');
     $description = get_string('breadcrumbseparatordesc', 'theme_adaptable');
     $setting = new admin_setting_configtext($name, $title, $description, 'angle-right');
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    // Choose to display search box or social icons.
-    $name = 'theme_adaptable/socialorsearch';
-    $title = get_string('socialorsearch', 'theme_adaptable');
-    $description = get_string('socialorsearchdesc', 'theme_adaptable');
-    $radchoices = array(
-        'none' => get_string('socialorsearchnone', 'theme_adaptable'),
-        'social' => get_string('socialorsearchsocial', 'theme_adaptable'),
-        'search' => get_string('socialorsearchsearch', 'theme_adaptable')
+    // Choose what to do with the search box and social icons.
+    $name = 'theme_adaptable/headersearchandsocial';
+    $title = get_string('headersearchandsocial', 'theme_adaptable');
+    $description = get_string('headersearchandsocialdesc', 'theme_adaptable');
+    $choices = array(
+        'none' => get_string('headersearchandsocialnone', 'theme_adaptable'),
+        'searchmobilenav' => get_string('headersearchandsocialsearchmobilenav', 'theme_adaptable'),
+        'searchheader' => get_string('headersearchandsocialsearchheader', 'theme_adaptable'),
+        'socialheader' => get_string('headersearchandsocialsocialheader', 'theme_adaptable'),
+        'searchnavbar' => get_string('headersearchandsocialsearchnavbar', 'theme_adaptable'),
+        'searchnavbarsocialheader' => get_string('headersearchandsocialsearchnavbarsocialheader', 'theme_adaptable'),
     );
-    $setting = new admin_setting_configselect($name, $title, $description, 'search', $radchoices);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $setting = new admin_setting_configselect($name, $title, $description, 'searchmobilenav', $choices);
+    $page->add($setting);
 
     // Search box padding.
     $name = 'theme_adaptable/searchboxpadding';
     $title = get_string('searchboxpadding', 'theme_adaptable');
     $description = get_string('searchboxpaddingdesc', 'theme_adaptable');
-    $setting = new admin_setting_configtext($name, $title, $description, '15px 0px 0px 0px');
+    $setting = new admin_setting_configtext($name, $title, $description, '0 0 10px 0');
     $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
     // Enable save / cancel overlay at top of page.
     $name = 'theme_adaptable/enablesavecanceloverlay';
@@ -225,7 +187,34 @@ defined('MOODLE_INTERNAL') || die;
     $description = get_string('enablesavecanceloverlaydesc', 'theme_adaptable');
     $default = true;
     $setting = new admin_setting_configcheckbox($name, $title, $description, $default, true, false);
-    $setting->set_updatedcallback('theme_reset_all_caches');
-    $temp->add($setting);
+    $page->add($setting);
 
-    $ADMIN->add('theme_adaptable', $temp);
+    // My courses section.
+    $page->add(new admin_setting_heading('theme_adaptable_headerstyle_heading',
+        get_string('headerstyleheading', 'theme_adaptable'),
+        format_text(get_string('headerstyleheadingdesc', 'theme_adaptable'), FORMAT_MARKDOWN)));
+
+    // Adaptable header style selection.
+    $name = 'theme_adaptable/headerstyle';
+    $title = get_string('headerstyle', 'theme_adaptable');
+    $description = get_string('headerstyledesc', 'theme_adaptable');
+    $radchoices = array(
+        'style1' => get_string('headerstyle1', 'theme_adaptable'),
+        'style2' => get_string('headerstyle2', 'theme_adaptable')
+    );
+    $setting = new admin_setting_configselect($name, $title, $description, 'style1', $radchoices);
+    $page->add($setting);
+
+    // Page header layout.
+    $name = 'theme_adaptable/pageheaderlayout';
+    $title = get_string('pageheaderlayout', 'theme_adaptable');
+    $description = get_string('pageheaderlayoutdesc', 'theme_adaptable');
+    $radchoices = array(
+        'original' => get_string('pageheaderoriginal', 'theme_adaptable'),
+        'alternative' => get_string('pageheaderalternative', 'theme_adaptable')
+    );
+    $setting = new admin_setting_configselect($name, $title, $description, 'left', $radchoices);
+    $page->add($setting);
+
+    $asettings->add($page);
+}

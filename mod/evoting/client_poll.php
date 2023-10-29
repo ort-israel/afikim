@@ -31,8 +31,8 @@ if (!isset($SESSION->evotingclientid)) {
 } else {
     $clientid = $SESSION->evotingclientid;
 }
-
-$jqueryurl = new moodle_url('/lib/jquery/jquery-3.2.1.min.js');
+$jqueryurl = new moodle_url('/mod/evoting/js/jquery-3.2.1.min.js');
+//$jqueryurl = new moodle_url('/lib/jquery/jquery-3.2.1.min.js');
 
 $cm = get_coursemodule_from_instance('evoting', $idPoll, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);

@@ -80,10 +80,11 @@ class post extends \core_search\base_mod {
                        fp.deleteuserid, fp.important, fp.mailstate, fp.oldversion, fp.edituserid, fp.subject, fp.message,
                        fp.messageformat, fp.attachments, fp.asmoderator,
                        fd.modified as discussionmodified, GREATEST(fp.modified, fd.modified) as modifyorder,
-                       fd.groupid as groupid
+                       fd.groupid as groupid, fpd.subject as discussionsubject
                   FROM {forumng_posts} fp
                   JOIN {forumng_discussions} fd ON fp.discussionid = fd.id
                   JOIN {forumng} f ON fd.forumngid = f.id
+                  JOIN {forumng_posts} fpd on fpd.id = fd.postid
           $contextjoin
                  WHERE (fp.modified >= ? OR fd.modified >= ?)
                    AND fp.deleted = 0
@@ -123,8 +124,11 @@ class post extends \core_search\base_mod {
                 $record->forumpostid, $this->componentname, $this->areaname);
 
         // Set document title.
-        // Document title will be post title.
+        // Document title will be post title, if post's title is empty, use the discussion's title instead.
         $title = $record->subject;
+        if (empty($title)) {
+            $title = $record->discussionsubject;
+        }
         $doc->set('title', content_to_text($title, false));
 
         // Set document content.
@@ -166,6 +170,7 @@ class post extends \core_search\base_mod {
      *
      * @param int $id Post ID
      * @return int
+     * @throws \moodle_exception
      */
     public function check_access($id) {
         global $USER;
@@ -183,8 +188,25 @@ class post extends \core_search\base_mod {
             return \core_search\manager::ACCESS_DELETED;
         }
 
-        if (!$postinstance->get_discussion()->can_view($USER->id)) {
+        $discussion = $postinstance->get_discussion();
+        if (!$discussion->can_view($USER->id)) {
             return \core_search\manager::ACCESS_DENIED;
+        } else {
+            // If forum's type is iPud then can_view() will return true even when
+            // student don't have permission to view both Forum view and SC view.
+            $forum = $discussion->get_forum();
+            // Check this forum type is iPud.
+            if (is_a($forum->get_type(), 'forumngtype_ipud')) {
+                // Check if current user can view SC view.
+                $loc = $discussion->get_location();
+                preg_match('/id=(.+)&/U', $loc, $matches);
+                if (!empty($matches[1]) && is_numeric($matches[1]) && strpos($loc, '/mod/oucontent/') !== false) {
+                    list(, $cm) = get_course_and_cm_from_cmid($matches[1], 'oucontent');
+                    if (!empty($cm) && !$cm->uservisible) {
+                        return \core_search\manager::ACCESS_DENIED;
+                    }
+                }
+            }
         }
 
         return \core_search\manager::ACCESS_GRANTED;
@@ -208,8 +230,18 @@ class post extends \core_search\base_mod {
      */
     public function get_doc_url(\core_search\document $doc) {
         $postintance = $this->get_post($doc->get('itemid'));
-        return new \moodle_url('/mod/forumng/discuss.php?' .
-                $postintance->get_discussion()->get_link_params(\mod_forumng::PARAM_PLAIN) . '#p' . $postintance->get_id());
+        $discussion = $postintance->get_discussion();
+        $forum = $discussion->get_forum();
+
+        // Check if forum's type is iPud then we'll return the link lead to SC view.
+        if (is_a($forum->get_type(), 'forumngtype_ipud')) {
+            $url = new \moodle_url($postintance->get_discussion()->get_location());
+        } else {
+            $url = new \moodle_url('/mod/forumng/discuss.php?' .
+                    $postintance->get_discussion()->get_link_params(\mod_forumng::PARAM_PLAIN) . '#p' . $postintance->get_id());
+        }
+
+        return $url;
     }
 
     /**

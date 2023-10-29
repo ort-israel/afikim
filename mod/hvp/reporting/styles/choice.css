@@ -8,6 +8,9 @@
   padding: 5px;
   line-height: 2em;
 }
+.dir-rtl .h5p-choices-table td {
+  text-align: right;
+}
 
 .h5p-choices-table-heading {
   background-color: #233448;

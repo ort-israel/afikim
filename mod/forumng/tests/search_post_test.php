@@ -89,7 +89,9 @@ class mod_forumng_search_post_testcase extends forumng_test_lib {
         $post2 = $generator->create_post(array(
                 'discussionid' => $did1[0],
                 'parentpostid' => $did1[1],
-                'userid' => $suser2->id));
+                'userid' => $suser2->id,
+                'subject' => '',
+                'message' => 'Message with empty subject'));
 
         $cm = get_coursemodule_from_instance('forumng', $forum1->get_id(), $forum1->get_course_id());
         $context = \context_module::instance($cm->id);
@@ -112,6 +114,12 @@ class mod_forumng_search_post_testcase extends forumng_test_lib {
         $this->assertEquals($post1->id, $out->get('itemid'));
         $this->assertEquals(\core_search\manager::NO_OWNER_ID, $out->get('owneruserid'));
         $this->assertTrue($out->get_is_new());
+
+        // If post subject is empty, discussion subject will be used.
+        $post2out = $page->get_document($results[2]);
+        $this->assertEquals('Discussion 1', $post2out->get('title'));
+        $this->assertEquals('Message with empty subject', $post2out->get('content'));
+        $this->assertEquals('distag1', $post2out->get('description1'));
 
         // Check access.
         $did2 = $generator->create_discussion(array(
@@ -359,5 +367,52 @@ class mod_forumng_search_post_testcase extends forumng_test_lib {
                 \context_module::instance($forum1->cmid)
         ];
         $this->assertEquals($expected, $contexts);
+    }
+
+    /**
+     * Check get iPud document url.
+     *
+     * @throws coding_exception
+     */
+    public function test_check_ipud_document_url() {
+        global $CFG;
+        $this->resetAfterTest(true);
+        $this->setAdminUser();
+
+        // Enable global search for this test.
+        set_config('enableglobalsearch', true);
+        $search = testable_core_search::instance();
+
+        // First check there are no results with empty database.
+        $page = new search_post();
+        $rs = $page->get_recordset_by_timestamp();
+        $this->assertCount(0, self::recordset_to_array($rs));
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_forumng');
+
+        $course = $this->get_new_course();
+        $user1 = $this->get_new_user('student', $course->id);
+        $forum1 = $this->get_new_forumng($course->id, array('groupmode' => NOGROUPS,
+                'shared' => false, 'cmidnumber' => 'IPMR', 'type' => 'ipud'));
+        $ipudloc = 'http://domain.com/olink.php?id=9';
+        $discussion1 = $generator->create_discussion(array(
+                'course' => $course,
+                'forum' => $forum1->get_id(),
+                'userid' => $user1->id,
+                'subject' => 'Discussion 1',
+                'ipudloc' => $ipudloc));
+        $post1 = $generator->create_post(array(
+                'discussionid' => $discussion1[0],
+                'parentpostid' => $discussion1[1],
+                'userid' => $user1->id,
+                'subject' => 'Post 1',
+                'message' => 'Message 1'));
+
+        $results = self::recordset_to_array($page->get_recordset_by_timestamp());
+        $document = $page->get_document($results[0], array('lastindexedtime' => 0));
+        $discussionurl = $page->get_doc_url($document)->out(false);
+
+        // Should return iPud location.
+        $this->assertEquals($discussionurl, $ipudloc);
     }
 }

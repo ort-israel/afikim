@@ -206,6 +206,17 @@ class mod_publication_mod_form extends moodleform_mod {
         $mform->addElement('hidden', 'alwaysshowdescription', true);
         $mform->setType('alwaysshowdescription', PARAM_BOOL);
 
+        $mform->addElement('header', 'notifications', get_string('notifications', 'publication'));
+
+        $name = get_string('notifyteacher', 'publication');
+        $mform->addElement('selectyesno', 'notifyteacher', $name);
+        $mform->addHelpButton('notifyteacher', 'notifyteacher', 'publication');
+        $mform->setDefault('notifyteacher', 0);
+
+        $name = get_string('notifystudents', 'publication');
+        $mform->addElement('selectyesno', 'notifystudents', $name);
+        $mform->addHelpButton('notifystudents', 'notifystudents', 'publication');
+        $mform->setDefault('notifystudents', 0);
         // Standard coursemodule elements.
         $this->standard_coursemodule_elements();
 

@@ -30,6 +30,13 @@ $string['modulename_help'] = 'The student folder offers the following features:
 
 * Participants can upload documents that are available to other participants immediately or after you have checked the documents and given your consent.
 * An assignment can be chosen as a basis for a student folder. The teacher can decide which documents of the assignment are visible for all participants. Teachers can also let the participants decide whether their documents should be visible to others.';
+
+$string['eventpublicationfiledeleted'] = 'Publication file delete';
+$string['eventpublicationfileuploaded'] = 'Publication file upload';
+$string['eventpublicationfileimported'] = 'Publication file import';
+$string['eventpublicationduedateextended'] = 'Publication due-date extended';
+$string['eventpublicationapprovalchanged'] = 'Publication file approval changed';
+
 $string['modulenameplural'] = 'Student folders';
 $string['pluginadministration'] = 'Student folder administration';
 $string['publication:addinstance'] = 'Add a new student folder';
@@ -37,14 +44,46 @@ $string['publication:view'] = 'View student folder';
 $string['publication:upload'] = 'Upload files to a student folder';
 $string['publication:approve'] = 'Decide if files should be visible for every student';
 $string['publication:grantextension'] = 'Grant extension';
+$string['publication:receiveteachernotification'] = 'Receive notifications for teachers';
 $string['search:activity'] = 'Student folder - activity information';
+
+$string['messageprovider:publication_updates'] = 'Publication notifications';
+
+$string['notifications'] = 'Notifications';
+$string['notifyteacher'] = 'Notify graders about uploads';
+$string['notifystudents'] = 'Notify students about approval changes';
+$string['notifyteacher_help'] = 'If enabled, graders (usually teachers) receive a message whenever a student uploads a file. Message methods are configurable.';
+$string['notifystudents_help'] = 'If enabled, students recieve a message whenever the approval status of one of their uploads changes. Message methods are configurable.';
+
+$string['uploaded'] = 'Uploaded';
+$string['approvalchange'] = 'Approval status changed';
+
+$string['emailteachermail'] = '---------------------------------------------------------------------\n{$a->username} has uploaded \'{$a->filename}\'
+for \'{$a->publication}\' on {$a->dayupdated} at {$a->timeupdated}.
+
+It is available here:
+
+    {$a->url}---------------------------------------------------------------------\n';
+
+$string['emailteachermailhtml'] = '{$a->username} has uploaded \'{$a->filename}\'
+for <i>\'{$a->publication}\' on {$a->dayupdated} at {$a->timeupdated}</i><br /><br />
+It is <a href="{$a->url}">available on the web site</a>.';
+
+$string['emailstudentsmail'] = '{$a->username} has changed the approval status of \'{$a->filename}\'
+for \'{$a->publication}\' to {$a->apstatus} approved on {$a->dayupdated} at {$a->timeupdated}.
+
+It is available here:
+
+    {$a->url}';
+
+$string['emailstudentsmailhtml'] = '{$a->username} has changed the approval status of \'{$a->filename}\'
+for <i>\'{$a->publication}\'</i> to <b>{$a->apstatus} approved</b> on {$a->dayupdated} at {$a->timeupdated}</i><br /><br />
+It is <a href="{$a->url}">available on the web site</a>.';
 
 $string['name'] = 'Student folder name';
 $string['obtainstudentapproval'] = 'Obtain approval';
 $string['saveapproval'] = 'save approval';
 $string['configobtainstudentapproval'] = 'Documents are visible after the student´s consent.';
-$string['hideidnumberfromstudents'] = 'Hide ID-Number';
-$string['hideidnumberfromstudents_desc'] = 'Hide column ID-Number in Public Files table for students';
 $string['obtainteacherapproval'] = 'Approved by default';
 $string['configobtainteacherapproval'] = 'Documents of students are by default visible for all other participants.';
 $string['maxfiles'] = 'Maximum number of attachments';
@@ -83,8 +122,8 @@ $string['modeupload'] = 'students can upload documents';
 $string['modeimport'] = 'take documents from an assignment';
 
 $string['courseuploadlimit'] = 'Course upload limit';
-$string['allowedfiletypes'] = 'Allowed filetypes (;)';
-$string['allowedfiletypes_help'] = 'Accepted file types can be restricted by entering a semicolon-separated list of mimetypes, e.g. \'video/mp4; audio/mp3; image/png; image/jpeg\', or file extensions including a dot, e.g. \'.png; .jpg\'. If the field is left empty, then all file types are allowed.';
+$string['allowedfiletypes'] = 'Accepted file types';
+$string['allowedfiletypes_help'] = 'Accepted file types can be restricted by entering a comma-separated list of mimetypes, e.g. \'video/mp4, audio/mp3, image/png, image/jpeg\', or file extensions including a dot, e.g. \'.png, .jpg\'. If the field is left empty, then all file types are allowed.';
 $string['allowedfiletypes_err'] = 'Check input! Invalid file extensions or seperators';
 $string['obtainteacherapproval_help'] = 'Decide if files will be made visible immediately upon upload or not: <br><ul><li> yes - all files will be visible to everyone right away</li><li> no - files will be published only after the teacher approved</li></ul>';
 $string['assignment'] = 'Assignment';
@@ -96,8 +135,8 @@ $string['nonexistentfiletypes'] = 'The following file types were not recognised:
 
 $string['groupapprovalmode'] = 'Groupapproval mode';
 $string['groupapprovalmode_help'] = 'Here you decide if approval of all group members or just approval of at least one group member is required for files to be visible. The files will only be visible after approval by all group members or at least one group member.';
-$string['groupapprovalmode_all'] = '<strong>ALL</strong> members of the group have to approve';
-$string['groupapprovalmode_single'] = 'at least <strong>ONE</strong> member has to approve';
+$string['groupapprovalmode_all'] = 'ALL members of the group have to approve';
+$string['groupapprovalmode_single'] = 'at least ONE member has to approve';
 
 $string['warning_changefromobtainteacherapproval'] = 'After activating this setting, all uploaded files will be visible to other participants. All uploaded will become visible. You can manually make files invisible to certain students.';
 $string['warning_changetoobtainteacherapproval'] = 'After deactivating this setting uploaded files will not be visible to other participants automatically. You will have to determine which files are visible. Already visible files will become invisible.';

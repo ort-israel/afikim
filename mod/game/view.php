@@ -29,13 +29,13 @@ require_once($CFG->dirroot.'/mod/game/locallib.php');
 $id = optional_param('id', 0, PARAM_INT); // Course Module ID.
 
 if (! $cm = get_coursemodule_from_id('game', $id)) {
-    print_error('invalidcoursemodule');
+    throw new moodle_exception( 'game_error', 'game', 'invalidcoursemodule');
 }
 if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
-    print_error('coursemisconf');
+    throw new moodle_exception( 'game_error', 'game', 'coursemisconf');
 }
 if (! $game = $DB->get_record('game', array('id' => $cm->instance))) {
-    print_error('invalidcoursemodule');
+    throw new moodle_exception( 'game_error', 'game', 'invalidcoursemodule');
 }
 
 // Check login and get context.
@@ -116,6 +116,7 @@ echo $OUTPUT->heading(format_string($game->name));
 
 // Display information about this game.
 echo $OUTPUT->box_start('quizinfo');
+echo $game->intro.'<br>';
 if ($game->attempts != 1) {
     echo get_string('gradingmethod', 'quiz', game_get_grading_option_name($game->grademethod));
 }
@@ -190,7 +191,7 @@ if ($attempts) {
     $table->size[] = '';
 
     if ($gradecolumn) {
-        $table->head[] = get_string('grade') . ' / ' . game_format_grade( $game, $game->grade);
+        $table->head[] = get_string('grade', 'game') . ' / ' . game_format_grade( $game, $game->grade);
         $table->align[] = 'center';
         $table->size[] = '';
     }
@@ -353,7 +354,7 @@ function game_highscore( $game) {
     " FROM {$CFG->prefix}game_attempts ".
     " WHERE gameid={$game->id} AND score > 0".
     " GROUP BY userid".
-    " ORDER BY score DESC";
+    " ORDER BY max(score) DESC";
     $score = 0;
     $recs = $DB->get_records_sql( $sql);
     foreach ($recs as $rec) {

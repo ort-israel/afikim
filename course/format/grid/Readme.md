@@ -1,25 +1,25 @@
-Grid Course Format
+Grid course format
 ============================
 A topics based format that uses a grid of user selectable images to pop up a light box of the section.
 
-[![Build Status](https://travis-ci.org/gjb2048/moodle-format_grid.svg?branch=master)](https://travis-ci.org/gjb2048/moodle-format_grid)
+[![Build Status](https://travis-ci.org/gjb2048/moodle-format_grid.svg?branch=MOODLE_39)](https://travis-ci.org/gjb2048/moodle-format_grid)
 
 Required version of Moodle
 ==========================
-This version works with Moodle 3.5 version 2018051700.00 (Build: 20180517) and above within the 3.5 branch until the
+This version works with Moodle 3.9 version 2020061500.00 (Build: 20200615) and above within the 3.9 branch until the
 next release.
 
 Please ensure that your hardware and software complies with 'Requirements' in 'Installing Moodle' on
-'docs.moodle.org/35/en/Installing_Moodle'.
+'docs.moodle.org/39/en/Installing_Moodle'
 
-Free Software
+Free software
 =============
 The Grid format is 'free' software under the terms of the GNU GPLv3 License, please see 'COPYING.txt'.
 
 The primary source for downloading this branch of the format is https://moodle.org/plugins/view.php?plugin=format_grid
-with 'Select Moodle version:' set at 'Moodle 3.5'.
+with 'Select Moodle version:' set at 'Moodle 3.9'.
 
-The secondary source is a tagged version with the v3.5 prefix on https://github.com/gjb2048/moodle-courseformat_grid/tags
+The secondary source is a tagged version with the v3.9 prefix on https://github.com/gjb2048/moodle-courseformat_grid/tags
 
 If you download from the development area - https://github.com/gjb2048/moodle-courseformat_grid/ - consider that
 the code is unstable and not for use in production environments.  This is because I develop the next version in stages
@@ -72,7 +72,7 @@ Uninstallation
    and drop the 'format_grid_icon' and 'format_grid_summary' tables.
 5. Put Moodle out of Maintenance Mode.
 
-Upgrade Instructions
+Upgrade instructions
 ====================
 1. Ensure you have the version of Moodle as stated above in 'Required version of Moodle'.  This is essential as the
    format relies on underlying core code that is out of my control.
@@ -86,31 +86,6 @@ Upgrade Instructions
 7. If automatic 'Purge all caches' appears not to work by lack of display etc. then perform a manual 'Purge all caches'
    under 'Home -> Site administration -> Development -> Purge all caches'.
 8. Put Moodle out of Maintenance Mode.
-
-Upgrading from M1.9
-===================
-When upgrading from Moodle 1.9 the grid icon images are moved to a 'legacy' files area.  So they will not show up when you
-view the course as the format can no longer find them.  Therefore AFTER upgrading to Moodle 2.2+ please run the script
-'convert_legacy_image.php' as follows:
-
-1. Ensure you have updated fully to Moodle 2.2+.
-2. Ensure you have updated properly to the Moodle 2.2+ version of the Grid format by clicking on 'Notifications' if you had
-   not replaced the folder before performing the Moodle 2.2+ upgrade.
-3. Change the URL to have from the root of your Moodle installation: /course/format/grid/upgrade/convert_legacy_image.php -
-   i.e: http://www.mysite.com/moodle/course/format/grid/upgrade/convert_legacy_image.php
-   If you wish to crop instead of scaling the images then append '?crop=1' to the end of the URL like so:
-   http://www.mysite.com/moodle/course/format/grid/upgrade/convert_legacy_image.php?crop=1
-   If you wish to get the full log output then append '?logverbose=1' to the end of the URL like so:
-   http://www.mysite.com/moodle/course/format/grid/upgrade/convert_legacy_image.php?logverbose=1
-   or with crop:
-   http://www.mysite.com/moodle/course/format/grid/upgrade/convert_legacy_image.php?logverbose=1&crop=1
-   But keep in mind that with lots of records in the 'files' table this can cause the script to fail.
-4. Observe the output of the script which is also replicated in the PHP log file.
-5. Go back to the grid format course and confirm that the images are there.  It is possible that some old legacy files remain from
-   old images that were replaced.  At the present moment in time I have no way of detecting them (to be certain that they are
-   from the Grid format) in code.
-6. I'm not sure of the security vulnerabilities of the script on the server so after you have used it and are confident of the
-   results then move it from the '/course/format/grid/upgrade/' folder to a safe non-served folder.
 
 Downgrading
 ===========
@@ -133,7 +108,7 @@ do so:
     'Site administration' -> 'Notifications' if this does not happen.
 6.  Put Moodle out of Maintenance Mode.
 
-Reporting Issues
+Reporting issues
 ================
 Before reporting an issue, please ensure that you are running the latest version for your release of Moodle.  Major version numbers
 are always the same, so for Moodle 2.5.x there will be a Grid format 2.5.x.  The primary release area is located on
@@ -153,8 +128,7 @@ the service will expedite the response.
 It takes time and effort to maintain the format, therefore sponsorships are appreciated.
 
 When reporting an issue you can post in the course format's forum on Moodle.org (currently 'moodle.org/mod/forum/view.php?id=47'), 
-on Moodle tracker 'tracker.moodle.org' ensuring that you chose the 'Non-core contributed modules' and 'Course Format: Grid'
-for the component or contact us direct (details at the bottom).
+on https://github.com/gjb2048/moodle-format_grid/issues or contact me direct (details at the bottom).
 
 It is essential that you provide as much information as possible, the critical information being the contents of the format's 
 version.php file.  Other version information such as specific Moodle version, theme name and version also helps.  A screen shot
@@ -197,7 +171,7 @@ and:
 
 https://github.com/gjb2048/moodle-format_grid/issues/23
 
-Making Changes
+Making changes
 ==============
 
 Changing the keyboard control code
@@ -255,14 +229,20 @@ You can't back up the course format data independently.
 
 Roadmap
 =============
+1. Maintenance of issues.
+2. Ongoing structured walk through and refactoring.
+3. Updates to support major releases when they happen.
+
+Parked
+------
 1. Improved instructions including Moodle docs.
 2. User definable grid row icon numbers - https://moodle.org/mod/forum/discuss.php?d=196716
-3. Continued maintenance of issues.
-4. Ongoing structured walk through and refactoring.
 
-Known Issues
+Known issues
 =============
-1. All listed on https://tracker.moodle.org/browse/CONTRIB/component/11231.
+All listed on:
+1. https://tracker.moodle.org/browse/CONTRIB/component/11231
+2. https://github.com/gjb2048/moodle-format_grid/issues
 
 History
 =============

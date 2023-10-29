@@ -37,7 +37,8 @@ M.mod_evoting.history_init = function (Y, graphData) {
 	var sumVote = 0;
 	var countOptions = 0;
 	var strTooltipStart = "<h2 style='padding-left:10px;padding-right:10px; font-size:1.1em; line-height:20px'>" + M.util.get_string('countvote', 'evoting') + "<p style='font-size:1.5em; line-height:30px; font-weight:600;color:#007cb7;padding-top:5px;' >";
-
+	var nbrOption = 0;
+/*
 // Load the Visualization API and the chart package.
 	google.load("visualization", "1.0", {
 		packages: ["corechart"]
@@ -45,7 +46,12 @@ M.mod_evoting.history_init = function (Y, graphData) {
 
 // Set a callback to run when the Google Visualization API is loaded.
 	google.setOnLoadCallback(drawChart);
+*/
 
+	google.charts.load('current', {packages: ['corechart']});
+	google.charts.setOnLoadCallback(drawChart);
+	
+	
 	$(function () {
 
 		// Get idCourse
@@ -221,6 +227,7 @@ M.mod_evoting.history_init = function (Y, graphData) {
 			}
 		};
 
+		nbrOption = dataOptionsGraphic.length-1;
 		dataGraph = google.visualization.arrayToDataTable(dataOptionsGraphic);
 		dataGraph.setColumnProperty(0, {
 			allowHtml: true
@@ -265,7 +272,7 @@ M.mod_evoting.history_init = function (Y, graphData) {
 		var colorWrongAnswer = "#D8D8D8";
 		var cptWrong = 0;
 
-		for (var i = 0; i < dataGraph["Nf"].length; i++) {
+		for (var i = 0; i < nbrOption; i++) {
 			var value = dataGraph.getValue(i, 6);
 			var cptVote = dataGraph.getValue(i, 1);
 			var cptVoteToDelete = "";
@@ -299,8 +306,8 @@ M.mod_evoting.history_init = function (Y, graphData) {
 
 
 		// If there is no good answer
-		if (cptWrong == dataGraph["Nf"].length) {
-			for (var i = 0; i < dataGraph["Nf"].length; i++) {
+		if (cptWrong == nbrOption) {
+			for (var i = 0; i < nbrOption; i++) {
 				dataGraph.setValue(i, 2, colorBlueAnswer);
 			}
 		}

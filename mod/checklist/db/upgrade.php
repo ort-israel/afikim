@@ -14,10 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Extra upgrade steps
+ * @copyright Davo Smith <moodle@davosmith.co.uk>
+ * @package mod_checklist
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Extra upgrade steps.
+ * @param int $oldversion
+ * @return bool
+ */
 function xmldb_checklist_upgrade($oldversion = 0) {
-    global $DB, $OUTPUT;
+    global $DB, $OUTPUT, $CFG;
 
     $dbman = $DB->get_manager();
     $result = true;
@@ -292,6 +304,56 @@ function xmldb_checklist_upgrade($oldversion = 0) {
 
         // Checklist savepoint reached.
         upgrade_mod_savepoint(true, 2016090902, 'checklist');
+    }
+
+    if ($oldversion < 2018051500) {
+        // This version includes the extended privacy API only found in M3.4.6, M3.5.3 and M3.6+.
+        if ($CFG->version > 2018051700 && $CFG->version < 2018051703) {
+            // Main version.php takes care of Moodle below 3.4.6.
+            die('You must upgrade to Moodle 3.5.3 (or above) before upgrading to this version of mod_checklist');
+        }
+
+        // Checklist savepoint reached.
+        upgrade_mod_savepoint(true, 2018051500, 'checklist');
+    }
+
+    if ($oldversion < 2019061900) {
+        $table = new xmldb_table('checklist_item');
+        $field = new xmldb_field('grouping', XMLDB_TYPE_INTEGER, '10', null, null, null, '0');
+
+        // Rename field grouping as "GROUPING" has become a reserved keyword in MySQL 8.
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'groupingid');
+        }
+
+        // Checklist savepoint reached.
+        upgrade_mod_savepoint(true, 2019061900, 'checklist');
+    }
+
+    if ($oldversion < 2020012900) {
+        $table = new xmldb_table('checklist_item');
+        $field = new xmldb_field('openlinkinnewwindow', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, 0, 'linkurl');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Checklist savepoint reached.
+        upgrade_mod_savepoint(true, 2020012900, 'checklist');
+    }
+
+    if ($oldversion < 2020061500) {
+
+        // Define field completionpercenttype to be added to checklist.
+        $table = new xmldb_table('checklist');
+        $field = new xmldb_field('completionpercenttype', XMLDB_TYPE_CHAR, '8', null, XMLDB_NOTNULL, null, 'percent',
+                                 'completionpercent');
+
+        // Conditionally launch add field completionpercenttype.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Checklist savepoint reached.
+        upgrade_mod_savepoint(true, 2020061500, 'checklist');
     }
 
     return $result;

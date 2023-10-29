@@ -183,8 +183,10 @@ if (($mode === 'csstemplate') || ($mode === 'jstemplate')) {
     $usehtmleditor = data_get_config($data, "editor_{$mode}", true);
 }
 
+$datafieldtype = '';
 if ($usehtmleditor) {
     $format = FORMAT_HTML;
+    $datafieldtype = ' data-fieldtype="editor" ';
 } else {
     $format = FORMAT_PLAIN;
 }
@@ -226,7 +228,8 @@ if ($mode == 'listtemplate'){
     $field = 'listtemplateheader';
     $editor->set_text($data->listtemplateheader);
     $editor->use_editor($field, $options);
-    echo '<div><textarea id="'.$field.'" name="'.$field.'" rows="15" cols="80">'.s($data->listtemplateheader).'</textarea></div>';
+    echo "<div><textarea id='{$field}' {$datafieldtype} name='{$field}' class='form-control' rows='15' cols='80'>" .
+        s($data->listtemplateheader) . '</textarea></div>';
 
     echo '</td>';
     echo '</tr>';
@@ -343,7 +346,7 @@ $field = 'template';
 $editor->set_text($data->{$mode});
 $editor->use_editor($field, $options);
 echo '<div>';
-echo '<textarea class="form-control" id="' . $field . '" ' .
+echo '<textarea class="form-control" id="' . $field . '" ' . $datafieldtype .
      'name="' . $field . '" rows="15" cols="80">' . s($data->{$mode}) . '</textarea>';
 echo '</div>';
 echo '</td>';
@@ -359,7 +362,7 @@ if ($mode == 'listtemplate'){
     $editor->set_text($data->listtemplatefooter);
     $editor->use_editor($field, $options);
     echo '<div>';
-    echo '<textarea id="' . $field . '" class="form-control" ' .
+    echo '<textarea id="' . $field . '" class="form-control" ' . $datafieldtype .
          'name="' . $field . '" rows="15" cols="80">' . s($data->listtemplatefooter) . '</textarea>';
     echo '</div>';
     echo '</td>';
@@ -376,7 +379,7 @@ if ($mode == 'listtemplate'){
     $editor->set_text($data->rsstitletemplate);
     $editor->use_editor($field, $options);
     echo '<div>';
-    echo '<textarea id="' . $field . '" name="' . $field . '" ' .
+    echo '<textarea id="' . $field . '" name="' . $field . '" ' . $datafieldtype .
          'class="form-control" rows="15" cols="80">' . s($data->rsstitletemplate) . '</textarea>';
     echo '</div>';
     echo '</td>';

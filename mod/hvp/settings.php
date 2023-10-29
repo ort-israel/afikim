@@ -66,10 +66,15 @@ if ($ADMIN->fulltree) {
             1)
     );
 
+    // Should we save and grade each interaction inside an Interactive Video or a Presentation?
+    // when xAPI verb = answered
+    $settings->add(new admin_setting_configcheckbox('mod_hvp/saveeachinteraction',
+        get_string('saveeachinteraction', 'hvp'), get_string('saveeachinteraction_help', 'hvp'), 1));
+
     $choices = array(
-        H5PDisplayOptionBehaviour::NEVER_SHOW => get_string('displayoptionnevershow', 'hvp'),
-        H5PDisplayOptionBehaviour::ALWAYS_SHOW => get_string('displayoptionalwaysshow', 'hvp'),
-        H5PDisplayOptionBehaviour::CONTROLLED_BY_PERMISSIONS => get_string('displayoptionpermissions', 'hvp'),
+        H5PDisplayOptionBehaviour::NEVER_SHOW => get_string('displayoptiondownloadnever', 'hvp'),
+        H5PDisplayOptionBehaviour::ALWAYS_SHOW => get_string('displayoptiondownloadalways', 'hvp'),
+        H5PDisplayOptionBehaviour::CONTROLLED_BY_PERMISSIONS => get_string('displayoptiondownloadpermission', 'hvp'),
         H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_ON => get_string('displayoptionauthoron', 'hvp'),
         H5PDisplayOptionBehaviour::CONTROLLED_BY_AUTHOR_DEFAULT_OFF => get_string('displayoptionauthoroff', 'hvp')
     );
@@ -111,19 +116,19 @@ if ($ADMIN->fulltree) {
         )
     );
 
+    $settings->add(new admin_setting_heading('mod_hvp/ckeditor_buttons', get_string('ckeditorbuttons', 'hvp'), ''));
+    $settings->add(new admin_setting_configcheckbox('mod_hvp/bidi',
+        get_string('ckeditorbutton_bidi', 'hvp'), get_string('ckeditorbutton_bidi_help', 'hvp'), 1));
+    $settings->add(new admin_setting_configcheckbox('mod_hvp/editordirsupport',
+        get_string('editordirsupport', 'hvp'), get_string('editordirsupport_help', 'hvp'), 1));
+    $settings->add(new admin_setting_configcheckbox('mod_hvp/contentlang',
+        get_string('contentlang', 'hvp'), get_string('contentlang_help', 'hvp'), 1));
+
     // Load js for disable hub confirmation dialog functionality.
     $PAGE->requires->js('/mod/hvp/library/js/jquery.js', true);
     $PAGE->requires->js('/mod/hvp/library/js/h5p-event-dispatcher.js', true);
     $PAGE->requires->js('/mod/hvp/library/js/h5p-confirmation-dialog.js', true);
     $PAGE->requires->js('/mod/hvp/library/js/settings/h5p-disable-hub.js', true);
-
-    $settings->add(new admin_setting_configcheckbox('mod_hvp/xapistoreeachinteraction', get_string('xapistoreeachinteraction', 'hvp'),
-        get_string('xapistoreeachinteraction_help', 'hvp'), 1));
-
-    $settings->add(new admin_setting_heading('mod_hvp/ckeditor_buttons', get_string('ckeditorbuttons', 'hvp'), ''));
-    $settings->add(new admin_setting_configcheckbox('mod_hvp/bidi', get_string('ckeditorbutton_bidi', 'hvp'), '', 1));
-
-    $settings->add(new admin_setting_configcheckbox('mod_hvp/editordirsupport', get_string('editordirsupport', 'hvp'), '', 1));
 
     // Skip applying css when page has already loaded, since Moodle does not.
     // allow us to require the css at this point.

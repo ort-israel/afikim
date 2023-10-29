@@ -17,8 +17,7 @@
 /**
  * Grid Format - A topics based format that uses a grid of user selectable images to popup a light box of the section.
  *
- * @package    course/format
- * @subpackage grid
+ * @package    format_grid
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2012 G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://about.me/gjbarnard} and
@@ -39,6 +38,10 @@ class grid_image_form extends moodleform {
         // Visible elements.
         $mform->addElement('filepicker', 'imagefile', get_string('imagefile', 'format_grid'), null, $instance['options']);
         $mform->addHelpButton('imagefile', 'imagefile', 'format_grid');
+        $mform->addElement('text', 'alttext', get_string('alttext', 'format_grid'));
+        $mform->setType('alttext', PARAM_TEXT);
+        $mform->setDefault('alttext', $instance['alttext']);
+        $mform->addHelpButton('alttext', 'alttext', 'format_grid');
         $mform->addElement('selectyesno', 'deleteimage', get_string('deleteimage', 'format_grid'));
         $mform->addHelpButton('deleteimage', 'deleteimage', 'format_grid');
 

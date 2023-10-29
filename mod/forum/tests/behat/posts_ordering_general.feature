@@ -16,13 +16,10 @@ Feature: New discussions and discussions with recently added replies are display
       | user      | course    | role            |
       | teacher1  | C1        | editingteacher  |
       | student1  | C1        | student         |
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
-    And I add a "Forum" to section "1" and I fill the form with:
-      | Forum name  | Course general forum                |
-      | Description | Single discussion forum description |
-      | Forum type  | Standard forum for general use      |
-    And I log out
+    And the following "activity" exists:
+      | course   | C1                   |
+      | activity | forum                |
+      | name     | Course general forum |
 
   #
   # We need javascript/wait to prevent creation of the posts in the same second. The threads
@@ -31,9 +28,7 @@ Feature: New discussions and discussions with recently added replies are display
   #
   @javascript
   Scenario: Replying to a forum post or editing it puts the discussion to the front
-    Given I log in as "student1"
-    And I am on "Course 1" course homepage
-    And I follow "Course general forum"
+    Given I am on the "Course general forum" "forum activity" page logged in as student1
     #
     # Add three posts into the forum.
     #
@@ -59,26 +54,20 @@ Feature: New discussions and discussions with recently added replies are display
     #
     # Reply to another forum post.
     #
-    And I log in as "teacher1"
-    And I am on "Course 1" course homepage
-    And I follow "Course general forum"
+    And I am on the "Course general forum" "forum activity" page logged in as teacher1
     And I follow "Forum post 1"
-    And I click on "Reply" "link" in the "//div[@aria-label='Forum post 1 by Student 1']" "xpath_element"
-    And I set the following fields to these values:
+    And I reply "Forum post 1" post from "Course general forum" forum with:
       | Message | Reply to the first post |
-    And I press "Post to forum"
-    And I wait to be redirected
-    And I am on "Course 1" course homepage
-    And I follow "Course general forum"
+    And I am on the "Course general forum" "forum activity" page
     #
-    # Make sure the order of the forum posts is as expected (most recently participated first).
+    # Make sure the order of the forum posts is as expected, with most recent new participation first (ie excluding edits).
     #
-    Then I should see "Forum post 3" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=3]" "xpath_element"
-    And I should see "Edited forum post 2" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=2]" "xpath_element"
-    And I should see "Forum post 1" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=1]" "xpath_element"
+    Then I should see "Forum post 1" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=1]" "xpath_element"
+    And I should see "Forum post 3" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=2]" "xpath_element"
+    And I should see "Edited forum post 2" in the "//tr[contains(concat(' ', normalize-space(@class), ' '), ' discussion ')][position()=3]" "xpath_element"
     #
     # Make sure the next/prev navigation uses the same order of the posts.
     #
-    And I follow "Edited forum post 2"
+    And I follow "Forum post 3"
     And "//a[@aria-label='Next discussion: Forum post 1']" "xpath_element" should exist
-    And "//a[@aria-label='Previous discussion: Forum post 3']" "xpath_element" should exist
+    And "//a[@aria-label='Previous discussion: Edited forum post 2']" "xpath_element" should exist

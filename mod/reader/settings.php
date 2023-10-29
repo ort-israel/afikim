@@ -25,9 +25,6 @@
  * @since      Moodle 2.0
  */
 
-/** Prevent direct access to this script */
-defined('MOODLE_INTERNAL') || die();
-
 $plugin = 'mod_reader';
 $defaults = (object)array(
     // default settings for Reader activities in courses
@@ -63,11 +60,19 @@ $defaults = (object)array(
     'clearedmessage'     => get_string('clearedmessagedefault', 'mod_reader'),
 
     // site wide settings (i.e. all courses use the same settings)
+
+    // settings to download from quiz bank on MoodleReader.net
     'serverurl'          => 'http://moodlereader.net/quizbank',
     'serverusername'     => '',
     'serverpassword'     => '',
     'keepoldquizzes'     => '0',
     'keeplocalbookdifficulty' => '0',
+
+    // settings to access API and take quizzes online at mReader.org
+    'mreaderenable'      => '0',
+    'mreaderurl'         => 'https://mreader.org',
+    'mreadersiteid'      => '',
+    'mreadersitekey'     => '',
 
     'last_update'        => '0' // maintained by "reader_cron()" in "mod/reader/lib.php"
 );
@@ -87,6 +92,11 @@ $settings->add($setting);
 $name = 'timelimit';
 $text = get_string($name, 'quiz');
 $help = get_string('config'.$name, 'quiz');
+
+/** Prevent direct access to this script */
+defined('MOODLE_INTERNAL') || die();
+
+
 if (class_exists('admin_setting_configduration') && method_exists('admin_setting_configduration', 'set_advanced_flag_options')) {
     // Moodle >= 2.6
     $default = array('v' => $defaults->$name, 'u' => 1, 'adv' => false);
@@ -242,6 +252,50 @@ if (method_exists('admin_setting_configtextarea', 'set_advanced_flag_options')) 
     $settings->add($setting);
 }
 
+$name = 'mreadersettings';
+$text = get_string($name, $plugin);
+$help = get_string('config'.$name, $plugin);
+$setting = new admin_setting_heading("$plugin/$name", $text, $help);
+$settings->add($setting);
+
+// enable mReader access
+$name = 'mreaderenable';
+$text = get_string($name, $plugin);
+$help = get_string('config'.$name, $plugin);
+$default = $defaults->$name;
+$setting = new admin_setting_configselect("$plugin/$name", $text, $help, $default, $yesno);
+$settings->add($setting);
+
+// mReader API url
+$name = 'mreaderurl';
+$text = get_string($name, $plugin);
+$help = get_string('config'.$name, $plugin);
+$default = $defaults->$name;
+$setting = new admin_setting_configtext("$plugin/$name", $text, $help, $default, PARAM_TEXT);
+$settings->add($setting);
+
+// mReader API site id
+$name = 'mreadersiteid';
+$text = get_string($name, $plugin);
+$help = get_string('config'.$name, $plugin);
+$default = $defaults->$name;
+$setting = new admin_setting_configtext("$plugin/$name", $text, $help, $default, PARAM_TEXT);
+$settings->add($setting);
+
+// mReader API site key
+$name = 'mreadersitekey';
+$text = get_string($name, $plugin);
+$help = get_string('config'.$name, $plugin);
+$default = $defaults->$name;
+$setting = new admin_setting_configpasswordunmask("$plugin/$name", $text, $help, $default, PARAM_TEXT);
+$settings->add($setting);
+
+$name = 'serversettings';
+$text = get_string($name, $plugin);
+$help = get_string('config'.$name, $plugin);
+$setting = new admin_setting_heading("$plugin/$name", $text, $help);
+$settings->add($setting);
+
 // serverurl
 $name = 'serverurl';
 $text = get_string($name, $plugin);
@@ -263,7 +317,7 @@ $name = 'serverpassword';
 $text = get_string($name, $plugin);
 $help = get_string('config'.$name, $plugin);
 $default = $defaults->$name;
-$setting = new admin_setting_configtext("$plugin/$name", $text, $help, $default, PARAM_TEXT);
+$setting = new admin_setting_configpasswordunmask("$plugin/$name", $text, $help, $default, PARAM_TEXT);
 $settings->add($setting);
 
 // keepoldquizzes

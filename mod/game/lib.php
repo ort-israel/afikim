@@ -105,7 +105,7 @@ function game_update_instance($game) {
         $game->param1 = 0;
     }
 
-    if ($game->param1 == '') {
+    if ($game->param1 == 0) {
         $game->param1 = 0;
     }
 
@@ -113,7 +113,7 @@ function game_update_instance($game) {
         $game->param2 = 0;
     }
 
-    if ($game->param2 == '') {
+    if ($game->param2 == 0) {
         $game->param2 = 0;
     }
 
@@ -139,6 +139,15 @@ function game_update_instance($game) {
  * @param stdClass $game
  */
 function game_before_add_or_update(&$game) {
+
+    if (isset( $game->toptext)) {
+        $game->toptext = $game->toptext[ 'text'];
+    }
+
+    if (isset( $game->bottomtext)) {
+        $game->bottomtext = $game->bottomtext[ 'text'];
+    }
+
     if (isset( $game->questioncategoryid)) {
         $pos = strpos( $game->questioncategoryid, ',');
         if ($pos != false) {
@@ -367,6 +376,9 @@ function game_get_user_grades($game, $userid=0) {
 
     $user = $userid ? "AND u.id = $userid" : "";
 
+    if (!isset( $game->grade)) {
+        $game->grade = 1;
+    }
     $sql = 'SELECT u.id, u.id AS userid, '.$game->grade.
             ' * g.score AS rawgrade, g.timemodified AS dategraded, MAX(a.timefinish) AS datesubmitted
             FROM {user} u, {game_grades} g, {game_attempts} a
@@ -422,7 +434,8 @@ function game_update_grades($game=null, $userid=0, $nullifnone=true) {
     }
 
     if ($game != null) {
-        if ($grades = game_get_user_grades($game, $userid)) {
+        $grades = game_get_user_grades($game, $userid);
+        if ( $grades != null) {
             game_grade_item_update($game, $grades);
 
         } else if ($userid and $nullifnone) {
@@ -454,6 +467,7 @@ function game_update_grades($game=null, $userid=0, $nullifnone=true) {
 
 /**
  * Create grade item for given game
+ * Updates table grade_grades
  *
  * @param object $game object with extra cmidnumber
  * @param stdClass $grades
@@ -470,7 +484,7 @@ function game_grade_item_update($game, $grades=null) {
         }
     }
 
-    if (array_key_exists('cmidnumber', $game)) { // Tt may not be always present.
+    if (isset($game->cmidnumber)) { // Tt may not be always present.
         $params = array('itemname' => $game->name, 'idnumber' => $game->cmidnumber);
     } else {
         $params = array('itemname' => $game->name);
@@ -698,7 +712,7 @@ function game_supports($feature) {
         case FEATURE_GROUPMEMBERSONLY:
             return true;
         case FEATURE_MOD_INTRO:
-            return false;
+            return true;
         case FEATURE_COMPLETION_TRACKS_VIEWS:
             return true;
         case FEATURE_COMPLETION_HAS_RULES:
@@ -709,7 +723,8 @@ function game_supports($feature) {
             return false;
         case FEATURE_BACKUP_MOODLE2:
             return true;
-
+        case FEATURE_SHOW_DESCRIPTION:
+            return true;
         default:
             return null;
     }
@@ -838,6 +853,39 @@ function game_extend_settings_navigation($settings, $gamenode) {
         $url = new moodle_url('/course/modedit.php', array('update' => $PAGE->cm->id, 'return' => true, 'sesskey' => sesskey()));
         $gamenode->add(get_string('edit', 'moodle', ''), $url, navigation_node::TYPE_SETTING,
             null, null, new pix_icon('t/edit', ''));
+    }
+
+    if (has_capability('mod/game:manage', $context)) {
+        $gameid = $PAGE->cm->instance;
+        $sql = "SELECT id,gamekind,sourcemodule,bookid,course,glossaryid,quizid,questioncategoryid ".
+            "FROM {$CFG->prefix}game WHERE id=$gameid";
+        $game = $DB->get_record_sql( $sql);
+        if (($game->gamekind == 'bookquiz') && ($game->bookid != 0)) {
+            $book = $DB->get_record_sql( "SELECT id,name FROM {$CFG->prefix}book WHERE id={$game->bookid}");
+            $cmd = get_coursemodule_from_instance('book', $game->bookid, $game->course);
+            $url = new moodle_url('/mod/book/view.php', array('id' => $cmd->id));
+            $gamenode->add(get_string('viewbook', 'game', $book->name), $url, navigation_node::TYPE_SETTING,
+                null, null, new pix_icon('t/edit', ''));
+        }
+        if (($game->sourcemodule == 'glossary') && ($game->glossaryid != 0)) {
+            $glossary = $DB->get_record_sql( "SELECT id,name FROM {$CFG->prefix}glossary WHERE id={$game->glossaryid}");
+            $cmd = get_coursemodule_from_instance('glossary', $game->glossaryid, $game->course);
+            $url = new moodle_url('/mod/glossary/view.php', array('id' => $cmd->id));
+            $gamenode->add(get_string('viewglossary', 'game', $glossary->name), $url, navigation_node::TYPE_SETTING,
+                null, null, new pix_icon('t/edit', ''));
+        }
+        if (($game->sourcemodule == 'quiz') && ($game->quizid != 0)) {
+            $quiz = $DB->get_record_sql( "SELECT id,name FROM {$CFG->prefix}quiz WHERE id={$game->quizid}");
+            $cmd = get_coursemodule_from_instance('quiz', $game->quizid, $game->course);
+            $url = new moodle_url('/mod/quiz/view.php', array('id' => $cmd->id));
+            $gamenode->add(get_string('viewquiz', 'game', $quiz->name), $url, navigation_node::TYPE_SETTING,
+                null, null, new pix_icon('t/edit', ''));
+        }
+        if ($game->sourcemodule == 'question') {
+            $url = new moodle_url('/question/edit.php', array('courseid' => $game->course));
+            $gamenode->add(get_string('viewquestions', 'game'), $url, navigation_node::TYPE_SETTING,
+                null, null, new pix_icon('t/edit', ''));
+        }
     }
 
     if (has_capability('mod/game:viewreports', $context)) {
@@ -1167,7 +1215,7 @@ function mod_game_pluginfile($course, $cm, $context, $filearea, $args, $forcedow
         $file = $args[ 1];
         $a = explode( '/', $context->path);
         if (!$contextcourse = game_get_context_course_instance( $course->id)) {
-            print_error('nocontext');
+            throw new moodle_exception( 'game_error', 'game', 'nocontext');
         }
         $a = array( 'component' => 'question', 'filearea' => 'questiontext',
             'itemid' => $questionid, 'filename' => $file, 'contextid' => $contextcourse->id);
@@ -1179,13 +1227,13 @@ function mod_game_pluginfile($course, $cm, $context, $filearea, $args, $forcedow
         }
 
         // Finally send the file.
-        send_stored_file($file, 0, 0, true); // download MUST be forced - security!
+        send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
     } else if ($filearea == 'answer') {
         $answerid = $args[ 0];
         $file = $args[ 1];
 
         if (!$contextcourse = game_get_context_course_instance( $course->id)) {
-            print_error('nocontext');
+            throw new moodle_exception( 'game_error', 'game', 'nocontext');
         }
         $rec = $DB->get_record( 'files', array( 'component' => 'question', 'filearea' => 'answer',
             'itemid' => $answerid, 'filename' => $file, 'contextid' => $contextcourse->id));
@@ -1210,7 +1258,7 @@ function mod_game_pluginfile($course, $cm, $context, $filearea, $args, $forcedow
     }
 
     // Finally send the file.
-    send_stored_file($file, 0, 0, true); // download MUST be forced - security!
+    send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
 }
 
 /**
@@ -1363,7 +1411,7 @@ function game_get_completion_state($course, $cm, $userid, $type) {
     }
 
     if (! $game = $DB->get_record('game', array('id' => $cm->instance))) {
-        print_error('invalidcoursemodule');
+        throw new moodle_exception( 'game_error', 'game', 'invalidcoursemodule');
     }
 
     // Check for passing grade.
@@ -1376,6 +1424,14 @@ function game_get_completion_state($course, $cm, $userid, $type) {
             if (!empty($grades[$userid])) {
                 return $grades[$userid]->is_passed($item);
             }
+        }
+    } else if (!is_null( $cm->completiongradeitemnumber)) {
+        require_once($CFG->libdir . '/gradelib.php');
+        $item = grade_item::fetch(array('courseid' => $course->id, 'itemtype' => 'mod',
+                'itemmodule' => 'game', 'iteminstance' => $cm->instance, 'outcomeid' => null));
+        if ($item) {
+            $grades = grade_grade::fetch_users_grades($item, array($userid), false);
+            return !empty($grades[$userid]);
         }
     }
 
@@ -1468,20 +1524,80 @@ function mod_game_get_completion_active_rule_descriptions($cm) {
     foreach ($cm->customdata['customcompletionrules'] as $key => $val) {
         switch ($key) {
             case 'completionattemptsexhausted':
-                if (empty($val)) {
-                    continue;
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionattemptsexhausteddesc', 'quiz');
                 }
-                $descriptions[] = get_string('completionattemptsexhausteddesc', 'quiz');
                 break;
             case 'completionpass':
-                if (empty($val)) {
-                    continue;
+                if (!empty($val)) {
+                    $descriptions[] = get_string('completionpassdesc', 'quiz', format_time($val));
                 }
-                $descriptions[] = get_string('completionpassdesc', 'quiz', format_time($val));
-                break;
-            default:
                 break;
         }
     }
     return $descriptions;
+}
+
+/**
+ * Delete all the attempts belonging to a user in a particular game.
+ *
+ * @param int $gameid The id of game.
+ * @param object $user The user object.
+ */
+function game_delete_user_attempts( $gameid, $user) {
+    global $CFG, $DB;
+    require_once($CFG->dirroot . '/mod/game/locallib.php');
+
+    $sql = "SELECT id FROM {$CFG->prefix}game_attempts WHERE gameid=$gameid AND userid={$user->id}";
+    $recs = $DB->get_records_sql( $sql);
+    foreach ($recs as $rec) {
+        $params = [ 'id' => $rec->id];
+        $DB->delete_records('game_bookquiz', $params);
+        $DB->delete_records('game_cross', $params);
+        $DB->delete_records('game_cryptex', $params);
+        $DB->delete_records('game_hangman', $params);
+        $DB->delete_records('game_hiddenpicture', $params);
+        $DB->delete_records('game_millionaire', $params);
+        $DB->delete_records('game_snakes', $params);
+        $DB->delete_records('game_sudoku', $params);
+    }
+
+    $params = [ 'game' => $gameid, 'userid' => $user->id];
+    $DB->delete_records('game_grades', $params);
+
+    $params = [ 'gameid' => $gameid, 'userid' => $user->id];
+    $DB->delete_records('game_attempts', $params);
+    $DB->delete_records('game_repetitions', $params);
+    $DB->delete_records('game_queries', $params);
+}
+
+/**
+ * Add a get_coursemodule_info function in case any game type wants to add 'extra' information
+ * for the course (see resource).
+ *
+ * Given a course_module object, this function returns any "extra" information that may be needed
+ * when printing this activity in a course listing.  See get_array_of_activities() in course/lib.php.
+ *
+ * @param stdClass $coursemodule The coursemodule object (record).
+ * @return cached_cm_info An object on information that the courses
+ *                        will know about (most noticeably, an icon).
+ */
+function game_get_coursemodule_info($coursemodule) {
+    global $DB;
+
+    $dbparams = ['id' => $coursemodule->instance];
+    $fields = 'id, name, intro, introformat';
+    if (!$game = $DB->get_record('game', $dbparams, $fields)) {
+        return false;
+    }
+
+    $result = new cached_cm_info();
+    $result->name = $game->name;
+
+    if ($coursemodule->showdescription) {
+        // Convert intro to html. Do not filter cached version, filters run at display time.
+        $result->content = format_module_intro('game', $game, $coursemodule->id, false);
+    }
+
+    return $result;
 }

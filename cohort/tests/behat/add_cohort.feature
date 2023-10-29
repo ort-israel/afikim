@@ -12,7 +12,7 @@ Feature: Add cohorts of users
       | user3 | Third | User | third@example.com |
       | user4 | Forth | User | forth@example.com |
     And I log in as "admin"
-    And I navigate to "Cohorts" node in "Site administration > Users > Accounts"
+    And I navigate to "Users > Accounts >Cohorts" in site administration
     And I follow "Add new cohort"
     And I set the following fields to these values:
       | Name | Test cohort name |
@@ -59,9 +59,7 @@ Feature: Add cohorts of users
   @javascript
   Scenario: Edit cohort name in-place
     When I follow "Cohorts"
-    And I click on "Edit cohort name" "link" in the "Test cohort name" "table_row"
-    And I set the field "New name for cohort Test cohort name" to "Students cohort"
-    And I press key "13" in the field "New name for cohort Test cohort name"
+    And I set the field "Edit cohort name" to "Students cohort"
     Then I should not see "Test cohort name"
     And I should see "Students cohort"
     And I follow "Cohorts"

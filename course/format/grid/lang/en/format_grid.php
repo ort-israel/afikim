@@ -17,8 +17,7 @@
 /**
  * Grid Format - A topics based format that uses a grid of user selectable images to popup a light box of the section.
  *
- * @package    course/format
- * @subpackage grid
+ * @package    format_grid
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2012 G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://about.me/gjbarnard} and
@@ -27,24 +26,21 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['alttext'] = 'Image alt text';
+$string['alttext_help'] = 'This text will be set as the image alt attribute';
 $string['display_summary'] = 'Move out of grid';
 $string['display_summary_alt'] = 'Move this section out of the grid';
 $string['editimage'] = 'Change image';
 $string['editimage_alt'] = 'Set or change image';
-$string['formatgrid'] = 'Grid format'; // Name to display for format.
-$string['general_information'] = 'General Information';  // No longer used kept for legacy versions.
 $string['hidden_topic'] = 'This section has been hidden';
 $string['hide_summary'] = 'Move section into grid';
 $string['hide_summary_alt'] = 'Move this section into the grid';
-$string['namegrid'] = 'Grid view';
-$string['title'] = 'Section title';
 $string['topic'] = 'Section';
 $string['topic0'] = 'General';
-$string['topicoutline'] = 'Section';  // No longer used kept for legacy versions.
 
 // Moodle 2.0 Enhancement - Moodle Tracker MDL-15252, MDL-21693 & MDL-22056 - http://docs.moodle.org/en/Development:Languages.
 $string['sectionname'] = 'Section';
-$string['pluginname'] = 'Grid format';
+$string['pluginname'] = 'Grid';
 $string['section0name'] = 'General';
 
 // WAI-ARIA - http://www.w3.org/TR/wai-aria/roles.
@@ -77,18 +73,30 @@ $string['newsectionname'] = 'New name for section {$a}';
 $string['numbersections'] = 'Number of sections';
 
 // Exception messages.
-$string['imagecannotbeused'] = 'Image cannot be used, must be a PNG, JPG or GIF and the GD PHP extension must be installed.';
 $string['cannotfinduploadedimage'] = 'Cannot find the uploaded original image.  Please report error details and the information contained in the php.log file to developer.  Refresh the page and upload a fresh copy of the image.';
-$string['cannotconvertuploadedimagetodisplayedimage'] = 'Cannot convert uploaded image to displayed image.  Please report error details and the information contained in the php.log file to developer.';
-$string['cannotgetimagesforcourse'] = 'Cannot get images for course.  Please report error details to developer.';
+$string['cannotconvertuploadedimagetodisplayedimage'] = 'Cannot convert uploaded image to displayed image - {$a}.  Please report error details and the information contained in the php.log file to developer.';
+$string['cannotgetimagelock'] = 'Cannot get image lock.  Please report error details to developer.';
+$string['cannotgetsummarylock'] = 'Cannot get summary lock.  Please report error details to developer.';
+$string['formatnotsupported'] = 'Format is not supported at this server, please fix the system configuration to have the GD PHP extension installed - {$a}.';
+$string['functionfailed'] = 'Function failed on image - {$a}.';
+$string['imagecannotbeused'] = 'Image cannot be used, must be a PNG, JPG or GIF and the GD PHP extension must be installed.';
+$string['invalidiconrecordid'] = 'Could not create image container.  Grid format database is not ready.  An admin must visit the notifications section.';
+$string['invalidsummaryrecordid'] = 'Could not set summary status.  Grid format database is not ready.  An admin must visit the notifications section.';
+$string['mimetypenotsupported'] = 'Mime type is not supported as an image format in the Grid format - {$a}.';
+$string['originalheightempty'] = 'Original height is empty - {$a}.';
+$string['originalwidthempty'] = 'Original width is empty - {$a}.';
+$string['noimageinformation'] = 'Image information is empty - {$a}.';
+$string['reporterror'] = 'Please report error details and the information contained in the php.log file to developer';
 
 // CONTRIB-4099 Image container size change improvement.
 $string['off'] = 'Off';
 $string['on'] = 'On';
 $string['scale'] = 'Scale';
 $string['crop'] = 'Crop';
+$string['original'] = 'Original';
+$string['webp'] = 'WebP';
 $string['imagefile'] = 'Upload an image';
-$string['imagefile_help'] = 'Upload an image of type PNG, JPG or GIF.';
+$string['imagefile_help'] = 'Upload an image of type PNG, JPG or GIF.  WEBP needs Moodle core support.';
 $string['deleteimage'] = 'Delete image';
 $string['deleteimage_help'] = "Delete the image for the section being edited.  If you've uploaded an image then it will not replace the deleted image.";
 $string['gfreset'] = 'Grid reset options';
@@ -107,6 +115,8 @@ $string['defaultborderradius'] = 'Default border radius';
 $string['defaultborderradius_desc'] = 'The default border radius on / off.';
 $string['defaultborderwidth'] = 'Default border width';
 $string['defaultborderwidth_desc'] = 'The default border width.';
+$string['defaultdisplayedimagefiletype'] = 'Displayed image type';
+$string['defaultdisplayedimagefiletype_desc'] = 'Set the displayed image type.';
 $string['defaultimagecontainerbackgroundcolour'] = 'Default image container background colour';
 $string['defaultimagecontainerbackgroundcolour_desc'] = 'The default image container background colour.';
 $string['defaultcurrentselectedsectioncolour'] = 'Default current selected section colour';
@@ -115,9 +125,6 @@ $string['defaultcurrentselectedimagecontainertextcolour'] = 'Default current sel
 $string['defaultcurrentselectedimagecontainertextcolour_desc'] = 'The default current selected image container text colour.';
 $string['defaultcurrentselectedimagecontainercolour'] = 'Default current selected image container colour';
 $string['defaultcurrentselectedimagecontainercolour_desc'] = 'The default current selected image container colour.';
-
-$string['defaultcoursedisplay'] = 'Course display default';
-$string['defaultcoursedisplay_desc'] = "Either show all the sections on a single page or section zero and the chosen section on page.";
 
 $string['defaultfitsectioncontainertowindow'] = 'Fit section container to window by default';
 $string['defaultfitsectioncontainertowindow_desc'] = 'The default setting for \'Fit section container to window\'.';
@@ -151,10 +158,16 @@ $string['setcurrentselectedimagecontainercolour_help'] = 'Set the current select
 $string['setnewactivity'] = 'Show new activity notification image';
 $string['setnewactivity_help'] = "Show the new activity notification image when a new activity or resource are added to a section.";
 
+$string['singlepagesummaryimage'] = 'Show the grid image in the section summary on a single page.';
+$string['singlepagesummaryimage_help'] = "When the 'Course layout' is set to 'Show one section per page' then show the grid image for that section in the section summary when there is a summary in the position stated.";
+$string['defaultsinglepagesummaryimage'] = 'Show the grid image in the section summary on a single page.';
+$string['defaultsinglepagesummaryimage_desc'] = "When the 'Course layout' is set to 'Show one section per page' then show the grid image for that section in the section summary when there is a summary in the position stated.";
+
 $string['setfitsectioncontainertowindow'] = 'Fit the section popup to the window';
 $string['setfitsectioncontainertowindow_help'] = 'If enabled, the popup box with the contents of the section will fit to the size of the window and will scroll inside if necessary.  If disabled, the entire page will scroll instead.';
 
-$string['colourrule'] = "Please enter a valid RGB colour, six hexadecimal digits.";
+$string['default'] = 'Default - {$a}';
+$string['colourrule'] = "Please enter a valid RGB colour, six hexadecimal digits or '-' for default.";
 $string['opacityrule'] = "Please enter a valid opacity, between 0 and 1 with 0.1 increments.";
 $string['sectiontitlefontsizerule'] = "Please enter a valid section title font size, between 12 and 24 (pixels) or 0 for 'do not set'.";
 
@@ -164,10 +177,10 @@ $string['hidesectiontitle_help'] = 'Hide the section title.';
 $string['defaulthidesectiontitle'] = 'Hide section title option';
 $string['defaulthidesectiontitle_desc'] = 'Hide the section title.';
 $string['sectiontitlegridlengthmaxoption'] = 'Section title grid length option';
-$string['sectiontitlegridlengthmaxoption_help'] = 'Set the maximum length of the section title in the grid box.  Enter \'0\' for no truncation.';
+$string['sectiontitlegridlengthmaxoption_help'] = 'Set the maximum length of the section title in the grid box.  Enter \'0\' for no truncation or \'-\' for default.';
 $string['defaultsectiontitlegridlengthmaxoption'] = 'Section title grid length option';
 $string['defaultsectiontitlegridlengthmaxoption_desc'] = 'Set the default maximum length of the section title in the grid box.  Enter \'0\' for no truncation.';
-$string['sectiontitlegridlengthmaxoptionrule'] = 'The maximum length of the section title in the grid box must not be zero.  Enter \'0\' for no truncation.';
+$string['sectiontitlegridlengthmaxoptionrule'] = 'The maximum length of the section title in the grid box must not be zero.  Enter \'0\' for no truncation or \'-\' for default.';
 $string['sectiontitleboxposition'] = 'Section title box position option';
 $string['sectiontitleboxposition_help'] = 'Set the position of the section title within the grid box to one of: \'Inside\' or \'Outside\'.';
 $string['defaultsectiontitleboxposition'] = 'Section title box position option';
@@ -182,9 +195,9 @@ $string['sectiontitleboxinsidepositiontop'] = 'Top';
 $string['sectiontitleboxinsidepositionmiddle'] = 'Middle';
 $string['sectiontitleboxinsidepositionbottom'] = 'Bottom';
 $string['sectiontitleboxheight'] = 'Section title box height';
-$string['sectiontitleboxheight_help'] = 'Section title box height in pixels or 0 for calculated.  When the box position is \'Inside\'.';
+$string['sectiontitleboxheight_help'] = 'Section title box height in pixels or \'0\' for calculated or \'-\' for default.  When the box position is \'Inside\'.';
 $string['defaultsectiontitleboxheight'] = 'Section title box height';
-$string['defaultsectiontitleboxheight_desc'] = 'Section title box height in pixels or 0 for calculated.  When the box position is \'Inside\'.';
+$string['defaultsectiontitleboxheight_desc'] = 'Section title box height in pixels or \'0\' for calculated.  When the box position is \'Inside\'.';
 $string['sectiontitleboxopacity'] = 'Section title box opacity';
 $string['sectiontitleboxopacity_help'] = 'Section title box opacity between 0 and 1 in 0.1 increments.  When the box position is \'Inside\'.';
 $string['defaultsectiontitleboxopacity'] = 'Section title box opacity';
@@ -214,7 +227,7 @@ $string['setshowsectiontitlesummaryposition_help'] = 'Set the the section title 
 $string['defaultsetshowsectiontitlesummaryposition'] = 'Set the section title summary on hover position option';
 $string['defaultsetshowsectiontitlesummaryposition_desc'] = 'Set the the section title summary position when hovering over the grid box to one of: \'top\', \'bottom\', \'left\' or \'right\'.';
 $string['sectiontitlesummarymaxlength'] = 'Set the section title summary maximum length on hover';
-$string['sectiontitlesummarymaxlength_help'] = 'Set the the section title summary maxium length when hovering over the grid box.  Enter \'0\' for no truncation.';
+$string['sectiontitlesummarymaxlength_help'] = 'Set the the section title summary maxium length when hovering over the grid box.  Enter \'0\' for no truncation or \'-\' for default.';
 $string['defaultsectiontitlesummarymaxlength'] = 'Set the section title summary maximum length on hover';
 $string['defaultsectiontitlesummarymaxlength_desc'] = 'Set the the section title summary maxium length when hovering over the grid box.  Enter \'0\' for no truncation.';
 $string['sectiontitlesummarytextcolour'] = 'Set the section title summary text colour on hover';
@@ -239,46 +252,51 @@ $string['right'] = 'Right';
 $string['resetgrp'] = 'Reset:';
 $string['resetallgrp'] = 'Reset all:';
 $string['resetimagecontaineralignment'] = 'Image container alignment';
-$string['resetimagecontaineralignment_help'] = 'Resets the image container alignment to the default value so it will be the same as a course the first time it is in the Grid format.';
+$string['resetimagecontaineralignment_help'] = 'Resets the image container alignment to follow the site default value.';
 $string['resetallimagecontaineralignment'] = 'Image container alignments';
-$string['resetallimagecontaineralignment_help'] = 'Resets the image container alignmentss to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
+$string['resetallimagecontaineralignment_help'] = 'Resets the image container alignments to follow the site default value.';
 $string['resetimagecontainersize'] = 'Image container size';
-$string['resetimagecontainersize_help'] = 'Resets the image container size to the default value so it will be the same as a course the first time it is in the Grid format.';
+$string['resetimagecontainersize_help'] = 'Resets the image container size to follow the site default value.';
 $string['resetallimagecontainersize'] = 'Image container sizes';
-$string['resetallimagecontainersize_help'] = 'Resets the image container sizes to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
+$string['resetallimagecontainersize_help'] = 'Resets the image container sizes to follow the site default value.';
 $string['resetimageresizemethod'] = 'Image resize method';
-$string['resetimageresizemethod_help'] = 'Resets the image resize method to the default value so it will be the same as a course the first time it is in the Grid format.';
+$string['resetimageresizemethod_help'] = 'Resets the image resize method to follow the site default value.';
 $string['resetallimageresizemethod'] = 'Image resize methods';
-$string['resetallimageresizemethod_help'] = 'Resets the image resize methods to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
+$string['resetallimageresizemethod_help'] = 'Resets the image resize methods to follow the site default value.';
 $string['resetimagecontainerstyle'] = 'Image container style';
-$string['resetimagecontainerstyle_help'] = 'Resets the image container style to the default value so it will be the same as a course the first time it is in the Grid format.';
+$string['resetimagecontainerstyle_help'] = 'Resets the image container style to follow the site default value.';
 $string['resetallimagecontainerstyle'] = 'Image container styles';
-$string['resetallimagecontainerstyle_help'] = 'Resets the image container styles to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
+$string['resetallimagecontainerstyle_help'] = 'Resets the image container styles to follow the site default value.';
 $string['resetsectiontitleoptions'] = 'Section title options';
-$string['resetsectiontitleoptions_help'] = 'Resets the section title options to the default value so it will be the same as a course the first time it is in the Grid format.';
+$string['resetsectiontitleoptions_help'] = 'Resets the section title options to follow the site default value.';
 $string['resetallsectiontitleoptions'] = 'Section title options';
-$string['resetallsectiontitleoptions_help'] = 'Resets the section title options to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
+$string['resetallsectiontitleoptions_help'] = 'Resets the section title options to follow the site default value.';
 $string['resetnewactivity'] = 'New activity';
-$string['resetnewactivity_help'] = 'Resets the new activity notification image to the default value so it will be the same as a course the first time it is in the Grid format.';
+$string['resetnewactivity_help'] = 'Resets the new activity notification image to follow the site default value.';
 $string['resetallnewactivity'] = 'New activities';
-$string['resetallnewactivity_help'] = 'Resets the new activity notification images to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
+$string['resetallnewactivity_help'] = 'Resets the new activity notification images to follow the site default value.';
+$string['resetsinglepagesummaryimage'] = 'Single page summary image';
+$string['resetsinglepagesummaryimage_help'] = 'Resets the single page summary image to follow the site default value.';
+$string['resetallsinglepagesummaryimage'] = 'Single page summary images';
+$string['resetallsinglepagesummaryimage_help'] = 'Resets the single page summary images to follow the site default value.';
 $string['resetfitpopup'] = 'Fit section popup to the window';
-$string['resetfitpopup_help'] = 'Resets the \'Fit section popup to the window\' to the default value so it will be the same as a course the first time it is in the Grid format.';
+$string['resetfitpopup_help'] = 'Resets the \'Fit section popup to the window\' to follow the site default value.';
 $string['resetallfitpopup'] = 'Fit section popups to the window';
-$string['resetallfitpopup_help'] = 'Resets the \'Fit section popup to the window\' to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
+$string['resetallfitpopup_help'] = 'Resets the \'Fit section popup to the window\' to follow the site default value.';
 $string['resetgreyouthidden'] = 'Grey out unavailable';
-$string['resetgreyouthidden_desc'] = 'Resets the property \'Grid display show unavailable section images in grey and unlinked.\'';
-$string['resetgreyouthidden_help'] = 'Resets the property \'In Grid display show unavailable section images in grey and unlinked.\'';
+$string['resetgreyouthidden_help'] = 'Resets the property \'In Grid display show unavailable section images in grey and unlinked.\' to follow the site default value.';
+$string['resetallgreyouthidden'] = 'Grey out unavailables';
+$string['resetallgreyouthidden_help'] = 'Resets the property \'In Grid display show unavailable section images in grey and unlinked.\' to follow the site default value.';
 
 // Section 0 on own page when out of the grid and course layout is 'Show one section per page'.
 $string['setsection0ownpagenogridonesection'] = 'Section 0 on its own page when out of the grid and on a single section page';
 $string['setsection0ownpagenogridonesection_help'] = 'Have section 0 on its own page when it is out of the grid and the \'Course layout\' setting is \'One section per page\'.';
-$string['defaultsection0ownpagenogridonesection'] = 'Section 0 on its own page when out of the grid and on a single section page';
-$string['defaultsection0ownpagenogridonesection_desc'] = 'Have section 0 on its own page when it is out of the grid and the \'Course layout\' setting is \'One section per page\'.';
+$string['defaultsetsection0ownpagenogridonesection'] = 'Section 0 on its own page when out of the grid and on a single section page';
+$string['defaultsetsection0ownpagenogridonesection_desc'] = 'Have section 0 on its own page when it is out of the grid and the \'Course layout\' setting is \'One section per page\'.';
 $string['resetimagecontainernavigation'] = 'Image container navigation';
-$string['resetimagecontainernavigation_help'] = 'Resets the image container navigation to the default value so it will be the same as a course the first time it is in the Grid format.';
+$string['resetimagecontainernavigation_help'] = 'Resets the image container navigation to follow the site default value.';
 $string['resetallimagecontainernavigation'] = 'Image container navigations';
-$string['resetallimagecontainernavigation_help'] = 'Resets the image container navigation to the default value for all courses so it will be the same as a course the first time it is in the Grid format.';
+$string['resetallimagecontainernavigation_help'] = 'Resets the image container navigation to follow the site default value.';
 
 // Capabilities.
 $string['grid:changeimagecontaineralignment'] = 'Change or reset the image container alignment';
@@ -290,8 +308,9 @@ $string['grid:changesectiontitleoptions'] = 'Change or reset the section title o
 
 // Other.
 $string['greyouthidden'] = 'Grey out unavailable';
-$string['greyouthidden_desc'] = 'In Grid display show unavailable section images in grey and unlinked.';
 $string['greyouthidden_help'] = 'In Grid display show unavailable section images in grey and unlinked.';
+$string['defaultgreyouthidden'] = 'Grey out unavailable';
+$string['defaultgreyouthidden_desc'] = 'In Grid display show unavailable section images in grey and unlinked.';
 
 $string['custommousepointers'] = 'Use custom mouse pointers';
 $string['custommousepointers_desc'] = 'In Grid use custom mouse pointers.';

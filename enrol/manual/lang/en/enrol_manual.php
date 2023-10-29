@@ -72,7 +72,7 @@ $string['status_desc'] = 'Allow course access of internally enrolled users. This
 $string['status_help'] = 'This setting determines whether users can be enrolled manually, via a link in the course administration settings, by a user with appropriate permissions such as a teacher.';
 $string['statusenabled'] = 'Enabled';
 $string['statusdisabled'] = 'Disabled';
-$string['syncenrolmentstask'] = 'Manual enrolment synchronise enrolments task';
+$string['syncenrolmentstask'] = 'Synchronise manual enrolments task';
 $string['unenrol'] = 'Unenrol user';
 $string['unenrolselectedusers'] = 'Unenrol selected users';
 $string['unenrolselfconfirm'] = 'Do you really want to unenrol yourself from course "{$a}"?';
@@ -80,6 +80,6 @@ $string['unenroluser'] = 'Do you really want to unenrol "{$a->user}" from course
 $string['unenrolusers'] = 'Unenrol users';
 $string['wscannotenrol'] = 'Plugin instance cannot manually enrol a user in the course id = {$a->courseid}';
 $string['wsnoinstance'] = 'Manual enrolment plugin instance doesn\'t exist or is disabled for the course (id = {$a->courseid})';
-$string['wsusercannotassign'] = 'You don\'t have the permission to assign this role ({$a->roleid}) to this user ({$a->userid}) in this course({$a->courseid}).';
+$string['wsusercannotassign'] = 'You don\'t have the permission to assign this role ({$a->roleid}) to this user ({$a->userid}) in this course ({$a->courseid}).';
 $string['manualpluginnotinstalled'] = 'The "Manual" plugin has not yet been installed';
 $string['privacy:metadata'] = 'The Manual enrolments plugin does not store any personal data.';

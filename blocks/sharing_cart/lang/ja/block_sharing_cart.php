@@ -17,28 +17,28 @@
 /**
  *  Sharing Cart
  *
- *  @package    block_sharing_cart
- *  @copyright  2017 (C) VERSION2, INC.
- *  @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    block_sharing_cart
+ * @copyright  2017 (C) VERSION2, INC.
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 $string['pluginname'] = '共有カート';
 $string['sharing_cart'] = '共有カート';
-$string['sharing_cart_help'] = '<h2 class="helpheading">操作方法</h2>
-<dl style="margin-left:0.5em;">
-<dt>共有カートへコピー</dt>
-    <dd>コースを編集モードに切り替えると、コース上の各コンテンツの操作アイコンの右に
-        「共有カートへコピー」アイコンが追加されます。</dd>
-<dt>コースへコピー</dt>
-    <dd>共有カート内のアイテム操作アイコンの「コースへコピー」をクリックすると、
-        コースの各セクションに「ここへコピー」マーカーが現れるので、
-        いずれかを選択してコピーを完了するか、上部の「キャンセル」をクリックします。</dd>
-<dt>共有カート内にフォルダを作成</dt>
-    <dd>共有カート内で「フォルダ移動」アイコンをクリックすると、
-        既存のフォルダのリストが表示されるので、その中から移動先を選択するか、
-        リスト右の「編集」アイコンをクリックして入力ボックスを表示させ、
-        そこに移動先フォルダ名を入力します。</dd>
-</dl>';
+$string['sharing_cart_help'] =
+'<div>
+    <strong>共有カートへコピー</strong>
+        <p>コースを編集モードに切り替えると、コース上の各コンテンツの操作アイコンの右に
+            「共有カートへコピー」アイコンが追加されます。</p>
+    <strong>コースへコピー</strong>
+        <p>共有カート内のアイテム操作アイコンの「コースへコピー」をクリックすると、
+            コースの各セクションに「ここへコピー」マーカーが現れるので、
+            いずれかを選択してコピーを完了するか、上部の「キャンセル」をクリックします。</p>
+    <strong>共有カート内にフォルダを作成</strong>
+        <p>共有カート内で「フォルダ移動」アイコンをクリックすると、
+            既存のフォルダのリストが表示されるので、その中から移動先を選択するか、
+            リスト右の「編集」アイコンをクリックして入力ボックスを表示させ、
+            そこに移動先フォルダ名を入力します。</p>
+</div>';
 $string['sharing_cart:addinstance'] = '新しい共有カートブロックを追加する';
 
 $string['backup'] = '共有カートへコピー';
@@ -51,9 +51,6 @@ $string['bulkdelete'] = '一括削除';
 $string['confirm_backup'] = '共有カートにコピーしますか？';
 $string['confirm_backup_section'] = '共有カートにコピーしますか？';
 $string['confirm_userdata'] = '共有カートへのコピーにユーザーデータを含めますか？
-OK：ユーザーデーターを含めて、コピーする
-キャンセル：ユーザーデーターを含めずに、コピーする';
-$string['confirm_userdata_section'] = '共有カートへのコピーにユーザーデータを含めますか？
 OK：ユーザーデーターを含めて、コピーする
 キャンセル：ユーザーデーターを含めずに、コピーする';
 $string['confirm_restore'] = 'コースにコピーしますか？';
@@ -82,9 +79,11 @@ $string['requireajax'] = 'AJAX が有効になっていません';
 
 $string['variouscourse'] = '複数のコースから';
 
-$string['section_name_conflict'] = 'トピック名の選択';
-$string['conflict_description'] = 'コースのトピック名を上書きしますか？';
-$string['conflict_description_note'] = '※トピックの説明のフォーマット（テキストの色、画像など）がコースコピー後に表現する。';
-$string['conflict_no_overwrite'] = 'トピック名を変更しない。<strong>「{$a}」</strong>のままにする。';
-$string['conflict_overwrite_title'] = 'タイトルを<strong>「{$a}」</strong>に変更する。';
+$string['section_name_conflict'] = '上書きするトピックの選択';
+$string['conflict_description'] = 'コースのトピックを上書きしますか？';
+$string['conflict_description_note'] = '※トピックの説明のフォーマット（テキストの色、画像など）と設定がコースコピー後に表現する。';
+$string['restore_heavy_load_warning_message'] = 'Load time are longer, because more than 10 activities/resources are being processed. (Translation missing)';
+$string['backup_heavy_load_warning_message'] = 'If section contains several activites, processing time will be longer. (Translation missing)';
+$string['conflict_no_overwrite'] = 'トピック名と設定を変更しない。<strong>「{$a}」</strong>のままにする。';
+$string['conflict_overwrite_title'] = 'タイトルと設定を<strong>「{$a}」</strong>に変更する。';
 $string['conflict_submit'] = '続く';

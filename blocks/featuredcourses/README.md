@@ -16,7 +16,7 @@ Install
 * Put these files at moodle/blocks/featuredcourses/
  * You may use composer
  * or git clone
- * or download the latest version from https://github.com/danielneis/moodle-block_featuredcourses/archive/master.zip
+ * or download the latest version from https://gitlab.com/danielneis/moodle-block_featuredcourses/archive/master.zip
  * or install via web interface (if your Moodle is configured to do so) as it is available at [Plugins Directory](https://moodle.org/plugins/view/block_featuredcourses)
 * Log in your Moodle as Admin and go to "Notifications" page
 * Follow the instructions to install the block
@@ -33,11 +33,11 @@ are ordered by.
 
 Dev Info
 ---------
-Please, fill issues at: https://github.com/danielneis/moodle-block_featuredcourses/issues
+Please, fill issues at: https://gitlab.com/danielneis/moodle-block_featuredcourses/issues
 
-Feel free to send pull requests at: https://github.com/danielneis/moodle-block_featuredcourses/pulls
+Feel free to send code contributions at: https://gitlab.com/danielneis/moodle-block_featuredcourses/merge_requests
 
-For translations, please use: http://lang.moodle.org
+For translations, please use: https://lang.moodle.org
 
 [![Build Status](https://travis-ci.org/danielneis/moodle-availability_timesinceenrol.svg?branch=master)](https://travis-ci.org/danielneis/moodle-availability_timesinceenrol)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/danielneis/moodle-block_featuredcourses/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/danielneis/moodle-block_featuredcourses/?branch=master)

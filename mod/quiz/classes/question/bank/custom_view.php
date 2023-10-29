@@ -24,8 +24,8 @@
  */
 
 namespace mod_quiz\question\bank;
-defined('MOODLE_INTERNAL') || die();
 
+use coding_exception;
 
 /**
  * Subclass to customise the view of the question bank for the quiz editing screen.
@@ -81,7 +81,7 @@ class custom_view extends \core_question\bank\view {
                             $fullname, DEBUG_DEVELOPER);
                     $fullname = 'question_bank_' . $fullname;
                 } else {
-                    throw new coding_exception("No such class exists: $fullname");
+                    throw new coding_exception('Invalid quiz question bank column', $fullname);
                 }
             }
             $this->requiredcolumns[$fullname] = new $fullname($this);
@@ -166,14 +166,15 @@ class custom_view extends \core_question\bank\view {
 
             // Add selected questions to the quiz.
             $params = array(
-                    'type' => 'submit',
-                    'name' => 'add',
-                    'class' => 'btn btn-primary',
-                    'value' => get_string('addselectedquestionstoquiz', 'quiz'),
+                'type' => 'submit',
+                'name' => 'add',
+                'class' => 'btn btn-primary',
+                'value' => get_string('addselectedquestionstoquiz', 'quiz'),
+                'data-action' => 'toggle',
+                'data-togglegroup' => 'qbank',
+                'data-toggle' => 'action',
+                'disabled' => true,
             );
-            if ($cmoptions->hasattempts) {
-                $params['disabled'] = 'disabled';
-            }
             echo \html_writer::empty_tag('input', $params);
         }
         echo "</div>\n";
@@ -206,7 +207,7 @@ class custom_view extends \core_question\bank\view {
     }
 
     protected function print_category_info($category) {
-        $formatoptions = new stdClass();
+        $formatoptions = new \stdClass();
         $formatoptions->noclean = true;
         $strcategory = get_string('category', 'quiz');
         echo '<div class="categoryinfo"><div class="categorynamefieldcontainer">' .

@@ -155,7 +155,7 @@ class mod_forumng_post_test extends forumng_test_lib {
         // Get read counts for editingteacher, include count of their own posts.
         $discussionetuser = mod_forumng_discussion::get_from_id($did1[0], 0, $etuser->id);
         $etuserposts = $discussionetuser->get_num_posts();
-        $this->assertEquals(1, count($etuserposts));
+        $this->assertEquals(11, $etuserposts);
         $unreadpostsetuser = $discussionetuser->get_num_unread_posts();
         $this->assertEquals(4, $unreadpostsetuser);
         $readpostsetuser = $DB->get_records('forumng_read_posts', array('userid' => $etuser->id));
@@ -164,7 +164,7 @@ class mod_forumng_post_test extends forumng_test_lib {
         // Get the first count for the student user 1, includes count of their own posts.
         $discussionsuser1 = mod_forumng_discussion::get_from_id($did1[0], 0, $suser1->id);
         $suser1posts = $discussionsuser1->get_num_posts();
-        $this->assertEquals(1, count($suser1posts));
+        $this->assertEquals(11, $suser1posts);
         $unreadpostsuser1 = $discussionsuser1->get_num_unread_posts();
         $this->assertEquals(3, $unreadpostsuser1);
         $readpostsuser1 = $DB->get_records('forumng_read_posts', array('userid' => $suser1->id));
@@ -173,7 +173,7 @@ class mod_forumng_post_test extends forumng_test_lib {
         // Get the first count for the student user 2, includes count of their own posts.
         $discussionsuser2 = mod_forumng_discussion::get_from_id($did1[0], 0, $suser2->id);
         $suser2posts = $discussionsuser2->get_num_posts();
-        $this->assertEquals(1, count($suser2posts));
+        $this->assertEquals(11, $suser2posts);
         $unreadpostsuser2 = $discussionsuser2->get_num_unread_posts();
         $this->assertEquals(3, $unreadpostsuser2);
         $readpostsuser2 = $DB->get_records('forumng_read_posts', array('userid' => $suser2->id));
@@ -217,7 +217,7 @@ class mod_forumng_post_test extends forumng_test_lib {
         // Get the second count for the student user 1, includes count of their own posts.
         $discussionsuser1 = mod_forumng_discussion::get_from_id($did1[0], 0, $suser1->id);
         $suser1posts = $discussionsuser1->get_num_posts();
-        $this->assertEquals(1, count($suser1posts));
+        $this->assertEquals(11, $suser1posts);
         $unreadpostsuser1 = $discussionsuser1->get_num_unread_posts();
         $this->assertEquals(0, $unreadpostsuser1);
         $readpostsuser1 = $DB->get_records('forumng_read_posts', array('userid' => $suser1->id));
@@ -226,7 +226,7 @@ class mod_forumng_post_test extends forumng_test_lib {
         // Get more counts for the student user 2, includes count of their own posts.
         $discussionsuser2 = mod_forumng_discussion::get_from_id($did1[0], 0, $suser2->id);
         $suser2posts = $discussionsuser2->get_num_posts();
-        $this->assertEquals(1, count($suser2posts));
+        $this->assertEquals(11, $suser2posts);
         $unreadpostsuser2 = $discussionsuser2->get_num_unread_posts();
         $this->assertEquals(0, $unreadpostsuser2);
         $readpostsuser2 = $DB->get_records('forumng_read_posts', array('userid' => $suser2->id));
@@ -406,7 +406,7 @@ class mod_forumng_post_test extends forumng_test_lib {
         // also checks both query_forums() and query_discussions().
         $discussion1etuser = mod_forumng_discussion::get_from_id($did1[0], 0, $etuser1->id);
         $etuserposts = $discussion1etuser->get_num_posts();
-        $this->assertEquals(1, count($etuserposts));
+        $this->assertEquals(4, $etuserposts);
         $unreadpostsetuser = $discussion1etuser->get_num_unread_posts();
         $this->assertEquals(0, $unreadpostsetuser);
         $readpostsetuser = $DB->get_records('forumng_read_posts', array('userid' => $etuser1->id));
@@ -414,7 +414,7 @@ class mod_forumng_post_test extends forumng_test_lib {
 
         $discussion2etuser = mod_forumng_discussion::get_from_id($did2[0], 0, $etuser1->id);
         $etuserposts = $discussion2etuser->get_num_posts();
-        $this->assertEquals(1, count($etuserposts));
+        $this->assertEquals(4, $etuserposts);
         $unreadpostsetuser = $discussion2etuser->get_num_unread_posts();
         $this->assertEquals(0, $unreadpostsetuser);
         $readpostsetuser = $DB->get_records('forumng_read_posts', array('userid' => $etuser1->id));
@@ -423,7 +423,7 @@ class mod_forumng_post_test extends forumng_test_lib {
         // Get read counts for the student user 1, includes count of their own posts.
         $discussion1suser1 = mod_forumng_discussion::get_from_id($did1[0], 0, $suser1->id);
         $suser1posts = $discussion1suser1->get_num_posts();
-        $this->assertEquals(1, count($suser1posts));
+        $this->assertEquals(4, $suser1posts);
         $unreadpostsuser1 = $discussion1suser1->get_num_unread_posts();
         $this->assertEquals(0, $unreadpostsuser1);
         $readpostsuser1 = $DB->get_records('forumng_read_posts', array('userid' => $suser1->id));
@@ -431,7 +431,7 @@ class mod_forumng_post_test extends forumng_test_lib {
 
         $discussion2suser1 = mod_forumng_discussion::get_from_id($did2[0], 0, $suser1->id);
         $suser1posts = $discussion2suser1->get_num_posts();
-        $this->assertEquals(1, count($suser1posts));
+        $this->assertEquals(4, $suser1posts);
         $unreadpostsuser1 = $discussion2suser1->get_num_unread_posts();
         $this->assertEquals(0, $unreadpostsuser1);
         $readpostsuser1 = $DB->get_records('forumng_read_posts', array('userid' => $suser1->id));
@@ -525,7 +525,7 @@ class mod_forumng_post_test extends forumng_test_lib {
         // Get read counts for the student user 1, includes count of their own posts.
         $discussion1suser1 = mod_forumng_discussion::get_from_id($did1[0], 0, $suser1->id);
         $suser1posts = $discussion1suser1->get_num_posts();
-        $this->assertEquals(1, count($suser1posts));
+        $this->assertEquals(4, $suser1posts);
         $unreadpostsuser1 = $discussion1suser1->get_num_unread_posts();
         $this->assertEquals(0, $unreadpostsuser1);
         $readpostsuser1 = $DB->get_records('forumng_read_posts', array('userid' => $suser1->id));
@@ -533,7 +533,7 @@ class mod_forumng_post_test extends forumng_test_lib {
 
         $discussion2suser1 = mod_forumng_discussion::get_from_id($did2[0], 0, $suser1->id);
         $suser1posts = $discussion2suser1->get_num_posts();
-        $this->assertEquals(1, count($suser1posts));
+        $this->assertEquals(6, $suser1posts);
         $unreadpostsuser1 = $discussion2suser1->get_num_unread_posts();
         $this->assertEquals(1, $unreadpostsuser1);
         $readpostsuser1 = $DB->get_records('forumng_read_posts', array('userid' => $suser1->id));
@@ -784,5 +784,40 @@ class mod_forumng_post_test extends forumng_test_lib {
         $this->assertEquals(2, count($post->get_replies()));
         $this->assertEquals('Reply 1.1', $post->get_replies()[0]->get_raw_message());
         $this->assertEquals('Reply 1.2', $post->get_replies()[1]->get_raw_message());
+    }
+
+    /**
+     * Test replace html tags.
+     */
+    public function test_remove_html_tag() {
+        // Normal html tags.
+        $string = '<p>String</p>with html<br /> tag';
+        $actual = mod_forumng_utils::html_to_text($string);
+        $this->assertEquals('String with html tag', $actual);
+
+        // Orderedlist and paragraph tags.
+        $string = '<p>paragraph 1</p><ul><li>item 1</li><li>item 2</li></ul><p>paragraph 2</p><ol><li>item 1</li><li>item 2</li></ol>';
+        $actual = mod_forumng_utils::html_to_text($string);
+        $this->assertEquals('paragraph 1 item 1 item 2 paragraph 2 item 1 item 2', $actual);
+
+        // Orderedlist with multi level.
+        $string = '<p>paragraph 1</p><ol><li>item 1<ol><li>subitem 1</li><li>subitem 2<ol><li>sub subitem 1</li><li>sub subitem 2</li></ol></li></ol></li><li>item 2</li></ol><p>paragraph 2</p><ul><li>item 1</li><li>item 2</li></ul>';
+        $actual = mod_forumng_utils::html_to_text($string);
+        $this->assertEquals('paragraph 1 item 1 subitem 1 subitem 2 sub subitem 1 sub subitem 2 item 2 paragraph 2 item 1 item 2', $actual);
+
+        // Heading tags.
+        $string = '<h1>heading 1</h1><h2>heading 2</h2><h3>heading 3</h3><h4>heading 4</h4><h5>heading 5</h5><h6>heading 6</h6><p>paragraph 1</p><br /><p>paragraph 2</p>';
+        $actual = mod_forumng_utils::html_to_text($string);
+        $this->assertEquals('heading 1 heading 2 heading 3 heading 4 heading 5 heading 6 paragraph 1 paragraph 2', $actual);
+
+        // Content with img tag.
+        $string = 'a picture <img src="https://example.com/bg.jpg" />';
+        $actual = mod_forumng_utils::html_to_text($string);
+        $this->assertEquals('a picture <img src="https://example.com/bg.jpg" />', $actual);
+
+        // Mixed content.
+        $string = '<h1>heading 1</h1><h2>heading 2</h2>with a picture <img src="https://example.com/bg.jpg" /><br /> and<p>paragraph 1</p>';
+        $actual = mod_forumng_utils::html_to_text($string);
+        $this->assertEquals('heading 1 heading 2 with a picture <img src="https://example.com/bg.jpg" /> and paragraph 1', $actual);
     }
 }

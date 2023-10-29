@@ -616,6 +616,7 @@ WHERE
      */
     public static function convert_forumng_post_to_object($post, $parentpostid) {
         global $PAGE, $CFG, $USER;
+        $PAGE->set_context($post->get_forum()->get_context());
         $userpicture = new user_picture($post->get_user());
         $userpicture->size = 1;
         $whynot  = '';
@@ -658,13 +659,24 @@ WHERE
             $postobject->deleteuser->lastname = '';
             $postobject->deleteuser->profileurl = '';
             $postobject->ismoderator = -1;
+            $postobject->isanon = 0;
         } else {
+            if (self::display_discussion_author_anonymously($post, $USER->id)) {
+                $postobject->authorname = get_string('identityprotected', 'forumng');
+                $postobject->authoravatar = self::get_renderer()->image_url('u/f2')->out();
+                $postobject->authorprofile = '';
+                $postobject->authorid = -1;
+                $postobject->isanon = 1;
+            } else {
+                // Post as normal and Moderator can view the post anonymous.
+                $postobject->authorname = fullname($post->get_user());
+                $postobject->authoravatar = $userpicture->get_url($PAGE)->out();
+                $postobject->authorprofile = $CFG->wwwroot . '/user/view.php?id=' . $post->get_user()->id
+                        . '&course=' . $post->get_forum()->get_course_id();
+                $postobject->authorid = $post->get_user()->id;
+                $postobject->isanon = 0;
+            }
             $postobject->title = $post->get_subject();
-            $postobject->authorname = fullname($post->get_user());
-            $postobject->authorid = $post->get_user()->id;
-            $postobject->authorprofile = $CFG->wwwroot . '/user/view.php?id=' . $post->get_user()->id
-                . '&course=' . $post->get_forum()->get_course_id();
-            $postobject->authoravatar = $userpicture->get_url($PAGE)->out();
             $postobject->posttime = userdate($post->get_created());
             $postobject->lastedittime = userdate($post->get_modified());
             $postobject->content = $post->get_raw_message();
@@ -709,6 +721,7 @@ WHERE
 
         $postobject->numberofreply = $post->get_total_reply(false);
         $postobject->isunread = $post->is_unread();
+        $postobject->important = $post->is_important();
 
         return $postobject;
     }
@@ -728,6 +741,7 @@ WHERE
             'authorname' => new external_value(PARAM_TEXT, 'Author of this post'),
             'authorid' => new external_value(PARAM_INT, 'ID of the user who created this post'),
             'ismoderator' => new external_value(PARAM_INT, 'Is moderator'),
+            'isanon' => new external_value(PARAM_BOOL, 'Is post anonymously'),
             'authorprofile' => new external_value(PARAM_TEXT, 'Author profile URL'),
             'authoravatar' => new external_value(PARAM_TEXT, 'Author avatar URL'),
             'posttime' => new external_value(PARAM_RAW, 'Post create time'),
@@ -758,6 +772,79 @@ WHERE
             'canreply' => new external_value(PARAM_TEXT, 'Can reply this post or not, if not return the reason.'),
             'canviewanon' => new external_value(PARAM_RAW, 'Can view hidden moderator post or not.'),
             'reportlink' => new external_value(PARAM_RAW, 'Link lead to report page.', VALUE_DEFAULT, ''),
+            'important' => new external_value(PARAM_BOOL, 'Is post set as important/highlighted')
         );
+    }
+
+    /**
+     * Check to display non-moderator author anonymously in the discussion list.
+     *
+     * @param mod_forumng $forum Forumng object
+     * @param int $displaytouserid Id of user who is viewing the post.
+     * @return bool
+     */
+    public static function display_discussion_list_item_author_anonymously(mod_forumng $forum, $displaytouserid) {
+        if ($forum->get_can_post_anon() == mod_forumng::CANPOSTATON_NONMODERATOR) {
+            return !$forum->can_post_anonymously($displaytouserid);
+        }
+        return false;
+    }
+
+    /**
+     * Check to display non-moderator author anonymously in discussion and email.
+     *
+     * @param mod_forumng_post $post Post object
+     * @param $displaytouserid Display to user id
+     * @return bool
+     * @throws coding_exception
+     */
+    public static function display_discussion_author_anonymously(mod_forumng_post $post, $displaytouserid) {
+        if ($post->get_forum()->get_can_post_anon() == mod_forumng::CANPOSTATON_NONMODERATOR &&
+                $post->get_asmoderator() == mod_forumng::ASMODERATOR_NO) {
+            return !$post->get_forum()->can_post_anonymously($displaytouserid);
+        }
+        return false;
+    }
+
+    /**
+     * Format content for showmore.
+     *
+     * @param string $content
+     * @param string $allowable_tags [optional]
+     * @return array
+     *
+     */
+    public static function format_forum_content($content, $allowable_tags = '') {
+        $pattern = '/(?:(?:&lt;|<)(?:tex|math)|\$\$)((?s).*?)(?:(?:&lt;|<)\/(?:tex|math)(?:&gt;|>)|\$\$)/';
+        $showmore = preg_match('~<img(?s).*?>~', $content) || preg_match($pattern, $content);
+        $content = self::replace_equation($content);
+        $content = \mod_forumng_renderer::nice_shorten_text(strip_tags($content, '<img>' . $allowable_tags), strlen($content));
+        return [$content, $showmore];
+    }
+
+    /**
+     * Replace equation to [eqn];
+     *
+     * @param string $content
+     * @return string
+     *
+     */
+    public static function replace_equation($content) {
+        $pattern = '/(?:(?:&lt;|<)(?:tex|math)|\$\$)((?s).*?)(?:(?:&lt;|<)\/(?:tex|math)(?:&gt;|>)|\$\$)/';
+        return preg_replace($pattern, get_string('eqn', 'mod_forumng'), $content);
+    }
+
+    /**
+     * Convert html format to plaintext with single line.
+     * @param $content
+     * @return string
+     */
+    public static function html_to_text($content): string {
+        $text = preg_replace('/(<(?:\/){0,1}[^>]*(?:\/){0,1}>)/i', '$1 ', $content);
+        $text = strip_tags(
+            preg_replace('~<script.*?</script>~s', '', $text), '<img>');
+        // Remove multiple spaces.
+        $text = trim(preg_replace('/\s+/i', ' ', $text));
+        return $text;
     }
 }

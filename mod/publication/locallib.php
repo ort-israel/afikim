@@ -33,6 +33,7 @@ define('PUBLICATION_MODE_ONLINETEXT', 2);
 
 define('PUBLICATION_APPROVAL_ALL', 0);
 define('PUBLICATION_APPROVAL_SINGLE', 1);
+require_once($CFG->dirroot . '/mod/publication/mod_publication_allfiles_form.php');
 
 /**
  * publication class contains much logic used in mod_publication
@@ -46,15 +47,15 @@ define('PUBLICATION_APPROVAL_SINGLE', 1);
 class publication {
     // TODO replace $instance with proper properties + PHPDoc comments?!?
     /** @var object instance */
-    private $instance;
+    protected $instance;
     /** @var object context */
-    private $context;
+    protected $context;
     /** @var object course */
-    private $course;
+    protected $course;
     /** @var object coursemodule */
-    private $coursemodule;
+    protected $coursemodule;
     /** @var bool requiregroup if mode = import and group membership is required for submission in assign to import from */
-    private $requiregroup = 0;
+    protected $requiregroup = 0;
 
     /**
      * Constructor
@@ -113,7 +114,7 @@ class publication {
         if ($this->show_intro()) {
             if ($this->instance->intro) {
                 echo $OUTPUT->box_start('generalbox boxaligncenter', 'intro');
-                echo $this->instance->intro;
+                echo format_module_intro('publication', $this->instance, $this->coursemodule->id);
                 echo $OUTPUT->box_end();
             }
         } else {
@@ -262,6 +263,10 @@ class publication {
      */
     public function is_open() {
         global $USER;
+
+        if (!has_capability('mod/publication:upload', $this->get_context())) {
+            return false;
+        }
 
         $now = time();
 
@@ -425,7 +430,7 @@ class publication {
         $updatepref = optional_param('updatepref', 0, PARAM_BOOL);
         if ($updatepref) {
             $perpage = optional_param('perpage', 10, PARAM_INT);
-            $perpage = ($perpage <= 0) ? 10 : $perpage;
+            $perpage = ($perpage < 0) ? 10 : $perpage;
             $filter = optional_param('filter', 0, PARAM_INT);
             set_user_preference('publication_perpage', $perpage);
         }
@@ -458,7 +463,9 @@ class publication {
         echo html_writer::tag('div', $title, ['class' => 'legend']);
         echo html_writer::start_div('fcontainer clearfix');
 
-        echo groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
+        $f = groups_print_activity_menu($cm, $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id, true);
+        $mf = new mod_publication_allfiles_form(null, array('form' => $f));
+        $mf->display();
 
         if ($this->get_instance()->mode == PUBLICATION_MODE_UPLOAD) {
             $table = new \mod_publication\local\allfilestable\upload('mod-publication-allfiles', $this);
@@ -518,7 +525,7 @@ class publication {
                             'type' => 'submit',
                             'name' => 'savevisibility',
                             'value' => get_string('saveteacherapproval', 'publication'),
-                            'class' => 'visibilitysaver btn btn-primary'
+                            'class' => 'visibilitysaver btn btn-primary m-x-1'
                     ]);
                 }
             } else {
@@ -568,9 +575,14 @@ class publication {
 
         $mform->addElement('header', 'qgprefs', get_string('optionalsettings', 'publication'));
 
-        $mform->addElement('text', 'perpage', get_string('entiresperpage', 'publication'), ['size' => 1]);
+        $mform->addElement('select', 'perpage', get_string('entiresperpage', 'publication'), [
+            0 => get_string('all'),
+            10 => 10,
+            20 => 20,
+            50 => 50,
+            100 => 100
+        ]);
         $mform->setDefault('perpage', $perpage);
-
         $mform->addElement('submit', 'savepreferences', get_string('savepreferences'));
 
         $mform->display();
@@ -651,7 +663,9 @@ class publication {
      * @param null|int $approval 0 if rejected, 1 if approved and 'null' if not set!
      * @param int $pubfileid ID of publication file entry in DB
      * @param int $userid ID of user to set approval/rejection for
-     * @return null|int cumulated approval for specified file
+     * @return array cumulated approval for specified file, approving and needed count
+     * @throws coding_exception
+     * @throws dml_exception
      */
     public function set_group_approval($approval, $pubfileid, $userid) {
         global $DB;
@@ -685,6 +699,7 @@ class publication {
 
         // Get group members!
         $groupmembers = $this->get_submissionmembers($filerec->userid);
+        $stats = array();
         if (!empty($groupmembers)) {
             list($usersql, $userparams) = $DB->get_in_or_equal(array_keys($groupmembers), SQL_PARAMS_NAMED, 'user');
             $select = "fileid = :fileid AND approval = :approval AND userid " . $usersql;
@@ -708,6 +723,8 @@ class publication {
                     $approving = $DB->count_records_sql("SELECT count(DISTINCT userid)
                                                            FROM {publication_groupapproval}
                                                           WHERE fileid = :fileid AND approval = 1 AND userid " . $usersql, $params);
+                    $stats['approving'] = $approving;
+                    $stats['needed'] = count($userparams);
                     if ($approving < count($userparams)) {
                         // Rejected if not every group member has approved the file!
                         $approval = null;
@@ -724,8 +741,8 @@ class publication {
         // Update approval value and return it!
         $filerec->studentapproval = $approval;
         $DB->update_record('publication_file', $filerec);
-
-        return $approval;
+        $stats['approval'] = $approval;
+        return $stats;
     }
 
     /**
@@ -1159,7 +1176,9 @@ class publication {
                     }
 
                     $conditions['id'] = $oldpubfile->id;
-
+                    $dataobject = $DB->get_record('publication_file', ['id' => $conditions['id']->id]);
+                    $cm = $this->coursemodule;
+                    \mod_publication\event\publication_file_deleted::create_from_object($cm, $dataobject)->trigger();
                     $DB->delete_records('publication_file', $conditions);
                 }
             }
@@ -1181,9 +1200,11 @@ class publication {
 
                     $dataobject = new stdClass();
                     $dataobject->publication = $this->get_instance()->id;
+                    $importtype = 'user';
                     if (empty($assignment->get_instance()->teamsubmission)) {
                         $dataobject->userid = $submission->userid;
                     } else {
+                        $importtype = 'group';
                         $dataobject->userid = $submission->groupid;
                     }
                     $dataobject->timecreated = time();
@@ -1193,7 +1214,16 @@ class publication {
                     $dataobject->contenthash = "666";
                     $dataobject->type = PUBLICATION_MODE_IMPORT;
 
-                    $DB->insert_record('publication_file', $dataobject);
+                    $dataobject->id = $DB->insert_record('publication_file', $dataobject);
+                    $dataobject->typ = $importtype;
+                    \mod_publication\event\publication_file_imported::file_added($assigncm, $dataobject)->trigger();
+
+                    if ($this->get_instance()->notifyteacher) {
+                        $cm = get_coursemodule_from_instance('publication', $this->get_instance()->id, 0, false, MUST_EXIST);
+                        $user = $DB->get_record('user', ['id' => $submission->userid], '*', MUST_EXIST);
+                        self::send_teacher_notification_uploaded($cm, $newfile, $user);
+                    }
+
                 } catch (Exception $e) {
                     // File could not be copied, maybe it does already exist.
                     // Should not happen.
@@ -1209,6 +1239,7 @@ class publication {
      *
      * @param object $assigncm Assignment coursemodule object
      * @param object $assigncontext Assignment context object
+     * @throws coding_exception
      */
     protected function import_assign_onlinetexts($assigncm, $assigncontext) {
         if ($this->get_instance()->mode != PUBLICATION_MODE_IMPORT) {
@@ -1228,7 +1259,7 @@ class publication {
      * @param int $submissionid (optional) If set, only process this submission, else process all submissions
      */
     public static function update_assign_onlinetext($assigncm, $assigncontext, $publicationid, $contextid, $submissionid = 0) {
-        global $DB, $CFG;
+        global $USER, $DB, $CFG;
 
         $fs = get_file_storage();
 
@@ -1249,6 +1280,7 @@ class publication {
         foreach ($records as $record) {
             $submission = $DB->get_record('assign_submission', ['id' => $record->submission]);
             $itemid = empty($teamsubmission) ? $submission->userid : $submission->groupid;
+            $importtype = empty($teamsubmission) ? 'user' : 'group';
 
             // First we fetch the resource files (embedded files in text!)
             $fsfiles = $fs->get_area_files($assigncontext->id,
@@ -1323,6 +1355,8 @@ class publication {
                 $file = $fs->get_file_by_hash($pathhash);
                 if (empty($formattedtext)) {
                     // The onlinetext was empty, delete the file!
+                    $dataobject = $DB->get_record('publication_file', ['id' => $conditions['id']->id]);
+                    \mod_publication\event\publication_file_deleted::create_from_object($assigncm, $dataobject)->trigger();
                     $DB->delete_records('publication_file', $conditions);
                     $file->delete();
                 } else if (($file->get_timemodified() < $submission->timemodified)
@@ -1367,11 +1401,135 @@ class publication {
                 $pubfile->filename = $filename;
                 $pubfile->contenthash = $newfile->get_contenthash();
                 if (!empty($pubfile->id)) {
+                    $dataobject = $pubfile;
+                    $dataobject->typ = $importtype;
+                    $dataobject->itemid = $itemid;
+                    $dataobject->update = true;
+                    \mod_publication\event\publication_file_imported::file_added($assigncm, $dataobject)->trigger();
                     $DB->update_record('publication_file', $pubfile);
                 } else {
-                    $DB->insert_record('publication_file', $pubfile);
+                    $dataobject = $pubfile;
+                    $dataobject->id = $DB->insert_record('publication_file', $pubfile);
+                    $dataobject->typ = $importtype;
+                    $dataobject->itemid = $itemid;
+                    \mod_publication\event\publication_file_imported::file_added($assigncm, $dataobject)->trigger();
                 }
+
+                $cm = get_coursemodule_from_instance('publication', $publicationid, 0, false, MUST_EXIST);
+                $publication = new publication($cm);
+                if ($publication->get_instance()->notifyteacher) {
+                    self::send_teacher_notification_uploaded($cm, $newfile);
+                }
+
             }
+        }
+    }
+
+    /**
+     * Send a notification about the change of the approval status to a student
+     * @param stdClass $cm coursemodule
+     * @param object $user the where the notification should go
+     * @param object $userfrom who cahnged the approval status
+     * @param string $newstatus whats the new status
+     * @param object $pubfile the publication-file on which the status change took place
+     * @param string $pubid id of the publication
+     * @param null|stdClass $publication the publication instance
+     * @throws coding_exception
+     */
+    public static function send_student_notification_approval_changed($cm, $user, $userfrom, $newstatus, $pubfile,
+                                                                      $pubid, $publication=null) {
+        global $CFG;
+        $strsubmitted = get_string('approvalchange', 'publication');
+
+        if (!$publication) {
+            $publication = new publication($cm);
+        }
+
+        $info = new stdClass();
+        $info->username = fullname($userfrom);
+        $info->publication = format_string($cm->name, true);
+        $info->url = $CFG->wwwroot . '/mod/publication/view.php?id=' . $pubid;
+        $info->id = $pubid;
+        $info->filename = $pubfile->filename;
+        $info->apstatus = $newstatus;
+        $info->dayupdated = userdate(time(), get_string('strftimedate'));
+        $info->timeupdated = userdate(time(), get_string('strftimetime'));
+
+        $postsubject = $strsubmitted . ': ' . $info->username . ' -> ' . $cm->name;
+        $posttext = $publication->email_students_text($info);
+        $posthtml = ($user->mailformat == 1) ? $publication->email_students_html($info) : '';
+
+        $message = new \core\message\message();
+        $message->component = 'mod_publication';
+        $message->name = 'publication_updates';
+        $message->courseid = $cm->course;
+        $message->userfrom = $userfrom;
+        $message->userto = $user;
+        $message->subject = $postsubject;
+        $message->fullmessage = $posttext;
+        $message->fullmessageformat = FORMAT_HTML;
+        $message->fullmessagehtml = $posthtml;
+        $message->smallmessage = $postsubject;
+        $message->notification = 1;
+        $message->contexturl = $info->url;
+        $message->contexturlname = $info->publication;
+
+        try {
+            message_send($message);
+        } catch (coding_exception $e) {
+            throw new Exception("Coding exception while sending notification: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Sends a notification to assigned grades
+     * @param object $cm course module
+     * @param stored_file $file the file
+     * @param stdClass|null $user the user
+     * @param stdClass|null $publication object the publication, if available
+     * @throws coding_exception
+     */
+    public static function send_teacher_notification_uploaded($cm, $file, $user=null, $publication=null) {
+        global $CFG, $USER;
+        $strsubmitted = get_string('uploaded', 'publication');
+        if (!$publication) {
+            $publication = new publication($cm);
+        }
+        if (!$user) {
+            $user = $USER;
+        }
+        $graders = $publication->get_graders($user);
+
+        foreach ($graders as $teacher) {
+            $info = new stdClass();
+            $info->username = fullname($user);
+            $info->publication = format_string($publication->get_instance()->name, true);
+            $info->url = $CFG->wwwroot . '/mod/publication/view.php?id=' . $cm->id;
+            $info->id = $cm->id;
+            $info->filename = $file->get_filename();
+            $info->dayupdated = userdate(time(), get_string('strftimedate'));
+            $info->timeupdated = userdate(time(), get_string('strftimetime'));
+
+            $postsubject = $strsubmitted . ': ' . $info->username . ' -> ' . $info->publication;
+            $posttext = $publication->email_teachers_text($info);
+            $posthtml = ($teacher->mailformat == 1) ? $publication->email_teachers_html($info) : '';
+
+            $message = new \core\message\message();
+            $message->component = 'mod_publication';
+            $message->name = 'publication_updates';
+            $message->courseid = $cm->course;
+            $message->userfrom = $user;
+            $message->userto = $teacher;
+            $message->subject = $postsubject;
+            $message->fullmessage = $posttext;
+            $message->fullmessageformat = FORMAT_HTML;
+            $message->fullmessagehtml = $posthtml;
+            $message->smallmessage = $postsubject;
+            $message->notification = 1;
+            $message->contexturl = $info->url;
+            $message->contexturlname = $info->publication;
+
+            message_send($message);
         }
     }
 
@@ -1497,5 +1655,125 @@ class publication {
         }
 
         return array_keys($nonexistent);
+    }
+
+    /**
+     * Returns a list of teachers that should be notified of the file-upload
+     *
+     * @param object $user
+     * @return array Array of users able to grade
+     */
+    public function get_graders($user) {
+        // Get potential graders!
+        $potgraders = get_users_by_capability($this->context, 'mod/publication:receiveteachernotification', '', '', '',
+            '', '', '', false, false);
+
+        $graders = array();
+        if (groups_get_activity_groupmode($this->coursemodule) == SEPARATEGROUPS) {
+            // Separate groups are being used!
+            if ($groups = groups_get_all_groups($this->course->id, $user->id)) {
+                // Try to find all groups!
+                foreach ($groups as $group) {
+                    foreach ($potgraders as $t) {
+                        if ($t->id == $user->id) {
+                            continue; // Do not send self!
+                        }
+                        if (groups_is_member($group->id, $t->id)) {
+                            $graders[$t->id] = $t;
+                        }
+                    }
+                }
+            } else {
+                // User not in group, try to find graders without group!
+                foreach ($potgraders as $t) {
+                    if ($t->id == $user->id) {
+                        continue; // Do not send to one self!
+                    }
+                    if (!groups_get_all_groups($this->course->id, $t->id)) { // Ugly hack!
+                        $graders[$t->id] = $t;
+                    }
+                }
+            }
+        } else {
+            foreach ($potgraders as $t) {
+                if ($t->id == $user->id) {
+                    continue; // Do not send to one self!
+                }
+                $graders[$t->id] = $t;
+            }
+        }
+        return $graders;
+    }
+
+    /**
+     * Creates the text content for emails to teachers
+     *
+     * @param object $info The info used by the 'emailteachermail' language string
+     * @return string Plain-Text snippet to use in messages
+     */
+    public function email_teachers_text($info) {
+        $posttext  = format_string($this->course->shortname).' -> '.
+            get_string('modulenameplural', 'publication').' -> '.
+            format_string($info->publication)."\n";
+        $posttext .= get_string('emailteachermail', 'publication', $info)."\n";
+        return $posttext;
+    }
+
+    /**
+     * Creates the html content for emails to teachers
+     *
+     * @param object $info The info used by the 'emailteachermailhtml' language string
+     * @return string HTML snippet to use in messages
+     */
+    public function email_teachers_html($info) {
+        global $CFG;
+        $posthtml  = '<p><span style="font-family: sans-serif; ">' .
+            '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$this->course->id.'">'.
+            format_string($this->course->shortname).'</a> ->'.
+            '<a href="'.$CFG->wwwroot.'/mod/publication/view.php?id='.
+            $info->id.'">'.get_string('modulenameplural', 'publication').'</a> ->'.
+            '<a href="'.$CFG->wwwroot.'/mod/publication/view.php?id='.$info->id.'">'.
+            format_string($info->publication). '</a></span></p>';
+        $posthtml .= '<hr /><span style="font-family: sans-serif; ">';
+        $posthtml .= '<p>'.get_string('emailteachermailhtml', 'publication', $info).'</p>';
+        $posthtml .= '</font><hr />';
+        return $posthtml;
+    }
+
+    /**
+     * Creates the text content for emails to students
+     *
+     * @param object $info The info used by the 'emailteachermail' language string
+     * @return string Plain-Text snippet to use in messages
+     */
+    public function email_students_text($info) {
+        $posttext  = format_string($this->course->shortname).' -> '.
+            get_string('modulenameplural', 'publication').' -> '.
+            format_string($info->publication)."\n";
+        $posttext .= "---------------------------------------------------------------------\n";
+        $posttext .= get_string('emailstudentsmail', 'publication', $info)."\n";
+        $posttext .= "---------------------------------------------------------------------\n";
+        return $posttext;
+    }
+
+    /**
+     * Creates the html content for emails to students
+     *
+     * @param object $info The info used by the 'emailstudentsmailhtml' language string
+     * @return string HTML snippet to use in messages
+     */
+    public function email_students_html($info) {
+        global $CFG;
+        $posthtml  = '<p><span style="font-family: sans-serif; ">' .
+            '<a href="'.$CFG->wwwroot.'/course/view.php?id='.$this->course->id.'">'.
+            format_string($this->course->shortname).'</a> ->'.
+            '<a href="'.$CFG->wwwroot.'/mod/publication/view.php?id='.
+            $info->id.'">'.get_string('modulenameplural', 'publication').'</a> ->'.
+            '<a href="'.$CFG->wwwroot.'/mod/publication/view.php?id='.$info->id.'">'.
+            format_string($info->publication). '</a></span></p>';
+        $posthtml .= '<hr /><span style="font-family: sans-serif; ">';
+        $posthtml .= '<p>'.get_string('emailstudentsmailhtml', 'publication', $info).'</p>';
+        $posthtml .= '</font><hr />';
+        return $posthtml;
     }
 }

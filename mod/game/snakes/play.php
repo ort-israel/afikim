@@ -26,15 +26,16 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Plays the game "Snakes and Ladders".
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $snakes
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_snakes_continue( $id, $game, $attempt, $snakes, $context) {
+function game_snakes_continue( $cm, $game, $attempt, $snakes, $context, $course) {
     if ($attempt != false and $snakes != false) {
-        return game_snakes_play( $id, $game, $attempt, $snakes, $context);
+        return game_snakes_play( $cm, $game, $attempt, $snakes, $context, $course);
     }
 
     if ($attempt === false) {
@@ -51,24 +52,23 @@ function game_snakes_continue( $id, $game, $attempt, $snakes, $context) {
     $newrec->queryid = 0;
     $newrec->dice = rand( 1, 6);
     if (!game_insert_record(  'game_snakes', $newrec)) {
-        print_error( 'game_snakes_continue: error inserting in game_snakes');
+        throw new moodle_exception('snakes_error', 'game', 'game_snakes_continue: error inserting in game_snakes');
     }
 
-    game_updateattempts( $game, $attempt, 0, 0);
-
-    return game_snakes_play( $id, $game, $attempt, $newrec, $context);
+    return game_snakes_play( $cm, $game, $attempt, $newrec, $context, $course);
 }
 
 /**
  * Plays the game "Snakes and Ladders".
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $snakes
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_snakes_play( $id, $game, $attempt, $snakes, $context) {
+function game_snakes_play( $cm, $game, $attempt, $snakes, $context, $course) {
     global $CFG, $DB, $OUTPUT;
 
     $board = game_snakes_get_board( $game);
@@ -77,19 +77,15 @@ function game_snakes_play( $id, $game, $attempt, $snakes, $context) {
     if ($snakes->position > $board->usedcols * $board->usedrows && $snakes->queryid <> 0) {
         $finish = true;
 
-        if (! $cm = $DB->get_record('course_modules', array( 'id' => $id))) {
-            print_error("Course Module ID was incorrect id=$id");
-        }
-
         echo '<B>'.get_string( 'win', 'game').'</B><BR>';
         echo '<br>';
-        echo "<a href=\"$CFG->wwwroot/mod/game/attempt.php?id=$id\">".
+        echo "<a href=\"$CFG->wwwroot/mod/game/attempt.php?id={$cm->id}\">".
             get_string( 'nextgame', 'game').'</a> &nbsp; &nbsp; &nbsp; &nbsp; ';
         echo "<a href=\"$CFG->wwwroot/course/view.php?id=$cm->course\">".get_string( 'finish', 'game').'</a> ';
 
         $gradeattempt = 1;
         $finish = 1;
-        game_updateattempts( $game, $attempt, $gradeattempt, $finish);
+        game_updateattempts( $game, $attempt, $gradeattempt, $finish, $cm, $course);
     } else {
         $finish = false;
         if ($snakes->queryid == 0) {
@@ -104,7 +100,7 @@ function game_snakes_play( $id, $game, $attempt, $snakes, $context) {
     }
 
     if ($showboard and $game->param8 == 0) {
-        game_snakes_showquestion( $id, $game, $snakes, $query, $context);
+        game_snakes_showquestion( $cm->id, $game, $snakes, $query, $context);
     }
 ?>
     <script language="javascript" event="onload" for="window">
@@ -145,7 +141,7 @@ function game_snakes_play( $id, $game, $attempt, $snakes, $context) {
     }
 
     if ($showboard and $game->param8 != 0) {
-        game_snakes_showquestion( $id, $game, $snakes, $query, $context);
+        game_snakes_showquestion( $cm->id, $game, $snakes, $query, $context);
     }
 }
 
@@ -170,7 +166,7 @@ left:<?php p( $board->width + round($board->width / 3)); ?>px;
 top:<?php p( -2 * round($board->height / 3));?>px; ">
     <img src="snakes/1/dice<?php p($snakes->dice);?>.png" alt="<?php print_string('snakes_dice', 'game', $snakes->dice) ?>" />
     </div>
-<?php
+    <?php
 }
 
 /**
@@ -254,7 +250,7 @@ function game_snakes_computenextquestion( $game, &$snakes, &$query) {
     $query->score = 0;
     $query->timelastattempt = time();
     if (!($query->id = $DB->insert_record( 'game_queries', $query))) {
-        print_error( "Can't insert to table game_queries");
+        throw new moodle_exception('snakes_error', 'game', 'Can\'t insert to table game_queries');
     }
 
     $snakes->queryid = $query->id;
@@ -265,7 +261,7 @@ function game_snakes_computenextquestion( $game, &$snakes, &$query) {
     $updrec->dice = $snakes->dice = rand( 1, 6);
 
     if (!$DB->update_record( 'game_snakes', $updrec)) {
-        print_error( 'game_questions_selectrandom: error updating in game_snakes');
+        throw new moodle_exception('snakes_error', 'game', 'game_questions_selectrandom: error updating in game_snakes');
     }
 
     game_update_repetitions($game->id, $USER->id, $query->questionid, $query->glossaryentryid);
@@ -370,19 +366,20 @@ function game_snakes_showquestion_glossary( $id, $snakes, $query, $game) {
 /**
  * Checks if answer is correct.
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $snakes
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_snakes_check_questions( $id, $game, $attempt, $snakes, $context) {
+function game_snakes_check_questions( $cm, $game, $attempt, $snakes, $context, $course) {
     global $CFG, $DB;
 
     $responses = data_submitted();
 
     if ($responses->queryid != $snakes->queryid) {
-        game_snakes_play( $id, $game, $attempt, $snakes, $context);
+        game_snakes_play( $cm, $game, $attempt, $snakes, $context, $course);
         return;
     }
 
@@ -409,25 +406,26 @@ function game_snakes_check_questions( $id, $game, $attempt, $snakes, $context) {
     }
 
     // Set the grade of the whole game.
-    game_snakes_position( $id, $game, $attempt, $snakes, $correct, $query, $context);
+    game_snakes_position( $cm, $game, $attempt, $snakes, $correct, $query, $context, $course);
 }
 
 /**
  * Checks if the glossary answer is correct.
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $snakes
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_snakes_check_glossary( $id, $game, $attempt, $snakes, $context) {
+function game_snakes_check_glossary( $cm, $game, $attempt, $snakes, $context, $course) {
     global $CFG, $DB;
 
     $responses = data_submitted();
 
     if ($responses->queryid != $snakes->queryid) {
-        game_snakes_play( $id, $game, $attempt, $snakes, $context);
+        game_snakes_play( $cm, $game, $attempt, $snakes, $context, $course);
         return;
     }
 
@@ -450,21 +448,22 @@ function game_snakes_check_glossary( $id, $game, $attempt, $snakes, $context) {
     }
 
     // Set the grade of the whole game.
-    game_snakes_position( $id, $game, $attempt, $snakes, $correct, $query, $context);
+    game_snakes_position( $cm, $game, $attempt, $snakes, $correct, $query, $context, $course);
 }
 
 /**
  * Computes the position.
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $snakes
  * @param boolean $correct
  * @param stdClasss $query
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_snakes_position( $id, $game, $attempt, $snakes, $correct, $query, $context) {
+function game_snakes_position( $cm, $game, $attempt, $snakes, $correct, $query, $context, $course) {
     global $DB;
 
     $data = $DB->get_field( 'game_snakes_database', 'data', array( 'id' => $snakes->snakesdatabaseid));
@@ -487,18 +486,18 @@ function game_snakes_position( $id, $game, $attempt, $snakes, $correct, $query, 
     $updrec->queryid = 0;
 
     if (!$DB->update_record( 'game_snakes', $updrec)) {
-        print_error( "game_snakes_position: Can't update game_snakes");
+        throw new moodle_exception('snakes_error', 'game', 'game_snakes_position: Can\'t update game_snakes');
     }
 
     $board = $DB->get_record_select( 'game_snakes_database', "id=$snakes->snakesdatabaseid");
     $gradeattempt = $snakes->position / ($board->usedcols * $board->usedrows);
     $finished = ( $snakes->position > $board->usedcols * $board->usedrows ? 1 : 0);
 
-    game_updateattempts( $game, $attempt, $gradeattempt, $finished);
+    game_updateattempts( $game, $attempt, $gradeattempt, $finished, $cm, $course);
 
     game_snakes_computenextquestion( $game, $snakes, $query);
 
-    game_snakes_play( $id, $game, $attempt, $snakes, $context);
+    game_snakes_play( $cm, $game, $attempt, $snakes, $context, $course);
 }
 
 /**

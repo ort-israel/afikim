@@ -272,7 +272,7 @@ class engine extends \core_search\engine {
 
         $query = new \SolrDisMaxQuery();
 
-        $this->set_query($query, $data->q);
+        $this->set_query($query, self::replace_underlines($data->q));
         $this->add_fields($query);
 
         // Search filters applied, we don't cache these filters as we don't want to pollute the cache with tmp filters
@@ -433,7 +433,10 @@ class engine extends \core_search\engine {
             $query->addField($key);
             if ($dismax && !empty($field['mainquery'])) {
                 // Add fields the main query should be run against.
-                $query->addQueryField($key);
+                // Due to a regression in the PECL solr extension, https://bugs.php.net/bug.php?id=72740,
+                // a boost value is required, even if it is optional; to avoid boosting one among other fields,
+                // the explicit boost value will be the default one, for every field.
+                $query->addQueryField($key, 1);
             }
         }
     }
@@ -751,6 +754,23 @@ class engine extends \core_search\engine {
     }
 
     /**
+     * Replaces underlines at edges of words in the content with spaces.
+     *
+     * For example '_frogs_' will become 'frogs', '_frogs and toads_' will become 'frogs and toads',
+     * and 'frogs_and_toads' will be left as 'frogs_and_toads'.
+     *
+     * The reason for this is that for italic content_to_text puts _italic_ underlines at the start
+     * and end of the italicised phrase (not between words). Solr treats underlines as part of the
+     * word, which means that if you search for a word in italic then you can't find it.
+     *
+     * @param string $str String to replace
+     * @return string Replaced string
+     */
+    protected static function replace_underlines(string $str): string {
+        return preg_replace('~\b_|_\b~', '', $str);
+    }
+
+    /**
      * Adds a text document to the search engine.
      *
      * @param array $doc
@@ -758,6 +778,14 @@ class engine extends \core_search\engine {
      */
     protected function add_solr_document($doc) {
         $solrdoc = new \SolrInputDocument();
+
+        // Replace underlines in the content with spaces. The reason for this is that for italic
+        // text, content_to_text puts _italic_ underlines. Solr treats underlines as part of the
+        // word, which means that if you search for a word in italic then you can't find it.
+        if (array_key_exists('content', $doc)) {
+            $doc['content'] = self::replace_underlines($doc['content']);
+        }
+
         foreach ($doc as $field => $value) {
             $solrdoc->addField($field, $value);
         }
@@ -983,8 +1011,12 @@ class engine extends \core_search\engine {
 
         // A giant block of code that is really just error checking around the curl request.
         try {
-            // Now actually do the request.
-            $result = $curl->post($url->out(false), array('myfile' => $storedfile));
+            // We have to post the file directly in binary data (not using multipart) to avoid
+            // Solr bug SOLR-15039 which can cause incorrect data when you use multipart upload.
+            // Note this loads the whole file into memory; see limit in file_is_indexable().
+            $curl->setHeader('Content-Type: text/plain; charset=UTF-8');
+            $result = $curl->post($url->out(false), $storedfile->get_content());
+            $curl->resetHeader();
 
             $code = $curl->get_errno();
             $info = $curl->get_info();
@@ -1046,6 +1078,18 @@ class engine extends \core_search\engine {
         if (!empty($this->config->maxindexfilekb) && ($file->get_filesize() > ($this->config->maxindexfilekb * 1024))) {
             // The file is too big to index.
             return false;
+        }
+
+        // Because we now load files into memory to index them in Solr, we also have to ensure that
+        // we don't try to index anything bigger than the memory limit (less 100MB for safety).
+        // Memory limit in cron is MEMORY_EXTRA which is usually 256 or 384MB but can be increased
+        // in config, so this will allow files over 100MB to be indexed.
+        $limit = ini_get('memory_limit');
+        if ($limit && $limit != -1) {
+            $limitbytes = get_real_size($limit);
+            if ($file->get_filesize() > $limitbytes) {
+                return false;
+            }
         }
 
         $mime = $file->get_mimetype();
@@ -1257,7 +1301,13 @@ class engine extends \core_search\engine {
 
         if ($CFG->proxyhost && !is_proxybypass('http://' . $this->config->server_hostname . '/')) {
             $options['proxy_host'] = $CFG->proxyhost;
-            $options['proxy_port'] = $CFG->proxyport;
+            if (!empty($CFG->proxyport)) {
+                $options['proxy_port'] = $CFG->proxyport;
+            }
+            if (!empty($CFG->proxyuser) && !empty($CFG->proxypassword)) {
+                $options['proxy_login'] = $CFG->proxyuser;
+                $options['proxy_password'] = $CFG->proxypassword;
+            }
         }
 
         if (!class_exists('\SolrClient')) {
@@ -1410,5 +1460,41 @@ class engine extends \core_search\engine {
      */
     public function supports_users() {
         return true;
+    }
+
+    /**
+     * Solr supports deleting the index for a context.
+     *
+     * @param int $oldcontextid Context that has been deleted
+     * @return bool True to indicate that any data was actually deleted
+     * @throws \core_search\engine_exception
+     */
+    public function delete_index_for_context(int $oldcontextid) {
+        $client = $this->get_search_client();
+        try {
+            $client->deleteByQuery('contextid:' . $oldcontextid);
+            $client->commit(true);
+            return true;
+        } catch (\Exception $e) {
+            throw new \core_search\engine_exception('error_solr', 'search_solr', '', $e->getMessage());
+        }
+    }
+
+    /**
+     * Solr supports deleting the index for a course.
+     *
+     * @param int $oldcourseid
+     * @return bool True to indicate that any data was actually deleted
+     * @throws \core_search\engine_exception
+     */
+    public function delete_index_for_course(int $oldcourseid) {
+        $client = $this->get_search_client();
+        try {
+            $client->deleteByQuery('courseid:' . $oldcourseid);
+            $client->commit(true);
+            return true;
+        } catch (\Exception $e) {
+            throw new \core_search\engine_exception('error_solr', 'search_solr', '', $e->getMessage());
+        }
     }
 }

@@ -45,6 +45,9 @@ define('MAX_COURSE_CATEGORIES', 10000);
  *
  * We allow overwrites from config.php, useful to ensure coherence in performance
  * tests results.
+ *
+ * Note: For web service requests in the external_tokens field, we use a different constant
+ * webservice::TOKEN_LASTACCESS_UPDATE_SECS.
  */
 if (!defined('LASTACCESS_UPDATE_SECS')) {
     define('LASTACCESS_UPDATE_SECS', 60);
@@ -503,20 +506,26 @@ function get_users_listing($sort='lastaccess', $dir='ASC', $page=0, $recordsperp
         $params = $params + (array)$extraparams;
     }
 
-    if ($sort) {
-        $sort = " ORDER BY $sort $dir";
-    }
-
     // If a context is specified, get extra user fields that the current user
     // is supposed to see.
     $extrafields = '';
+    $includedfields = ['id', 'username', 'email', 'firstname', 'lastname', 'city', 'country',
+        'lastaccess', 'confirmed', 'mnethostid', 'suspended'];
     if ($extracontext) {
-        $extrafields = get_extra_user_fields_sql($extracontext, '', '',
-                array('id', 'username', 'email', 'firstname', 'lastname', 'city', 'country',
-                'lastaccess', 'confirmed', 'mnethostid'));
+        $extrafields = get_extra_user_fields_sql($extracontext, '', '', $includedfields);
     }
     $namefields = get_all_user_name_fields(true);
     $extrafields = "$extrafields, $namefields";
+
+    if ($sort) {
+        $orderbymap = trim($extrafields, ', ');
+        $orderbymap = array_merge(explode(',', $orderbymap), $includedfields);
+        $neworderbymap = ['default' => 'lastaccess'];
+        foreach($orderbymap as $value) {
+            $neworderbymap[$value] = $value;
+        }
+        $sort = get_safe_orderby($neworderbymap, $sort, $dir);
+    }
 
     // warning: will return UNCONFIRMED USERS
     return $DB->get_records_sql("SELECT id, username, email, city, country, lastaccess, confirmed, mnethostid, suspended $extrafields
@@ -597,13 +606,16 @@ function get_course($courseid, $clone = true) {
  *            we are using distinct. You almost _NEVER_ need all the fields
  *            in such a large SELECT
  *
+ * Consider using core_course_category::get_courses()
+ * or core_course_category::search_courses() instead since they use caching.
+ *
  * @global object
  * @global object
  * @global object
  * @uses CONTEXT_COURSE
  * @param string|int $categoryid Either a category id or 'all' for everything
  * @param string $sort A field and direction to sort by
- * @param string $fields The additional fields to return
+ * @param string $fields The additional fields to return (note that "id, category, visible" are always present)
  * @return array Array of courses
  */
 function get_courses($categoryid="all", $sort="c.sortorder ASC", $fields="c.*") {
@@ -631,6 +643,19 @@ function get_courses($categoryid="all", $sort="c.sortorder ASC", $fields="c.*") 
     $ccjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel)";
     $params['contextlevel'] = CONTEXT_COURSE;
 
+    // The fields "id, category, visible" are required in the subsequent loop and must always be present.
+    if ($fields !== 'c.*') {
+        $fieldarray = array_merge(
+            // Split fields on comma + zero or more whitespace, merge with required fields.
+            preg_split('/,\s*/', $fields), [
+                'c.id',
+                'c.category',
+                'c.visible',
+            ]
+        );
+        $fields = implode(',', array_unique($fieldarray));
+    }
+
     $sql = "SELECT $fields $ccselect
               FROM {course} c
            $ccjoin
@@ -643,91 +668,11 @@ function get_courses($categoryid="all", $sort="c.sortorder ASC", $fields="c.*") 
         // loop throught them
         foreach ($courses as $course) {
             context_helper::preload_from_record($course);
-            if (isset($course->visible) && $course->visible <= 0) {
-                // for hidden courses, require visibility check
-                if (has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {
-                    $visiblecourses [$course->id] = $course;
-                }
-            } else {
+            if (core_course_category::can_view_course_info($course)) {
                 $visiblecourses [$course->id] = $course;
             }
         }
     }
-    return $visiblecourses;
-}
-
-
-/**
- * Returns list of courses, for whole site, or category
- *
- * Similar to get_courses, but allows paging
- * Important: Using c.* for fields is extremely expensive because
- *            we are using distinct. You almost _NEVER_ need all the fields
- *            in such a large SELECT
- *
- * @global object
- * @global object
- * @global object
- * @uses CONTEXT_COURSE
- * @param string|int $categoryid Either a category id or 'all' for everything
- * @param string $sort A field and direction to sort by
- * @param string $fields The additional fields to return
- * @param int $totalcount Reference for the number of courses
- * @param string $limitfrom The course to start from
- * @param string $limitnum The number of courses to limit to
- * @return array Array of courses
- */
-function get_courses_page($categoryid="all", $sort="c.sortorder ASC", $fields="c.*",
-                          &$totalcount, $limitfrom="", $limitnum="") {
-    global $USER, $CFG, $DB;
-
-    $params = array();
-
-    $categoryselect = "";
-    if ($categoryid !== "all" && is_numeric($categoryid)) {
-        $categoryselect = "WHERE c.category = :catid";
-        $params['catid'] = $categoryid;
-    } else {
-        $categoryselect = "";
-    }
-
-    $ccselect = ', ' . context_helper::get_preload_record_columns_sql('ctx');
-    $ccjoin = "LEFT JOIN {context} ctx ON (ctx.instanceid = c.id AND ctx.contextlevel = :contextlevel)";
-    $params['contextlevel'] = CONTEXT_COURSE;
-
-    $totalcount = 0;
-    if (!$limitfrom) {
-        $limitfrom = 0;
-    }
-    $visiblecourses = array();
-
-    $sql = "SELECT $fields $ccselect
-              FROM {course} c
-              $ccjoin
-           $categoryselect
-          ORDER BY $sort";
-
-    // pull out all course matching the cat
-    $rs = $DB->get_recordset_sql($sql, $params);
-    // iteration will have to be done inside loop to keep track of the limitfrom and limitnum
-    foreach($rs as $course) {
-        context_helper::preload_from_record($course);
-        if ($course->visible <= 0) {
-            // for hidden courses, require visibility check
-            if (has_capability('moodle/course:viewhiddencourses', context_course::instance($course->id))) {
-                $totalcount++;
-                if ($totalcount > $limitfrom && (!$limitnum or count($visiblecourses) < $limitnum)) {
-                    $visiblecourses [$course->id] = $course;
-                }
-            }
-        } else {
-            $totalcount++;
-            if ($totalcount > $limitfrom && (!$limitnum or count($visiblecourses) < $limitnum)) {
-                $visiblecourses [$course->id] = $course;
-            }
-        }
-    }
-    $rs->close();
     return $visiblecourses;
 }
 
@@ -742,10 +687,12 @@ function get_courses_page($categoryid="all", $sort="c.sortorder ASC", $fields="c
  * @param int $recordsperpage The number of records per page
  * @param int $totalcount Passed in by reference.
  * @param array $requiredcapabilities Extra list of capabilities used to filter courses
- * @return object {@link $COURSE} records
+ * @param array $searchcond additional search conditions, for example ['c.enablecompletion = :p1']
+ * @param array $params named parameters for additional search conditions, for example ['p1' => 1]
+ * @return stdClass[] {@link $COURSE} records
  */
 function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$totalcount,
-                            $requiredcapabilities = array()) {
+                            $requiredcapabilities = array(), $searchcond = [], $params = []) {
     global $CFG, $DB;
 
     if ($DB->sql_regex_supported()) {
@@ -753,8 +700,6 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
         $NOTREGEXP = $DB->sql_regex(false);
     }
 
-    $searchcond = array();
-    $params     = array();
     $i = 0;
 
     // Thanks Oracle for your non-ansi concat and type limits in coalesce. MDL-29912
@@ -822,12 +767,13 @@ function get_courses_search($searchterms, $sort, $page, $recordsperpage, &$total
              WHERE $searchcond AND c.id <> ".SITEID."
           ORDER BY $sort";
 
+    $mycourses = enrol_get_my_courses();
     $rs = $DB->get_recordset_sql($sql, $params);
     foreach($rs as $course) {
         // Preload contexts only for hidden courses or courses we need to return.
         context_helper::preload_from_record($course);
         $coursecontext = context_course::instance($course->id);
-        if (!$course->visible && !has_capability('moodle/course:viewhiddencourses', $coursecontext)) {
+        if (!array_key_exists($course->id, $mycourses) && !core_course_category::can_view_course_info($course)) {
             continue;
         }
         if (!empty($requiredcapabilities)) {
@@ -1712,6 +1658,10 @@ function print_object($object) {
     if (CLI_SCRIPT) {
         fwrite(STDERR, print_r($object, true));
         fwrite(STDERR, PHP_EOL);
+    } else if (AJAX_SCRIPT) {
+        foreach (explode("\n", print_r($object, true)) as $line) {
+            error_log($line);
+        }
     } else {
         echo html_writer::tag('pre', s(print_r($object, true)), array('class' => 'notifytiny'));
     }
@@ -1872,4 +1822,98 @@ function decompose_update_into_safe_changes(array $newvalues, $unusedvalue) {
     }
 
     return $safechanges;
+}
+
+/**
+ * Prepare a safe ORDER BY statement from user interactable requests.
+ *
+ * This allows safe user specified sorting (ORDER BY), by abstracting the SQL from the value being requested by the user.
+ * A standard string (and optional direction) can be specified, which will be mapped to a predefined allow list of SQL ordering.
+ * The mapping can optionally include a 'default', which will be used if the key provided is invalid.
+ *
+ * Example usage:
+ *      -If $orderbymap = [
+ *              'courseid' => 'c.id',
+ *              'somecustomvalue'=> 'c.startdate, c.shortname',
+ *              'default' => 'c.fullname',
+ *       ]
+ *      -A value from the map array's keys can be passed in by a user interaction (eg web service) along with an optional direction.
+ *      -get_safe_orderby($orderbymap, 'courseid', 'DESC') would return: ORDER BY c.id DESC
+ *      -get_safe_orderby($orderbymap, 'somecustomvalue') would return: ORDER BY c.startdate, c.shortname
+ *      -get_safe_orderby($orderbymap, 'invalidblah', 'DESC') would return: ORDER BY c.fullname DESC
+ *      -If no default key was specified in $orderbymap, the invalidblah example above would return empty string.
+ *
+ * @param array $orderbymap An array in the format [keystring => sqlstring]. A default fallback can be set with the key 'default'.
+ * @param string $orderbykey A string to be mapped to a key in $orderbymap.
+ * @param string $direction Optional ORDER BY direction (ASC/DESC, case insensitive).
+ * @param bool $useprefix Whether ORDER BY is prefixed to the output (true by default). This should not be modified in most cases.
+ *                        It is included to enable get_safe_orderby_multiple() to use this function multiple times.
+ * @return string The ORDER BY statement, or empty string if $orderbykey is invalid and no default is mapped.
+ */
+function get_safe_orderby(array $orderbymap, string $orderbykey, string $direction = '', bool $useprefix = true): string {
+    $orderby = $useprefix ? ' ORDER BY ' : '';
+    $output = '';
+
+    // Only include an order direction if ASC/DESC is explicitly specified (case insensitive).
+    $direction = strtoupper($direction);
+    if (!in_array($direction, ['ASC', 'DESC'], true)) {
+        $direction = '';
+    } else {
+        $direction = " {$direction}";
+    }
+
+    // Prepare the statement if the key maps to a defined sort parameter.
+    if (isset($orderbymap[$orderbykey])) {
+        $output = "{$orderby}{$orderbymap[$orderbykey]}{$direction}";
+    } else if (array_key_exists('default', $orderbymap)) {
+        // Fall back to use the default if one is specified.
+        $output = "{$orderby}{$orderbymap['default']}{$direction}";
+    }
+
+    return $output;
+}
+
+/**
+ * Prepare a safe ORDER BY statement from user interactable requests using multiple values.
+ *
+ * This allows safe user specified sorting (ORDER BY) similar to get_safe_orderby(), but supports multiple keys and directions.
+ * This is useful in cases where combinations of columns are needed and/or each item requires a specified direction (ASC/DESC).
+ * The mapping can optionally include a 'default', which will be used if the key provided is invalid.
+ *
+ * Example usage:
+ *      -If $orderbymap = [
+ *              'courseid' => 'c.id',
+ *              'fullname'=> 'c.fullname',
+ *              'default' => 'c.startdate',
+ *          ]
+ *      -An array of values from the map's keys can be passed in by a user interaction (eg web service), with optional directions.
+ *      -get_safe_orderby($orderbymap, ['courseid', 'fullname'], ['DESC', 'ASC']) would return: ORDER BY c.id DESC, c.fullname ASC
+ *      -get_safe_orderby($orderbymap, ['courseid', 'invalidblah'], ['aaa', 'DESC']) would return: ORDER BY c.id, c.startdate DESC
+ *      -If no default key was specified in $orderbymap, the invalidblah example above would return: ORDER BY c.id
+ *
+ * @param array $orderbymap An array in the format [keystring => sqlstring]. A default fallback can be set with the key 'default'.
+ * @param array $orderbykeys An array of strings to be mapped to keys in $orderbymap.
+ * @param array $directions Optional array of ORDER BY direction (ASC/DESC, case insensitive).
+ *                          The array keys should match array keys in $orderbykeys.
+ * @return string The ORDER BY statement, or empty string if $orderbykeys contains no valid items and no default is mapped.
+ */
+function get_safe_orderby_multiple(array $orderbymap, array $orderbykeys, array $directions = []): string {
+    $output = '';
+
+    // Check each key for a valid mapping and add to the ORDER BY statement (invalid entries will be empty strings).
+    foreach ($orderbykeys as $index => $orderbykey) {
+        $direction = $directions[$index] ?? '';
+        $safeorderby = get_safe_orderby($orderbymap, $orderbykey, $direction, false);
+
+        if (!empty($safeorderby)) {
+            $output .= ", {$safeorderby}";
+        }
+    }
+
+    // Prefix with ORDER BY if any valid ordering is specified (and remove comma from the start).
+    if (!empty($output)) {
+        $output = ' ORDER BY' . ltrim($output, ',');
+    }
+
+    return $output;
 }

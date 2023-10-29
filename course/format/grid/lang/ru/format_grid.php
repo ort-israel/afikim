@@ -17,8 +17,7 @@
 /**
  * Grid Format - A topics based format that uses a grid of user selectable images to popup a light box of the section.
  *
- * @package    course/format
- * @subpackage grid
+ * @package    format_grid
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2012 G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://about.me/gjbarnard} and
@@ -31,14 +30,9 @@ $string['display_summary'] = 'Вынести из области сетки';
 $string['display_summary_alt'] = 'Вынести из области сетки';
 $string['editimage'] = 'Изменить изображение';
 $string['editimage_alt'] = 'Установить или изменить изображение';
-$string['formatgrid'] = 'Сетка'; // Name to display for format.
-$string['general_information'] = 'Общая информация';
 $string['hidden_topic'] = 'Этот раздел был скрыт';
 $string['hide_summary'] = 'Переместить раздел внутрь сетки';
 $string['hide_summary_alt'] = 'Переместить раздел внутрь сетки';
-$string['namegrid'] = 'Сетка'; // Name of a topic within your format.
 $string['pluginname'] = 'Сетка';
-$string['title'] = 'Название раздела';
 $string['topic'] = 'Раздел';
 $string['topic0'] = 'Общее';
-$string['topicoutline'] = 'Разделов';

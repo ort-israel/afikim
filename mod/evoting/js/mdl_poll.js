@@ -47,7 +47,8 @@ M.mod_evoting.poll_init = function (Y, graphData) {
     var goodAnswerBoolean = false;
     var jsonDataGraphic;
     var strTooltipStart = "<h2 style='padding-left:10px;padding-right:10px; font-size:1.1em; line-height:20px'>" + M.util.get_string('countvote', 'evoting') + "<p style='font-size:1.5em; line-height:30px; font-weight:600;color:#007cb7;padding-top:5px;' >";
-
+	var nbrOption = 0;
+/*
 // Load the Visualization API and the chart package.
     google.load("visualization", "1.0", {
         packages: ["corechart"]
@@ -55,6 +56,9 @@ M.mod_evoting.poll_init = function (Y, graphData) {
 
 // Set a callback to run when the Google Visualization API is loaded.
     google.setOnLoadCallback(drawChart);
+*/
+	google.charts.load('current', {packages: ['corechart']});
+	google.charts.setOnLoadCallback(drawChart);
 
     $(function ($) {
 
@@ -65,6 +69,15 @@ M.mod_evoting.poll_init = function (Y, graphData) {
         // Resize graph if windows is resize
         $(window).resize(function () {
             updateOptionGraphicMax();
+
+            if(cahrt == null){
+                console.log("Show chart is null :"+ viewGraph);
+            }
+            else{
+                console.log("Show chart :"+ viewGraph);
+            }
+            console.log("Show viewgraph :"+ viewGraph);
+            console.log("Show OptionGraph :"+ optionsGraph);
             chart.draw(viewGraph, optionsGraph);
         });
 
@@ -124,6 +137,7 @@ M.mod_evoting.poll_init = function (Y, graphData) {
 
                 // Show the countdown div
                 $("#divCountDown").show();
+                $("#divEndText").show();
                 $("#divCountText").show();
                 $("#divOptions").show();
 
@@ -131,7 +145,8 @@ M.mod_evoting.poll_init = function (Y, graphData) {
                 $("#chartContainer").hide();
 
                 // Write time to initiate countdown
-                $('#divCountText').html(M.util.get_string('endvote', 'evoting') + "<h1>" + timeToVote + "</h1><span class='sec'>" + M.util.get_string('seconds', 'evoting') + "</span>");
+                $('#divEndText').html(M.util.get_string('endvote', 'evoting'));
+                $('#divCountText').html("<h1>" + timeToVote + "</h1><span class='sec'>" + M.util.get_string('seconds', 'evoting') + "</span>");
 
                 // Countdown loading display
                 countdownCircle(timeToVote, idPoll, history);
@@ -276,8 +291,9 @@ M.mod_evoting.poll_init = function (Y, graphData) {
     function drawChart() {
 
         // Get the dataGraphic array form PHP
+		//console.log(jsonDataGraphic);
         var dataOptionsGraphic = JSON.parse(jsonDataGraphic);
-
+		//console.log(dataOptionsGraphic);
         for (col in dataOptionsGraphic) {
             dataOptionsGraphic[col][5] = strTooltipStart + dataOptionsGraphic[col][1] + strTooltipEnd;
         }
@@ -378,8 +394,12 @@ M.mod_evoting.poll_init = function (Y, graphData) {
                 width: '100%'
             }
         };
-
+		//console.log(dataOptionsGraphic);
+		//console.log(dataOptionsGraphic.length);
+		nbrOption = dataOptionsGraphic.length-1;
         dataGraph = google.visualization.arrayToDataTable(dataOptionsGraphic);
+		//console.log(dataGraph);
+		//console.log('-------------------------------');
         dataGraph.setColumnProperty(0, {
             allowHtml: true
         });
@@ -429,9 +449,11 @@ M.mod_evoting.poll_init = function (Y, graphData) {
             count -= 1;
 
             if (count > 1) {
-                $('#divCountText').html(M.util.get_string('endvote', 'evoting') + "<h1>" + count + "</h1><span class='sec'>" + M.util.get_string('seconds', 'evoting') + "</span>");
+                $('#divCountText').html("<h1>" + count + "</h1><span class='sec'>" + M.util.get_string('seconds', 'evoting') + "</span>");
+                $('#divEndText').html(M.util.get_string('endvote', 'evoting'));
             } else {
-                $('#divCountText').html(M.util.get_string('endvote', 'evoting') + "<h1>" + count + "</h1><span class='sec'>" + M.util.get_string('second', 'evoting') + "</span>");
+                $('#divCountText').html("<h1>" + count + "</h1><span class='sec'>" + M.util.get_string('second', 'evoting') + "</span>");
+                $('#divEndText').html(M.util.get_string('endvote', 'evoting'));
             }
 
             updateCountdown(count, totaltime);
@@ -481,6 +503,7 @@ M.mod_evoting.poll_init = function (Y, graphData) {
         // hide the countdown div
         $("#divCountDown").hide();
         $("#divCountText").hide();
+        $("#divEndText").hide();
         $("#divOptions").hide();
 
         // When timout finish
@@ -792,8 +815,9 @@ M.mod_evoting.poll_init = function (Y, graphData) {
         $(".answerCount").each(function () {
             sumVote += parseInt($(this).text());
         });
-
-        for (var i = 0; i < dataGraph["Nf"].length; i++) {
+		console.log("test console log");
+		console.log(dataGraph);
+        for (var i = 0; i < nbrOption; i++) {
             if (pollStart) {
                 var value = dataGraph.getValue(i, 6);
                 var cptVote = dataGraph.getValue(i, 1);
@@ -838,8 +862,8 @@ M.mod_evoting.poll_init = function (Y, graphData) {
             }
         }
         // If there is no good answer
-        if (cptWrong == dataGraph["Nf"].length) {
-            for (var i = 0; i < dataGraph["Nf"].length; i++) {
+        if (cptWrong == nbrOption) {
+            for (var i = 0; i < nbrOption; i++) {
                 dataGraph.setValue(i, 2, colorBlueAnswer);
             }
         }

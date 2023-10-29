@@ -19,7 +19,11 @@
         i {
             margin-right: 3px;
             min-width: 20px;
-            text-align: center;
+        }
+
+        a, i {
+            display: inline-block;
+            vertical-align: middle;
         }
     }
 
@@ -27,39 +31,59 @@
         text-align: right;
         ul li {
             display: inline;
-            font-size: 2.4rem;
 
             a {
                 text-decoration: none;
+                color: #fff;
 
                 &.facebook {
-                    color: $m-facebook-color;
+                    background-color: $m-facebook-color;
+                    &:hover {
+                        background-color: darken($m-facebook-color, 20%);
+                    }
                 }
 
                 &.twitter {
-                    color: $m-twitter-color;
-                }
-
-                &.googleplus {
-                    color: $m-googleplus-color;
+                    background-color: $m-twitter-color;
+                    &:hover {
+                        background-color: darken($m-twitter-color, 20%);
+                    }
                 }
 
                 &.linkedin {
-                    color: $m-linkedin-color;
+                    background-color: $m-linkedin-color;
+                    &:hover {
+                        background-color: darken($m-linkedin-color, 20%);
+                    }
                 }
 
                 &.youtube {
-                    color: $m-youtube-color;
+                    background-color: $m-youtube-color;
+                    &:hover {
+                        background-color: darken($m-youtube-color, 20%);
+                    }
                 }
 
                 &.instagram {
-                    color: $m-instagram-color;
+                    background-color: $m-instagram-color;
+                    &:hover {
+                        background-color: darken($m-instagram-color, 20%);
+                    }
                 }
 
-                &:hover {
-                    color: $brand-primary;
+                &.whatsapp {
+                    background-color: $m-whatsapp-color;
+                    &:hover {
+                        background-color: darken($m-whatsapp-color, 20%);
+                    }
                 }
             }
+        }
+    }
+
+    .plugins_standard_footer_html {
+        .mobilefooter a.btn {
+            white-space: inherit;
         }
     }
 }
@@ -87,5 +111,23 @@
     }
     .madeby {
         font-size: 14px;
+
+        a {
+            color: #fff;
+        }
+
+        p {
+            margin-bottom: 0;
+        }
+    }
+}
+
+@include media-breakpoint-down(md) {
+    #top-footer .social {
+        text-align: left;
+
+        .plugins_standard_footer_html {
+            padding-left: 1rem;
+        }
     }
 }

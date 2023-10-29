@@ -28,18 +28,19 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Plays the game "Hidden picture"
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $hiddenpicture
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_hiddenpicture_continue( $id, $game, $attempt, $hiddenpicture, $context) {
+function game_hiddenpicture_continue( $cm, $game, $attempt, $hiddenpicture, $context, $course) {
     global $DB, $USER;
 
     if ($attempt != false and $hiddenpicture != false) {
         // Continue a previous attempt.
-        return game_hiddenpicture_play( $id, $game, $attempt, $hiddenpicture, false, $context);
+        return game_hiddenpicture_play( $cm, $game, $attempt, $hiddenpicture, false, $context, $course);
     }
 
     if ($attempt == false) {
@@ -50,10 +51,10 @@ function game_hiddenpicture_continue( $id, $game, $attempt, $hiddenpicture, $con
     $cols = $game->param1;
     $rows = $game->param2;
     if ($cols == 0) {
-        print_error( get_string( 'hiddenpicture_nocols', 'game'));
+        throw new moodle_exception( 'hiddenpicture_nocols', 'game');
     }
     if ($rows == 0) {
-        print_error( get_string( 'hiddenpicture_norows', 'game'));
+        throw new moodle_exception( 'hiddenpicture_norows', 'game');
     }
 
     // New attempt.
@@ -64,7 +65,7 @@ function game_hiddenpicture_continue( $id, $game, $attempt, $hiddenpicture, $con
     $newrec = game_hiddenpicture_selectglossaryentry( $game, $attempt);
 
     if ($recs === false) {
-        print_error( get_string( 'no_questions', 'game'));
+        throw new moodle_exception( 'no_questions', 'game');
     }
 
     $positions = array();
@@ -94,7 +95,7 @@ function game_hiddenpicture_continue( $id, $game, $attempt, $hiddenpicture, $con
         $query->userid = $USER->id;
 
         $pos = array_rand( $positions);
-        $query->col = $positions[ $pos];
+        $query->mycol = $positions[ $pos];
         unset( $positions[ $pos]);
 
         $query->sourcemodule = $game->sourcemodule;
@@ -102,15 +103,12 @@ function game_hiddenpicture_continue( $id, $game, $attempt, $hiddenpicture, $con
         $query->glossaryentryid = $rec->glossaryentryid;
         $query->score = 0;
         if (($query->id = $DB->insert_record( 'game_queries', $query)) == 0) {
-            print_error( 'error inserting in game_queries');
+            throw new moodle_exception( 'hiddenpicture_error', 'game', 'error inserting in game_queries');
         }
         game_update_repetitions($game->id, $USER->id, $query->questionid, $query->glossaryentryid);
     }
 
-    // The score is zero.
-    game_updateattempts( $game, $attempt, 0, 0);
-
-    game_hiddenpicture_play( $id, $game, $attempt, $newrec, false, $context);
+    game_hiddenpicture_play( $cm, $game, $attempt, $newrec, false, $context, $course);
 }
 
 
@@ -126,7 +124,7 @@ function game_hiddenpicture_selectglossaryentry( $game, $attempt) {
     srand( (double)microtime() * 1000000);
 
     if ($game->glossaryid2 == 0) {
-        print_error( get_string( 'must_select_glossary', 'game'));
+        throw new moodle_exception( 'must_select_glossary', 'game');
     }
     $select = "ge.glossaryid={$game->glossaryid2}";
     $table = '{glossary_entries} ge';
@@ -142,7 +140,7 @@ function game_hiddenpicture_selectglossaryentry( $game, $attempt) {
     $sql = "SELECT ge.id,attachment FROM $table WHERE $select";
     if (($recs = $DB->get_records_sql( $sql)) == false) {
         $a->name = "'".$DB->get_field('glossary', 'name', array( 'id' => $game->glossaryid2))."'";
-        print_error( get_string( 'hiddenpicture_nomainquestion', 'game', $a));
+        throw new moodle_exception( 'hiddenpicture_nomainquestion', 'game', $a);
         return false;
     }
     $ids = array();
@@ -166,7 +164,7 @@ function game_hiddenpicture_selectglossaryentry( $game, $attempt) {
     if (count( $ids) == 0) {
         $a = new stdClass();
         $a->name = "'".$DB->get_field( 'glossary', 'name', array( 'id' => $game->glossaryid2))."'";
-        print_error( get_string( 'hiddenpicture_nomainquestion', 'game', $a));
+        throw new moodle_exception( 'hiddenpicture_nomainquestion', 'game', $a);
         return false;
     }
 
@@ -207,7 +205,7 @@ function game_hiddenpicture_selectglossaryentry( $game, $attempt) {
     $query->gameid = $game->id;
     $query->userid = $USER->id;
 
-    $query->col = 0;
+    $query->mycol = 0;
     $query->sourcemodule = 'glossary';
     $query->questionid = 0;
     $query->glossaryentryid = $rec->glossaryentryid;
@@ -216,13 +214,13 @@ function game_hiddenpicture_selectglossaryentry( $game, $attempt) {
     $query->answertext = $rec->answertext;
     $query->score = 0;
     if (($query->id = $DB->insert_record( 'game_queries', $query)) == 0) {
-        print_error( 'Error inserting in game_queries');
+        throw new moodle_exception( 'hiddenpicture_error', 'game', 'Error inserting in game_queries');
     }
     $newrec = new stdClass();
     $newrec->id = $attempt->id;
     $newrec->correct = 0;
     if (!game_insert_record(  'game_hiddenpicture', $newrec)) {
-        print_error( 'Error inserting in game_hiddenpicture');
+        throw new moodle_exception( 'hiddenpicture_error', 'game',  'Error inserting in game_hiddenpicture');
     }
 
     game_update_repetitions($game->id, $USER->id, $query->questionid, $query->glossaryentryid);
@@ -233,14 +231,15 @@ function game_hiddenpicture_selectglossaryentry( $game, $attempt) {
 /**
  * Plays the game "Hidden picture"
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $hiddenpicture
  * @param boolean $showsolution
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_hiddenpicture_play( $id, $game, $attempt, $hiddenpicture, $showsolution, $context) {
+function game_hiddenpicture_play( $cm, $game, $attempt, $hiddenpicture, $showsolution, $context, $course) {
     if ($game->toptext != '') {
         echo $game->toptext.'<br>';
     }
@@ -249,8 +248,8 @@ function game_hiddenpicture_play( $id, $game, $attempt, $hiddenpicture, $showsol
     $offsetquestions = game_sudoku_compute_offsetquestions( $game->sourcemodule, $attempt, $numbers, $correctquestions);
     unset( $offsetquestions[ 0]);
 
-    game_hiddenpicture_showhiddenpicture( $id, $game, $attempt, $hiddenpicture, $showsolution,
-        $offsetquestions, $correctquestions, $id, $attempt, $showsolution);
+    game_hiddenpicture_showhiddenpicture( $cm->id, $game, $attempt, $hiddenpicture, $showsolution,
+        $offsetquestions, $correctquestions);
 
     // Show questions.
     $onlyshow = false;
@@ -259,11 +258,11 @@ function game_hiddenpicture_play( $id, $game, $attempt, $hiddenpicture, $showsol
     switch ($game->sourcemodule) {
         case 'quiz':
         case 'question':
-            game_sudoku_showquestions_quiz( $id, $game, $attempt, $hiddenpicture, $offsetquestions,
+            game_sudoku_showquestions_quiz( $cm->id, $game, $attempt, $hiddenpicture, $offsetquestions,
                 $numbers, $correctquestions, $onlyshow, $showsolution, $context);
             break;
         case 'glossary':
-            game_sudoku_showquestions_glossary( $id, $game, $attempt, $hiddenpicture,
+            game_sudoku_showquestions_glossary( $cm->id, $game, $attempt, $hiddenpicture,
                 $offsetquestions, $numbers, $correctquestions, $onlyshow, $showsolution);
             break;
     }
@@ -321,7 +320,7 @@ function game_hiddenpicture_showhiddenpicture( $id, $game, $attempt, $hiddenpict
         }
     }
 
-    $query = $DB->get_record_select( 'game_queries', "attemptid=$hiddenpicture->id AND col=0",
+    $query = $DB->get_record_select( 'game_queries', "attemptid=$hiddenpicture->id AND mycol=0",
         null, 'id,glossaryentryid,attachment,questiontext');
 
     // Grade.
@@ -375,14 +374,15 @@ function game_hiddenpicture_showquestion_glossary( $game, $id, $query) {
 /**
  * Check main question
  *
- * @param int $id
+ * @param stdClass $cm
  * @param stdClass $game
  * @param stdClass $attempt
  * @param stdClass $hiddenpicture
  * @param boolean $finishattempt
  * @param stdClass $context
+ * @param stdClass $course
  */
-function game_hiddenpicture_check_mainquestion( $id, $game, &$attempt, &$hiddenpicture, $finishattempt, $context) {
+function game_hiddenpicture_check_mainquestion( $cm, $game, &$attempt, &$hiddenpicture, $finishattempt, $context, $course) {
     global $CFG, $DB;
 
     $responses = data_submitted();
@@ -392,7 +392,7 @@ function game_hiddenpicture_check_mainquestion( $id, $game, &$attempt, &$hiddenp
 
     // Load the glossary entry.
     if (!($entry = $DB->get_record( 'glossary_entries', array( 'id' => $glossaryentryid)))) {
-        print_error( get_string( 'noglossaryentriesfound', 'game'));
+        throw new moodle_exception( 'noglossaryentriesfound', 'game');
     }
     $answer = $responses->answer;
     $correct = false;
@@ -404,7 +404,7 @@ function game_hiddenpicture_check_mainquestion( $id, $game, &$attempt, &$hiddenp
 
     // Load the query.
     if (!($query = $DB->get_record( 'game_queries', array( 'id' => $queryid)))) {
-        print_error( "The query $queryid not found");
+        throw new moodle_exception( 'hiddenpicture_error', 'game',  "The query $queryid not found");
     }
 
     game_update_queries( $game, $attempt, $query, $correct, $answer);
@@ -415,32 +415,28 @@ function game_hiddenpicture_check_mainquestion( $id, $game, &$attempt, &$hiddenp
         $hiddenpicture->wrong++;
     }
     if (!$DB->update_record( 'game_hiddenpicture', $hiddenpicture)) {
-        print_error( 'game_hiddenpicture_check_mainquestion: error updating in game_hiddenpicture');
+        throw new moodle_exception( 'hiddenpicture_error', 'game', 'check_mainquestion: error updating');
     }
 
     $score = game_hidden_picture_computescore( $game, $hiddenpicture);
-    game_updateattempts( $game, $attempt, $score, $correct);
+    game_updateattempts( $game, $attempt, $score, $correct, $cm, $course);
 
     if ($correct == false) {
-        game_hiddenpicture_play( $id, $game, $attempt, $hiddenpicture, false, $context);
+        game_hiddenpicture_play( $cm, $game, $attempt, $hiddenpicture, false, $context, $course);
         return true;
     }
 
     // Finish the game.
-    $query = $DB->get_record_select( 'game_queries', "attemptid=$hiddenpicture->id AND col=0",
+    $query = $DB->get_record_select( 'game_queries', "attemptid=$hiddenpicture->id AND mycol=0",
         null, 'id,glossaryentryid,attachment,questiontext');
-    game_showpicture( $id, $game, $attempt, $query, '', '', false);
+    game_showpicture( $cm->id, $game, $attempt, $query, '', '', false);
     echo '<p><br/><font size="5" color="green">'.get_string( 'win', 'game').'</font><BR/><BR/></p>';
     global $CFG;
 
     echo '<br/>';
 
-    echo "<a href=\"$CFG->wwwroot/mod/game/attempt.php?id=$id\">";
+    echo "<a href=\"$CFG->wwwroot/mod/game/attempt.php?id={$cm->id}\">";
     echo get_string( 'nextgame', 'game').'</a> &nbsp; &nbsp; &nbsp; &nbsp;';
-
-    if (! $cm = $DB->get_record( 'course_modules', array( 'id' => $id))) {
-        print_error( "Course Module ID was incorrect id=$id");
-    }
 
     echo "<a href=\"{$CFG->wwwroot}/course/view.php?id=$cm->course\">".get_string( 'finish', 'game').'</a> ';
 

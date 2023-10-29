@@ -26,10 +26,10 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-$plugin->version   = 2018072400;       // The current module version (Date: YYYYMMDDXX)
+$plugin->version   = 2020070700;       // The current module version (Date: YYYYMMDDXX)
 $plugin->requires  = 2015051100;    // Requires this Moodle version
 $plugin->component = 'mod_evoting';     // Full name of the plugin (used for diagnostics)
 $plugin->cron      = 0;
 $plugin->maturity  =  MATURITY_STABLE;
-$plugin->release = 'v3.5-r1';
+$plugin->release = 'v3.9-r1';
 

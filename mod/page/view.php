@@ -56,7 +56,7 @@ page_view($page, $course, $cm, $context);
 
 $PAGE->set_url('/mod/page/view.php', array('id' => $cm->id));
 
-$options = empty($page->displayoptions) ? array() : unserialize($page->displayoptions);
+$options = empty($page->displayoptions) ? [] : (array) unserialize_array($page->displayoptions);
 
 if ($inpopup and $page->display == RESOURCELIB_DISPLAY_POPUP) {
     $PAGE->set_pagelayout('popup');
@@ -88,7 +88,9 @@ $formatoptions->context = $context;
 $content = format_text($content, $page->contentformat, $formatoptions);
 echo $OUTPUT->box($content, "generalbox center clearfix");
 
-$strlastmodified = get_string("lastmodified");
-echo "<div class=\"modified\">$strlastmodified: ".userdate($page->timemodified)."</div>";
+if (!isset($options['printlastmodified']) || !empty($options['printlastmodified'])) {
+    $strlastmodified = get_string("lastmodified");
+    echo html_writer::div("$strlastmodified: " . userdate($page->timemodified), 'modified');
+}
 
 echo $OUTPUT->footer();

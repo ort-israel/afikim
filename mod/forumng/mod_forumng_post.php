@@ -68,12 +68,15 @@ class mod_forumng_post {
     const OPTION_PARTICIPATION = 'in_participation_screen';
     const OPTION_DONT_DISPLAY_ROOTPOST = 'dont_display_rootpost';
     const OPTION_COMMAND_TOTALREPLY = 'command_total_reply';
+    const OPTION_PARENT_POSTNUMBER = 'parent_post_number';
+    const OPTION_DONT_DISPLAY_COLLAPSED = 'dont_display_collapsed';
     /** Constant indicating that post is not rated by user */
     const NO_RATING = 999;
 
     const OPTION_INDICATE_MODERATOR = 'indicate_moderator';
     const OPTION_IS_ANON = 'is_anon';
     const OPTION_VIEW_ANON_INFO = 'view_anon';
+    const OPTION_MAILTO_USERID = 'mailto_userid';
 
     // Object variables and accessors
     // Comment.
@@ -448,7 +451,7 @@ WHERE
             $params['clone'] = $this->get_forum()->get_course_module_id();
         }
         return new moodle_url('/pluginfile.php/' . $filecontext->id . '/mod_forumng/attachment/' .
-                $this->get_id() . '/' . urlencode($attachment), $params);
+                $this->get_id() . '/' . rawurlencode($attachment), $params);
     }
 
     /**
@@ -486,6 +489,8 @@ WHERE
             $DB->insert_record('forumng_read_posts', $readrecord);
         }
         $transaction->allow_commit();
+
+        $this->log('read post');
     }
 
     /**
@@ -1235,6 +1240,8 @@ ORDER BY
             $mailnow=false, $userid=0, $log=true, $asmoderator = mod_forumng::ASMODERATOR_NO) {
         global $DB;
         $now = time();
+        $timestart = $this->get_discussion()->get_time_start();
+        $forum = $this->get_forum();
 
         // Create copy of existing entry ('old version')
         $copy = clone($this->postfields);
@@ -1278,17 +1285,36 @@ ORDER BY
         } else if ($attachments && !$this->postfields->attachments) {
             $update->attachments = 1;
         }
-        if ($setimportant) {
-            $update->important = 1;
+        if ($forum->can_set_important($userid)) {
+            if ($setimportant) {
+                $update->important = 1;
+            } else {
+                $update->important = 0;
+            }
         } else {
-            $update->important = 0;
+            $update->important = $this->is_important();
         }
-        $update->mailstate = mod_forumng::MAILSTATE_NOT_MAILED;
-        $update->modified = $now;
-        $update->edituserid = mod_forumng_utils::get_real_userid($userid);
 
+        $update->mailstate = mod_forumng::MAILSTATE_NOT_MAILED;
+        if ($timestart && $timestart > $now) {
+            $update->modified = $timestart;
+        } else {
+            $update->modified = $now;
+        }
+        $update->edituserid = mod_forumng_utils::get_real_userid($userid);
         $update->id = $this->postfields->id;
-        $update->asmoderator = $asmoderator;
+        $postanon = $forum->can_post_anonymously($userid);
+        $postasmoderator = $forum->can_indicate_moderator($userid);
+        if (($postanon && $postasmoderator) ||
+                ($postasmoderator && $asmoderator == mod_forumng::ASMODERATOR_IDENTIFY) ||
+                ($postanon && $asmoderator == mod_forumng::ASMODERATOR_ANON)) {
+            $update->asmoderator = $asmoderator;
+        } else {
+            // We should not change the value if the value is standard post.
+            $update->asmoderator = (int)$asmoderator === mod_forumng::ASMODERATOR_NO ?
+                    $asmoderator : $this->get_asmoderator();
+        }
+
         $DB->update_record('forumng_posts', $update);
 
         if ($log) {
@@ -1611,6 +1637,8 @@ WHERE
             $classname = 'post_split';
         } else if ($action == 'report post') {
             $classname = 'post_reported';
+        } else if ($action == 'read post') {
+            $classname = 'post_read';
         } else {
             throw new coding_exception('Unknown forumng post log event.');
         }
@@ -2135,7 +2163,8 @@ WHERE
             self::OPTION_VIEW_FULL_NAMES => $viewfullnames ? true : false,
             self::OPTION_TIME_ZONE => $timezone,
             self::OPTION_VISIBLE_POST_NUMBERS => $discussionemail,
-            self::OPTION_USER_IMAGE => true);
+            self::OPTION_USER_IMAGE => true,
+            self::OPTION_MAILTO_USERID => false);
         foreach ($extraoptions as $key => $value) {
             $options[$key] = $value;
         }
@@ -2163,7 +2192,8 @@ WHERE
             $options = array(
                 self::OPTION_EMAIL => true,
                 self::OPTION_NO_COMMANDS => true,
-                self::OPTION_TIME_ZONE => $timezone);
+                self::OPTION_TIME_ZONE => $timezone,
+                self::OPTION_MAILTO_USERID => false);
             foreach ($extraoptions as $key => $value) {
                 $options[$key] = $value;
             }
@@ -2361,10 +2391,16 @@ WHERE
         } else {
             $options[self::OPTION_INDICATE_MODERATOR] = false;
         }
+        // When create email content, we need option mailto_userid.
+        if (!array_key_exists(self::OPTION_MAILTO_USERID, $options)) {
+            $options[self::OPTION_MAILTO_USERID] = false;
+        }
         if ($options[self::OPTION_IS_ANON] == true ||
                 $options[self::OPTION_INDICATE_MODERATOR] == true) {
             if (!array_key_exists(self::OPTION_VIEW_ANON_INFO, $options)) {
-                if ($this->get_forum()->can_post_anonymously()) {
+                $displaytouserid = $options[mod_forumng_post::OPTION_MAILTO_USERID] !== false ?
+                        $options[mod_forumng_post::OPTION_MAILTO_USERID] : $USER->id;
+                if ($this->get_forum()->can_post_anonymously($displaytouserid)) {
                     $options[self::OPTION_VIEW_ANON_INFO] = true;
                 } else {
                     $options[self::OPTION_VIEW_ANON_INFO] = false;

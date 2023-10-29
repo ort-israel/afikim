@@ -49,7 +49,7 @@ class theme_settings {
         $templatecontext = [];
 
         $footersettings = [
-            'facebook', 'twitter', 'googleplus', 'linkedin', 'youtube', 'instagram', 'getintouchcontent',
+            'facebook', 'twitter', 'whatsapp', 'linkedin', 'youtube', 'instagram', 'getintouchcontent',
             'website', 'mobile', 'mail'
         ];
 
@@ -57,11 +57,6 @@ class theme_settings {
             if (!empty($theme->settings->$setting)) {
                 $templatecontext[$setting] = $theme->settings->$setting;
             }
-        }
-
-        $templatecontext['disablebottomfooter'] = false;
-        if (!empty($theme->settings->disablebottomfooter)) {
-            $templatecontext['disablebottomfooter'] = true;
         }
 
         return $templatecontext;

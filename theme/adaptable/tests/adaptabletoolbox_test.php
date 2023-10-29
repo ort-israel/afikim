@@ -15,8 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    theme
- * @subpackage adaptable
+ * Define unit tests for the toolbox class.
+ *
+ * @package    theme_adaptable
  * @copyright  &copy; 2018 G J Barnard.
  * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,6 +27,8 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Toolbox unit tests for the Adaptable theme.
  * @group theme_adaptable
+ * @copyright Copyright (c) 2017 Manoj Solanki (Coventry University)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class theme_adaptable_toolbox_testcase extends advanced_testcase {
 

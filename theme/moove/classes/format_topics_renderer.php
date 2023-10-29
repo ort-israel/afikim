@@ -46,8 +46,6 @@ class theme_moove_format_topics_renderer extends format_topics_renderer {
      * @param int $displaysection The section number in the course which is being displayed
      */
     public function print_single_section_page($course, $sections, $mods, $modnames, $modnamesused, $displaysection) {
-        global $PAGE;
-
         $modinfo = get_fast_modinfo($course);
         $course = course_get_format($course)->get_course();
 
@@ -71,7 +69,7 @@ class theme_moove_format_topics_renderer extends format_topics_renderer {
         // Copy activity clipboard..
         echo $this->course_activity_clipboard($course, $displaysection);
         $thissection = $modinfo->get_section_info(0);
-        if ($thissection->summary or !empty($modinfo->sections[0]) or $PAGE->user_is_editing()) {
+        if ($thissection->summary or !empty($modinfo->sections[0]) or $this->page->user_is_editing()) {
             echo $this->start_section_list();
             echo $this->section_header($thissection, $course, true, $displaysection);
             echo $this->courserenderer->course_section_cm_list($course, $thissection, $displaysection);
@@ -143,6 +141,15 @@ class theme_moove_format_topics_renderer extends format_topics_renderer {
         $canviewhidden = has_capability('moodle/course:viewhiddensections', context_course::instance($course->id))
             or !$course->hiddensections;
 
+        $arrowleft = 'left';
+        $arrowright = 'right';
+
+        // RTL support.
+        if (right_to_left()) {
+            $arrowleft = 'right';
+            $arrowright = 'left';
+        }
+
         $links = array('previous' => '', 'next' => '');
         $back = $sectionno - 1;
         while ($back > 0 and empty($links['previous'])) {
@@ -151,7 +158,7 @@ class theme_moove_format_topics_renderer extends format_topics_renderer {
                 if (!$sections[$back]->visible) {
                     $params = array('class' => 'dimmed_text');
                 }
-                $previouslink = html_writer::tag('span', '<i class="icon-arrow-left"></i>', array('class' => 'larrow'));
+                $previouslink = html_writer::tag('span', '<i class="icon-arrow-'.$arrowleft.'"></i>', array('class' => 'larrow'));
                 $previouslink .= "<span class='text'><span class='nav_guide'>".get_string('prev_section', 'theme_moove')."</span>";
                 $previouslink .= "<br>" . get_section_name($course, $sections[$back])."</span>";
                 $links['previous'] = html_writer::link(course_get_url($course, $back), $previouslink, $params);
@@ -169,7 +176,7 @@ class theme_moove_format_topics_renderer extends format_topics_renderer {
                 }
                 $nextlink = "<span class='text'><span class='nav_guide'>".get_string('next_section', 'theme_moove')."</span><br>";
                 $nextlink .= get_section_name($course, $sections[$forward])."</span>";
-                $nextlink .= html_writer::tag('span', '<i class="icon-arrow-right"></i>', array('class' => 'rarrow'));
+                $nextlink .= html_writer::tag('span', '<i class="icon-arrow-'.$arrowright.'"></i>', array('class' => 'rarrow'));
                 $links['next'] = html_writer::link(course_get_url($course, $forward), $nextlink, $params);
             }
             $forward++;
@@ -188,8 +195,6 @@ class theme_moove_format_topics_renderer extends format_topics_renderer {
      * @param array $modnamesused (argument not used)
      */
     public function print_multiple_section_page($course, $sections, $mods, $modnames, $modnamesused) {
-        global $PAGE;
-
         $modinfo = get_fast_modinfo($course);
         $course = course_get_format($course)->get_course();
 
@@ -210,7 +215,7 @@ class theme_moove_format_topics_renderer extends format_topics_renderer {
         foreach ($modinfo->get_section_info_all() as $section => $thissection) {
             if ($section == 0) {
                 // 0-section is displayed a little different then the others.
-                if ($thissection->summary or !empty($modinfo->sections[0]) or $PAGE->user_is_editing()) {
+                if ($thissection->summary or !empty($modinfo->sections[0]) or $this->page->user_is_editing()) {
                     echo $this->section_header($thissection, $course, false, 0);
                     echo $this->courserenderer->course_section_cm_list($course, $thissection, 0);
                     echo $this->courserenderer->course_section_add_cm_control($course, 0, 0);
@@ -246,7 +251,7 @@ class theme_moove_format_topics_renderer extends format_topics_renderer {
                 continue;
             }
 
-            if (!$PAGE->user_is_editing() && $course->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
+            if (!$this->page->user_is_editing() && $course->coursedisplay == COURSE_DISPLAY_MULTIPAGE) {
                 // Display section summary only.
                 echo $this->section_summary($thissection, $course, null);
             } else {
@@ -271,7 +276,7 @@ class theme_moove_format_topics_renderer extends format_topics_renderer {
             echo "</div>";
         }
 
-        if ($PAGE->user_is_editing() and has_capability('moodle/course:update', $context)) {
+        if ($this->page->user_is_editing() and has_capability('moodle/course:update', $context)) {
             // Print stealth sections if present.
             foreach ($modinfo->get_section_info_all() as $section => $thissection) {
                 if ($section <= $numsections or empty($modinfo->sections[$section])) {

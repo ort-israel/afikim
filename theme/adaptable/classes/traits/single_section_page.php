@@ -14,6 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+
+/**
+ * Trait for single section page functions.
+ *
+ * @package   theme_adaptable
+ * @copyright 2018 Manoj Solanki (Coventry University)
+ * @copyright Copyright (c) 2016 Moodlerooms Inc. (http://www.moodlerooms.com)
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 namespace theme_adaptable\traits;
 
 defined('MOODLE_INTERNAL') || die();
@@ -30,13 +40,11 @@ require_once($CFG->dirroot.'/message/lib.php');
 require_once($CFG->dirroot.'/course/format/topics/renderer.php');
 require_once($CFG->dirroot.'/course/format/weeks/renderer.php');
 
-if ($CFG->version < 2018051799) {
-    require_once($CFG->libdir.'/coursecatlib.php');
-}
-
 trait single_section_page {
     /**
      * Output the html for a single section page.
+     *
+     * @package theme_adaptable
      *
      * @param stdClass $course The course entry from DB.
      * @param array $sections (argument not used).
@@ -58,6 +66,10 @@ trait single_section_page {
      * have been replaced by calls calls to this function to get the information.
      * Also see https://bitbucket.org/covuni/moodle-theme_adaptable/pull-requests/43/fixes-renderersphp-for-the-missing/diff.
      *
+     * @package theme_adaptable
+     *
+     * @param stdClass $course Course
+     *
      * @return int Number of sections.
      */
     public function get_num_sections($course) {
@@ -69,6 +81,8 @@ trait single_section_page {
 
     /**
      * Output the html for a single section page.
+     *
+     * @package theme_adaptable
      *
      * @param stdClass $course The course entry from DB.
      * @param array    $sections (argument not used).
@@ -137,7 +151,7 @@ trait single_section_page {
             $classes .= ' dimmed_text';
         }
         $sectionname = html_writer::tag('span', $this->section_title_without_link($thissection, $course));
-        $sectiontitle .= $this->output->heading($sectionname, 3, $classes);
+        $sectiontitle .= $this->output->heading($sectionname, 2, $classes);
 
         $sectiontitle .= html_writer::end_tag('div');
         echo $sectiontitle;
@@ -146,7 +160,11 @@ trait single_section_page {
         echo $this->start_section_list();
 
         if (!$showsectionzero) {
-            echo $this->section_header_onsectionpage_topic0notattop($thissection, $course);
+            if (method_exists($this, 'section_header_onsectionpage_topic0notattop')) {
+                echo $this->section_header_onsectionpage_topic0notattop($thissection, $course);
+            } else {
+                echo $this->section_header_onsectionpage($thissection, $course);
+            }
         } else {
             echo $this->section_header($thissection, $course, true, $displaysection);
         }
@@ -183,9 +201,11 @@ trait single_section_page {
     /**
      * Generate the html for the 'Jump to' menu on a single section page.
      *
+     * @package theme_adaptable
+     *
      * @param stdClass $course The course entry from DB
      * @param array $sections The course_sections entries from the DB
-     * @param $displaysection the current displayed section number.
+     * @param int $displaysection the current displayed section number.
      *
      * @return string HTML to output.
      */
@@ -196,15 +216,16 @@ trait single_section_page {
     /**
      * Generate the html for the 'Jump to' menu on a single section page.
      *
+     * @package theme_adaptable
+     *
      * @param stdClass $course The course entry from DB
      * @param array $sections The course_sections entries from the DB
-     * @param $displaysection the current displayed section number.
+     * @param int $displaysection the current displayed section number.
      * @param int $section Section number to start on.
      *
      * @return string HTML to output.
      */
     protected function section_nav_selection_content($course, $sections, $displaysection, $section = 1) {
-        global $CFG;
         $o = '';
         $sectionmenu = array();
         $sectionmenu[course_get_url($course)->out(false)] = get_string('maincoursepage', 'theme_adaptable');
@@ -230,6 +251,17 @@ trait single_section_page {
         return $o;
     }
 
+    /**
+     * String shortening method.
+     *
+     * @package theme_adaptable
+     *
+     * @param string $string
+     * @param string $ellipsis
+     *
+     *
+     * @return string
+     */
     private function shorten_string($string, $ellipsis = '..') {
         $maxlen = 50;
         $string = strip_tags($string);
@@ -245,6 +277,8 @@ trait single_section_page {
     /**
      * Generate next/previous section links for naviation.
      *
+     * @package theme_adaptable
+     *
      * @param stdClass $course The course entry from DB.
      * @param array $sections The course_sections entries from the DB.
      * @param int $sectionno The section number in the coruse which is being displayed.
@@ -256,6 +290,8 @@ trait single_section_page {
 
     /**
      * Generate next/previous section links for naviation.
+     *
+     * @package theme_adaptable
      *
      * @param stdClass $course The course entry from DB.
      * @param array $sections The course_sections entries from the DB.

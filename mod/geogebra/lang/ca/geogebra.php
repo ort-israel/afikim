@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -116,6 +115,15 @@ $string['autograde'] = 'Activitat autopuntuable';
 $string['savechanges'] = 'Desa els canvis';
 $string['discardchanges'] = 'Torna sense desar';
 
+$string['privacy'] = 'Privacitat dels resultats';
+$string['privacy:metadata:geogebra_attempts'] = 'Informació sobre els intent/s realitzats per a cada activitat de geogebra';
+$string['privacy:metadata:geogebra_attempts:vars'] = 'Dades relacionades amb l\'intent del usuari';
+$string['privacy:metadata:geogebra_attempts:gradecomment'] = 'El comentari de la nota del intent de l\'acrivitat  geogebra.';
+$string['privacy:metadata:geogebra_attempts:userid'] = 'L\'ID del usuari que ha realitzat l\'intentot.';
+$string['privacy:metadata:geogebra_attempts:finished'] = 'El timestamp que indica la finalització del intent del usuari.';
+$string['privacy:metadata:geogebra_attempts:geogebra'] = 'L\'ID de l\'activitat geogebra';
+$string['privacy:metadata:geogebra_attempts:dateteacher'] = 'El timestamp que indica la finalització per part del professor';
+$string['privacy:metadata:geogebra_attempts:datestudent'] = 'El timestamp que indica la finalització per part del estudiant';
 
 /* Revision Moodle 2 */
 $string['modulename_help'] = '<p><a href="http://www.geogebra.org" target="_blank">GeoGebra</a> és una aplicació de matemàtica dinàmica, gratuïta, lliure i multiplataforma, enfocada a tots els nivells educatius, que aglutina la geometria, l\'àlgebra, el full de càlcul, l\'estadística i l\'anàlisi, en un únic paquet integrat, molt fàcil d\'utilitzar.</p>
@@ -142,7 +150,7 @@ $string['filetypelocal'] = 'Fitxer pujat';
 $string['invalidgeogebrafile'] = 'S\'ha especificat un fitxer GeoGebra no vàlid. El fitxer ha de tenir l\'extensió ".ggb".';
 $string['invalidurl'] = 'S\'ha especificat un URL no vàlid. El URL ha de començar amb http(s) i ha d\'enllaçar a un fitxer ".ggb" vàlid.';
 $string['geogebraurl'] = 'URL';
-$string['geogebraurl_help'] = 'Aquest paràmetre permet especificar el URL de l\'activitat GeoGebra enlloc de seleccionar-la mitjançant el selector d\'arxius.';
+$string['geogebraurl_help'] = 'Localitzeu la construcció a <a href="https://www.geogebra.org/" target="_blank">geogebra.org</a>, aneu a <strong>Detalls</strong>, feu clic amb el botó dret del ratolí al botó <strong>Descarrega</strong> i seleccioneu <strong>Copia l\'adreça de l\'enllaç</strong>. Finalment, situeu-vos al camp URL i enganxeu l\'enllaç amb <strong>Ctrl+V</strong>.<br/>Per a un exemple pas a pas d\'aquesta operació vegeu: <a href="https://youtu.be/qbp-RuM4NpU" target="_blank">https://youtu.be/qbp-RuM4NpU</a>';
 $string['geogebrafile'] = 'Fitxer GeoGebra';
 $string['geogebrafile_help'] = 'El fitxer ".ggb" que conté l\'activitat GeoGebra.';
 $string['urledit'] = 'Fitxer GeoGebra';

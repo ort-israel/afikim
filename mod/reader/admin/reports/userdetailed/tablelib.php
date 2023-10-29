@@ -16,6 +16,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * mod/reader/admin/reports/userdetailed/tablelib.php
+ *
+ * @package    mod
+ * @subpackage reader
+ * @copyright  2013 Gordon Bateson (gordon.bateson@gmail.com)
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @since      Moodle 2.0
+ */
+
+/**
  * Create a table to display attempts at a Reader activity
  *
  * @package   mod-reader
@@ -23,9 +33,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+// get parent class
+
+/** Prevent direct access to this script */
 defined('MOODLE_INTERNAL') || die();
 
-// get parent class
+/** Include required files */
 require_once($CFG->dirroot.'/mod/reader/admin/reports/tablelib.php');
 
 /**
@@ -81,7 +94,7 @@ class reader_admin_reports_userdetailed_table extends reader_admin_reports_table
                                     'sortfields'  => array());
 
     /** @var actions */
-    protected $actions = array('deleteattempts', 'restoreattempts', 'updatepassed', 'updatecheated');
+    protected $actions = array('deleteattempts', 'restoreattempts', 'updatepassed', 'updatecheated', 'sendmessage');
 
     /**
      * Constructor
@@ -125,7 +138,7 @@ class reader_admin_reports_userdetailed_table extends reader_admin_reports_table
         }
 
         $score    = '(ra.credit = :credit1 OR ra.passed = :passed1)';
-        $score    = "ra.deleted = :deleted1 AND ra.cheated = :cheated1 && $score";
+        $score    = "ra.deleted = :deleted1 AND ra.cheated = :cheated1 AND $score";
         $score    = "CASE WHEN ($score) THEN rb.$wordsorpoints ELSE 0 END";
         $grade    = 'CASE WHEN (ra.percentgrade IS NULL) THEN 0 ELSE ra.percentgrade END';
         $duration = 'CASE WHEN (ra.timefinish IS NULL OR ra.timefinish = 0) THEN 0 ELSE (ra.timefinish - ra.timestart) END';

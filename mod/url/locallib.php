@@ -39,7 +39,7 @@ require_once("$CFG->dirroot/mod/url/lib.php");
 function url_appears_valid_url($url) {
     if (preg_match('/^(\/|https?:|ftp:)/i', $url)) {
         // note: this is not exact validation, we look for severely malformed URLs only
-        return (bool)preg_match('/^[a-z]+:\/\/([^:@\s]+:[^@\s]+@)?[a-z0-9_\.\-]+(:[0-9]+)?(\/[^#]*)?(#.*)?$/i', $url);
+        return (bool) preg_match('/^[a-z]+:\/\/([^:@\s]+:[^@\s]+@)?[^ @]+(:[0-9]+)?(\/[^#]*)?(#.*)?$/i', $url);
     } else {
         return (bool)preg_match('/^[a-z]+:\/\/...*$/i', $url);
     }
@@ -83,15 +83,28 @@ function url_fix_submitted_url($url) {
  */
 function url_get_full_url($url, $cm, $course, $config=null) {
 
-    $parameters = empty($url->parameters) ? array() : unserialize($url->parameters);
+    $parameters = empty($url->parameters) ? [] : (array) unserialize_array($url->parameters);
 
     // make sure there are no encoded entities, it is ok to do this twice
     $fullurl = html_entity_decode($url->externalurl, ENT_QUOTES, 'UTF-8');
 
+    $letters = '\pL';
+    $latin = 'a-zA-Z';
+    $digits = '0-9';
+    $symbols = '\x{20E3}\x{00AE}\x{00A9}\x{203C}\x{2047}\x{2048}\x{2049}\x{3030}\x{303D}\x{2139}\x{2122}\x{3297}\x{3299}' .
+               '\x{2300}-\x{23FF}\x{2600}-\x{27BF}\x{2B00}-\x{2BF0}';
+    $arabic = '\x{FE00}-\x{FEFF}';
+    $math = '\x{2190}-\x{21FF}\x{2900}-\x{297F}';
+    $othernumbers = '\x{2460}-\x{24FF}';
+    $geometric = '\x{25A0}-\x{25FF}';
+    $emojis = '\x{1F000}-\x{1F6FF}';
+
     if (preg_match('/^(\/|https?:|ftp:)/i', $fullurl) or preg_match('|^/|', $fullurl)) {
         // encode extra chars in URLs - this does not make it always valid, but it helps with some UTF-8 problems
-        $allowed = "a-zA-Z0-9".preg_quote(';/?:@=&$_.+!*(),-#%', '/');
-        $fullurl = preg_replace_callback("/[^$allowed]/", 'url_filter_callback', $fullurl);
+        // Thanks to 💩.la emojis count as valid, too.
+        $allowed = "[" . $letters . $latin . $digits . $symbols . $arabic . $math . $othernumbers . $geometric .
+            $emojis . "]" . preg_quote(';/?:@=&$_.+!*(),-#%', '/');
+        $fullurl = preg_replace_callback("/[^$allowed]/u", 'url_filter_callback', $fullurl);
     } else {
         // encode special chars only
         $fullurl = str_replace('"', '%22', $fullurl);
@@ -182,7 +195,7 @@ function url_print_heading($url, $cm, $course, $notused = false) {
 function url_print_intro($url, $cm, $course, $ignoresettings=false) {
     global $OUTPUT;
 
-    $options = empty($url->displayoptions) ? array() : unserialize($url->displayoptions);
+    $options = empty($url->displayoptions) ? [] : (array) unserialize_array($url->displayoptions);
     if ($ignoresettings or !empty($options['printintro'])) {
         if (trim(strip_tags($url->intro))) {
             echo $OUTPUT->box_start('mod_introbox', 'urlintro');
@@ -264,7 +277,7 @@ function url_print_workaround($url, $cm, $course) {
     $display = url_get_final_display_type($url);
     if ($display == RESOURCELIB_DISPLAY_POPUP) {
         $jsfullurl = addslashes_js($fullurl);
-        $options = empty($url->displayoptions) ? array() : unserialize($url->displayoptions);
+        $options = empty($url->displayoptions) ? [] : (array) unserialize_array($url->displayoptions);
         $width  = empty($options['popupwidth'])  ? 620 : $options['popupwidth'];
         $height = empty($options['popupheight']) ? 450 : $options['popupheight'];
         $wh = "width=$width,height=$height,toolbar=no,location=no,menubar=no,copyhistory=no,status=no,directories=no,scrollbars=yes,resizable=yes";
@@ -460,18 +473,18 @@ function url_get_variable_values($url, $cm, $course, $config) {
 
     $values = array (
         'courseid'        => $course->id,
-        'coursefullname'  => format_string($course->fullname),
+        'coursefullname'  => format_string($course->fullname, true, array('context' => $coursecontext)),
         'courseshortname' => format_string($course->shortname, true, array('context' => $coursecontext)),
         'courseidnumber'  => $course->idnumber,
         'coursesummary'   => $course->summary,
         'courseformat'    => $course->format,
         'lang'            => current_language(),
-        'sitename'        => format_string($site->fullname),
+        'sitename'        => format_string($site->fullname, true, array('context' => $coursecontext)),
         'serverurl'       => $CFG->wwwroot,
         'currenttime'     => time(),
         'urlinstance'     => $url->id,
         'urlcmid'         => $cm->id,
-        'urlname'         => format_string($url->name),
+        'urlname'         => format_string($url->name, true, array('context' => $coursecontext)),
         'urlidnumber'     => $cm->idnumber,
     );
 

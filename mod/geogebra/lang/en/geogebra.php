@@ -117,6 +117,15 @@ $string['autograde'] = 'Selfgrade activity';
 $string['savechanges'] = 'Save changes';
 $string['discardchanges'] = 'Discard changes and return';
 
+$string['privacy'] = 'Privacy of results';
+$string['privacy:metadata:geogebra_attempts'] = 'Information about the user\'s results attempt(s) for a given geogebra activity';
+$string['privacy:metadata:geogebra_attempts:vars'] = 'The ID of the option that the user selected.';
+$string['privacy:metadata:geogebra_attempts:gradecomment'] = 'The comment of the grade for the attempt of the geogebra activity.';
+$string['privacy:metadata:geogebra_attempts:userid'] = 'The ID of the user answering this geogebra activity';
+$string['privacy:metadata:geogebra_attempts:finished'] = 'The timestamp indicating when the attempt was finished by the user';
+$string['privacy:metadata:geogebra_attempts:geogebra'] = 'The ID of the choice activity';
+$string['privacy:metadata:geogebra_attempts:dateteacher'] = 'The timestamp indicating when the attempt was finished by the teacher';
+$string['privacy:metadata:geogebra_attempts:datestudent'] = 'The timestamp indicating when the attempt was finished by the student';
 
 /* Revision Moodle 2 */
 $string['modulename_help'] = '<p><a href="http://www.geogebra.org" target="_blank">GeoGebra</a> is a free and multi-platform dynamic mathematics software for all levels of education that joins geometry, algebra, tables, graphing, statistics and calculus in one easy-to-use package.</p>
@@ -144,7 +153,7 @@ $string['filetypelocal'] = 'Uploaded file';
 $string['invalidgeogebrafile'] = 'Invalid GeoGebra specified. It must have the ".ggb" extension.';
 $string['invalidurl'] = 'Invalid URL specified. It must start with http(s) and has to be a valid ".ggb" file.';
 $string['geogebraurl'] = 'URL';
-$string['geogebraurl_help'] = 'This setting enables a URL for the GeoGebra file to be specified, rather than choosing a file via the file picker.';
+$string['geogebraurl_help'] = 'Find the construction on <a href="https://www.geogebra.org/" target="_blank">geogebra.org</a>, go to <strong>Details</strong>, right click on <strong>Download</strong> and select <strong>Copy link address</strong>. Finally, go to the URL field and paste the link with <strong>Ctrl+V</strong>.<br/>See a step-by-step example in: <a href="https://youtu.be/qbp-RuM4NpU" target="_blank">https://youtu.be/qbp-RuM4NpU</a>.';
 $string['geogebrafile'] = 'GeoGebra file';
 $string['geogebrafile_help'] = 'The .ggb file.';
 $string['urledit'] = 'GeoGebra file';

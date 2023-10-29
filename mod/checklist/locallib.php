@@ -17,8 +17,9 @@
 /**
  * Stores all the functions for manipulating a checklist
  *
- * @author   David Smith <moodle@davosmith.co.uk>
- * @package  mod/checklist
+ * @copyright Davo Smith <moodle@davosmith.co.uk>
+ * @package mod_checklist
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 use mod_checklist\local\checklist_check;
@@ -30,48 +31,70 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 require_once($CFG->dirroot.'/mod/checklist/lib.php');
 
+/** Width of text input */
 define("CHECKLIST_TEXT_INPUT_WIDTH", 45);
+/** Item is not optional */
 define("CHECKLIST_OPTIONAL_NO", 0);
+/** Item is optional */
 define("CHECKLIST_OPTIONAL_YES", 1);
+/** Item is a heading */
 define("CHECKLIST_OPTIONAL_HEADING", 2);
 
+/** Item is not hidden */
 define("CHECKLIST_HIDDEN_NO", 0);
+/** Item is manually hidden */
 define("CHECKLIST_HIDDEN_MANUAL", 1);
+/** Item is linked to a hidden activity */
 define("CHECKLIST_HIDDEN_BYMODULE", 2);
 
+/**
+ * Class checklist_class
+ */
 class checklist_class {
+    /** @var stdClass */
     protected $cm;
+    /** @var stdClass */
     protected $course;
+    /** @var stdClass */
     protected $checklist;
+    /** @var string */
     protected $strchecklists;
+    /** @var string */
     protected $strchecklist;
+    /** @var context_module */
     protected $context;
+    /** @var int */
     protected $userid;
     /** @var checklist_item[] */
     protected $items;
     /** @var checklist_item[] */
     protected $useritems;
+    /** @var bool */
     protected $useredit;
+    /** @var int|false */
     protected $additemafter;
+    /** @var bool */
     protected $editdates;
     /** @var bool|int[] */
     protected $groupings;
     /** @var mod_checklist_renderer */
     protected $output;
 
-    protected $canlinkcourses = null;
+    /** @var bool */
+    protected $canlinkcourses;
 
     /**
+     * Class constructor
      * @param int|string $cmid optional
      * @param int $userid optional
-     * @param object $checklist optional
-     * @param object $cm optional
-     * @param object $course optional
+     * @param object|null $checklist optional
+     * @param object|null $cm optional
+     * @param object|null $course optional
      */
     public function __construct($cmid = 'staticonly', $userid = 0, $checklist = null, $cm = null, $course = null) {
-        global $COURSE, $DB, $CFG;
+        global $COURSE, $DB;
 
-        if ($cmid == 'staticonly') {
+        if ($cmid === 'staticonly') {
             // Use static functions only!
             return;
         }
@@ -122,6 +145,7 @@ class checklist_class {
     }
 
     /**
+     * Get the checklist renderer
      * @return mod_checklist_renderer
      */
     private static function get_renderer() {
@@ -150,7 +174,6 @@ class checklist_class {
 
     /**
      * Get an array of the items in a checklist
-     *
      */
     protected function get_items() {
         global $DB;
@@ -349,20 +372,20 @@ class checklist_class {
 
                     $groupingid = $mods->get_cm($cmid)->groupingid;
                     if ($groupmembersonly && $groupingid && $mods->get_cm($cmid)->groupmembersonly) {
-                        if ($item->grouping != $groupingid) {
-                            $item->grouping = $groupingid;
+                        if ($item->groupingid != $groupingid) {
+                            $item->groupingid = $groupingid;
                             $upd = new stdClass;
                             $upd->id = $item->id;
-                            $upd->grouping = $groupingid;
+                            $upd->groupingid = $groupingid;
                             $DB->update_record('checklist_item', $upd);
                             $changes = true;
                         }
                     } else {
-                        if ($item->grouping) {
-                            $item->grouping = 0;
+                        if ($item->groupingid) {
+                            $item->groupingid = 0;
                             $upd = new stdClass;
                             $upd->id = $item->id;
-                            $upd->grouping = 0;
+                            $upd->groupingid = 0;
                             $DB->update_record('checklist_item', $upd);
                             $changes = true;
                         }
@@ -374,7 +397,7 @@ class checklist_class {
                     reset($this->items);
                     $this->items[$itemid]->stillexists = true;
                     $usegrouping = $groupmembersonly && $mods->get_cm($cmid)->groupmembersonly;
-                    $this->items[$itemid]->grouping = $usegrouping ? $mods->get_cm($cmid)->groupingid : 0;
+                    $this->items[$itemid]->groupingid = $usegrouping ? $mods->get_cm($cmid)->groupingid : 0;
                     $item = $this->items[$itemid];
                 }
                 $item->set_modulelink(new moodle_url('/mod/'.$mods->get_cm($cmid)->modname.'/view.php', array('id' => $cmid)));
@@ -399,6 +422,9 @@ class checklist_class {
         }
     }
 
+    /**
+     * Remove automatically-added items from the course activities (if no longer required).
+     */
     protected function removeauto() {
         if ($this->checklist->autopopulate) {
             return; // Still automatically populating the checklist, so don't remove the items.
@@ -451,6 +477,7 @@ class checklist_class {
     }
 
     /**
+     * Get checklist item at a particular position.
      * @param int $position
      * @return bool|object
      */
@@ -466,34 +493,62 @@ class checklist_class {
         return false;
     }
 
+    /**
+     * Can the current user update student mark for items on this list?
+     * @return bool
+     */
     protected function canupdateown() {
         global $USER;
         return (!$this->userid || ($this->userid == $USER->id)) && has_capability('mod/checklist:updateown', $this->context);
     }
 
+    /**
+     * Can the current user add their own items to this list?
+     * @return bool
+     */
     protected function canaddown() {
         global $USER;
         return $this->checklist->useritemsallowed
         && (!$this->userid || ($this->userid == $USER->id)) && has_capability('mod/checklist:updateown', $this->context);
     }
 
+    /**
+     * Can the current user preview this checklist?
+     * @return bool
+     */
     protected function canpreview() {
         return has_capability('mod/checklist:preview', $this->context);
     }
 
+    /**
+     * Can the current user edit this checklist?
+     * @return bool
+     */
     protected function canedit() {
         return has_capability('mod/checklist:edit', $this->context);
     }
 
+    /**
+     * Can the current user update the 'teacher marks' against other users?
+     * @return bool
+     */
     protected function caneditother() {
         return has_capability('mod/checklist:updateother', $this->context);
     }
 
+    /**
+     * Can the current user view reports?
+     * @return bool
+     */
     protected function canviewreports() {
         return has_capability('mod/checklist:viewreports', $this->context)
         || has_capability('mod/checklist:viewmenteereports', $this->context);
     }
 
+    /**
+     * Is the current user limited to only viewing reports on their mentees?
+     * @return bool
+     */
     protected function only_view_mentee_reports() {
         return has_capability('mod/checklist:viewmenteereports', $this->context)
         && !has_capability('mod/checklist:viewreports', $this->context);
@@ -539,6 +594,9 @@ class checklist_class {
         return $DB->get_fieldset_sql($sql, $params);
     }
 
+    /**
+     * View the checklist items
+     */
     public function view() {
         global $OUTPUT, $CFG;
 
@@ -572,9 +630,7 @@ class checklist_class {
         }
 
         $this->view_header();
-
-        echo $OUTPUT->heading(format_string($this->checklist->name));
-
+        $this->view_name_info();
         $this->view_tabs($currenttab);
 
         $params = array(
@@ -593,6 +649,9 @@ class checklist_class {
         $this->view_footer();
     }
 
+    /**
+     * View the edit items interface.
+     */
     public function edit() {
         global $OUTPUT;
 
@@ -608,9 +667,7 @@ class checklist_class {
         $event->trigger();
 
         $this->view_header();
-
-        echo $OUTPUT->heading(format_string($this->checklist->name));
-
+        $this->view_name_info();
         $this->view_tabs('edit');
 
         $this->process_edit_actions();
@@ -627,6 +684,9 @@ class checklist_class {
         $this->view_footer();
     }
 
+    /**
+     * View the report on user's checkmarks.
+     */
     public function report() {
         global $OUTPUT;
 
@@ -651,9 +711,7 @@ class checklist_class {
         checklist_item::add_grouping_names($this->items, $this->course->id);
 
         $this->view_header();
-
-        echo $OUTPUT->heading(format_string($this->checklist->name));
-
+        $this->view_name_info();
         $this->view_tabs('report');
 
         $this->process_report_actions();
@@ -677,10 +735,16 @@ class checklist_class {
         $this->view_footer();
     }
 
+    /**
+     * Fill in the content of the user activity report.
+     */
     public function user_complete() {
         $this->view_items(false, true);
     }
 
+    /**
+     * Output the header for the page.
+     */
     protected function view_header() {
         global $PAGE, $OUTPUT;
 
@@ -690,6 +754,28 @@ class checklist_class {
         echo $OUTPUT->header();
     }
 
+    /**
+     * Ouptut the checklist name along with completion info.
+     */
+    protected function view_name_info() {
+        global $OUTPUT, $USER;
+
+        echo $OUTPUT->heading(format_string($this->checklist->name));
+
+        if (class_exists('\core_completion\activity_custom_completion')) {
+            // Render the activity information.
+            $modinfo = get_fast_modinfo($this->course);
+            $cm = $modinfo->get_cm($this->cm->id);
+            $completiondetails = \core_completion\cm_completion_details::get_instance($cm, $USER->id);
+            $activitydates = \core\activity_dates::get_dates_for_module($cm, $USER->id);
+            echo $OUTPUT->activity_information($cm, $completiondetails, $activitydates);
+        }
+    }
+
+    /**
+     * Output the view/report/edit tabs.
+     * @param string $currenttab
+     */
     protected function view_tabs($currenttab) {
         $tabs = array();
         $row = array();
@@ -735,6 +821,10 @@ class checklist_class {
         print_tabs($tabs, $currenttab, $inactive, $activated);
     }
 
+    /**
+     * Get details of the overall progress for the checklist being viewed
+     * @return \mod_checklist\local\progress_info|null
+     */
     protected function get_progress() {
         if (!$this->items) {
             return null;
@@ -751,8 +841,8 @@ class checklist_class {
             if (($item->is_heading()) || ($item->hidden)) {
                 continue;
             }
-            if ($checkgroupings && !empty($item->grouping)) {
-                if (!in_array($item->grouping, $this->groupings)) {
+            if ($checkgroupings && !empty($item->groupingid)) {
+                if (!in_array($item->groupingid, $this->groupings)) {
                     continue; // Current user is not a member of this item's grouping.
                 }
             }
@@ -787,6 +877,7 @@ class checklist_class {
     }
 
     /**
+     * Output the checklist items.
      * @param bool $viewother
      * @param bool $userreport
      */
@@ -816,7 +907,7 @@ class checklist_class {
             $showcheckbox = in_array($this->checklist->teacheredit, [CHECKLIST_MARKING_STUDENT, CHECKLIST_MARKING_BOTH]);
             $status->set_showcheckbox($showcheckbox);
         }
-        if ($status->is_showteachermark() && $this->checklist->lockteachermarks) {
+        if ($status->is_showteachermark() && $status->is_viewother() && $this->checklist->lockteachermarks) {
             $status->set_teachermarklocked(!has_capability('mod/checklist:updatelocked', $this->context));
         }
         if ($status->is_viewother()) {
@@ -848,7 +939,7 @@ class checklist_class {
         }
 
         // Gather some extra details needed in the output.
-        $intro = $this->formatted_intro();
+        $intro = format_module_intro('checklist', $this->checklist, $this->cm->id);
         $progress = null;
         if ($status->is_showprogressbar()) {
             $progress = $this->get_progress();
@@ -876,14 +967,9 @@ class checklist_class {
         $this->output->checklist_items($this->items, $this->useritems, $this->groupings, $intro, $status, $progress, $student);
     }
 
-    protected function formatted_intro() {
-        global $CFG;
-        $intro = file_rewrite_pluginfile_urls($this->checklist->intro, 'pluginfile.php', $this->context->id,
-                                              'mod_checklist', 'intro', null);
-        $opts = array('trusted' => $CFG->enabletrusttext);
-        return format_text($intro, $this->checklist->introformat, $opts);
-    }
-
+    /**
+     * Output the import/export links.
+     */
     protected function view_import_export() {
         $importurl = new moodle_url('/mod/checklist/import.php', array('id' => $this->cm->id));
         $exporturl = new moodle_url('/mod/checklist/export.php', array('id' => $this->cm->id));
@@ -896,6 +982,9 @@ class checklist_class {
         echo "</div>";
     }
 
+    /**
+     * Output the list of items, with the editing interface.
+     */
     protected function view_edit_items() {
         global $PAGE;
 
@@ -915,14 +1004,17 @@ class checklist_class {
         checklist_item::add_grouping_names($this->items, $this->course->id);
 
         if ($status->is_allowcourselinks()) {
-            $PAGE->requires->yui_module('moodle-mod_checklist-linkselect', 'M.mod_checklist.linkselect.init');
+            $PAGE->requires->yui_module('moodle-mod_checklist-linkselect', 'M.modChecklist.linkselect.init');
         }
 
         $this->output->checklist_edit_items($this->items, $status);
     }
 
+    /**
+     * Output the main report page content
+     */
     protected function view_report() {
-        global $DB, $OUTPUT, $CFG;
+        global $DB, $OUTPUT;
 
         $reportsettings = $this->get_report_settings();
 
@@ -954,41 +1046,51 @@ class checklist_class {
             }
         }
 
-        echo '&nbsp;&nbsp;<form style="display: inline;" action="'.$thisurl->out_omit_querystring().'" method="get" />';
+        echo '&nbsp;&nbsp;<form style="display: inline;" class="form-inline" action="'.
+            $thisurl->out_omit_querystring().'" method="get" />';
         echo html_writer::input_hidden_params($thisurl, array('action'));
         if ($reportsettings->showoptional) {
             echo '<input type="hidden" name="action" value="hideoptional" />';
-            echo '<input type="submit" name="submit" value="'.get_string('optionalhide', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.
+                get_string('optionalhide', 'checklist').'" />';
         } else {
             echo '<input type="hidden" name="action" value="showoptional" />';
-            echo '<input type="submit" name="submit" value="'.get_string('optionalshow', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.
+                get_string('optionalshow', 'checklist').'" />';
         }
         echo '</form>';
 
-        echo '&nbsp;&nbsp;<form style="display: inline;" action="'.$thisurl->out_omit_querystring().'" method="get" />';
+        echo '&nbsp;&nbsp;<form style="display: inline;" class="form-inline" action="'.$thisurl->out_omit_querystring().
+            '" method="get" />';
         echo html_writer::input_hidden_params($thisurl);
         if ($reportsettings->showprogressbars) {
             $editchecks = false;
             echo '<input type="hidden" name="action" value="hideprogressbars" />';
-            echo '<input type="submit" name="submit" value="'.get_string('showfulldetails', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.
+                get_string('showfulldetails', 'checklist').'" />';
         } else {
             echo '<input type="hidden" name="action" value="showprogressbars" />';
-            echo '<input type="submit" name="submit" value="'.get_string('showprogressbars', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.
+                get_string('showprogressbars', 'checklist').'" />';
         }
         echo '</form>';
 
         if ($editchecks) {
-            echo '&nbsp;&nbsp;<form style="display: inline;" action="'.$thisurl->out_omit_querystring().'" method="post" />';
+            echo '&nbsp;&nbsp;<form style="display: inline;" class="form-inline" action="'.$thisurl->out_omit_querystring().
+                '" method="post" />';
             echo html_writer::input_hidden_params($thisurl);
             echo '<input type="hidden" name="action" value="updateallchecks"/>';
-            echo '<input type="submit" name="submit" value="'.get_string('savechecks', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.get_string('savechecks', 'checklist').
+                '" />';
         } else if (!$reportsettings->showprogressbars && $this->caneditother()
             && $this->checklist->teacheredit != CHECKLIST_MARKING_STUDENT
         ) {
-            echo '&nbsp;&nbsp;<form style="display: inline;" action="'.$thisurl->out_omit_querystring().'" method="get" />';
+            echo '&nbsp;&nbsp;<form style="display: inline;" class="form-inline" action="'.$thisurl->out_omit_querystring().
+                '" method="get" />';
             echo html_writer::input_hidden_params($thisurl);
             echo '<input type="hidden" name="editchecks" value="on" />';
-            echo '<input type="submit" name="submit" value="'.get_string('editchecks', 'checklist').'" />';
+            echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.
+                get_string('editchecks', 'checklist').'" />';
             echo '</form>';
         }
 
@@ -1038,9 +1140,20 @@ class checklist_class {
             echo $OUTPUT->paging_bar(count($users), $page, $perpage, new moodle_url($thisurl, array('perpage' => $perpage)));
             $users = array_slice($users, $page * $perpage, $perpage);
 
-            list($usql, $uparams) = $DB->get_in_or_equal($users);
-            $fields = get_all_user_name_fields(true, 'u');
-            $ausers = $DB->get_records_sql("SELECT u.id, $fields FROM {user} u WHERE u.id ".$usql.' ORDER BY '.$orderby, $uparams);
+            list($usql, $uparams) = $DB->get_in_or_equal($users, SQL_PARAMS_NAMED);
+            if (class_exists('\core_user\fields')) {
+                $namesql = \core_user\fields::for_name()->get_sql('u', true);
+            } else {
+                $namesql = (object)[
+                    'selects' => ','.get_all_user_name_fields(true, 'u'),
+                    'joins' => '',
+                    'params' => [],
+                    'mappings' => [],
+                ];
+            }
+            $ausers = $DB->get_records_sql("SELECT u.id {$namesql->selects} FROM {user} u {$namesql->joins}
+                                             WHERE u.id {$usql} ORDER BY {$orderby}",
+                                           array_merge($uparams, $namesql->params));
         }
 
         if ($reportsettings->showprogressbars) {
@@ -1200,7 +1313,8 @@ class checklist_class {
             echo '</div>';
 
             if ($editchecks) {
-                echo '<input type="submit" name="submit" value="'.get_string('savechecks', 'checklist').'" />';
+                echo '<input type="submit" class="btn btn-secondary" name="submit" value="'.
+                    get_string('savechecks', 'checklist').'" />';
                 echo '</form>';
             }
         }
@@ -1210,8 +1324,7 @@ class checklist_class {
      * This function gets called when we are in editing mode
      * adding the button the the row
      *
-     * @table object object being parsed
-     * @param $table
+     * @param object $table
      * @return string Return ammended code to output
      */
     protected function report_add_toggle_button_row($table) {
@@ -1232,7 +1345,7 @@ class checklist_class {
             } else {
                 $size = $table->size[$key];
                 $cellclass = 'cell c'.$key.' level'.$table->level[$key];
-                list($teachermark, $studentmark, $heading, $userid, $checkid) = $item;
+                list(, , $heading, , $checkid) = $item;
                 if ($heading) {
                     // Heading items have no buttons.
                     $output .= '<td style=" text-align: center; width: '.$size.';" class="cell c0">&nbsp;</td>';
@@ -1241,7 +1354,7 @@ class checklist_class {
                     $output .= '<td style=" text-align: center; width: '.$size.';" class="'.$cellclass.'">';
                     $output .= html_writer::tag('button', get_string('togglecolumn', 'checklist'),
                                                 array(
-                                                    'class' => 'make_col_c',
+                                                    'class' => 'make_col_c btn btn-secondary',
                                                     'id' => $checkid,
                                                     'type' => 'button'
                                                 ));
@@ -1253,6 +1366,12 @@ class checklist_class {
         return $output;
     }
 
+    /**
+     * Output the main table of the report
+     * @param stdClass $table
+     * @param bool $editchecks
+     * @param int[] $disableditems
+     */
     protected function print_report_table($table, $editchecks, $disableditems) {
         global $OUTPUT;
 
@@ -1332,7 +1451,7 @@ class checklist_class {
                         $output .= '<td style=" text-align: center; width: '.$size.';" class="'.$cellclass.'">';
                         $output .= html_writer::tag('button', get_string('togglerow', 'checklist'),
                                                     array(
-                                                        'class' => 'make_c',
+                                                        'class' => 'make_c btn btn-secondary',
                                                         'id' => $this->find_userid($row),
                                                         'type' => 'button'
                                                     ));
@@ -1396,12 +1515,17 @@ class checklist_class {
         echo $output;
     }
 
+    /**
+     * Extract the userid from the row of data.
+     * @param array $row
+     * @return mixed|null
+     */
     private function find_userid($row) {
         foreach ($row as $colkey => $item) {
             if ($colkey == 0) {
                 continue;
             }
-            list($teachermark, $studentmark, $heading, $userid, $checkid) = $item;
+            list(, , , $userid, ) = $item;
             if ($userid) {
                 return $userid;
             }
@@ -1409,11 +1533,17 @@ class checklist_class {
         return null;
     }
 
+    /**
+     * Output the the page footer.
+     */
     protected function view_footer() {
         global $OUTPUT;
         echo $OUTPUT->footer();
     }
 
+    /**
+     * Process the actions that can take place on the view page.
+     */
     protected function process_view_actions() {
         $this->useredit = optional_param('useredit', false, PARAM_BOOL);
 
@@ -1472,6 +1602,9 @@ class checklist_class {
         }
     }
 
+    /**
+     * Process the actions that can take place on the edit page
+     */
     protected function process_edit_actions() {
         $this->editdates = optional_param('editdates', false, PARAM_BOOL);
         $additemafter = optional_param('additemafter', false, PARAM_INT);
@@ -1513,14 +1646,15 @@ class checklist_class {
                 $position = optional_param('position', false, PARAM_INT);
                 $linkcourseid = optional_param('linkcourseid', null, PARAM_INT);
                 $linkurl = optional_param('linkurl', null, PARAM_URL);
-                $grouping = optional_param('grouping', 0, PARAM_INT);
+                $groupingid = optional_param('groupingid', 0, PARAM_INT);
+                $openlinkinnewwindow = optional_param('openlinkinnewwindow', false, PARAM_BOOL);
                 if (optional_param('duetimedisable', false, PARAM_BOOL)) {
                     $duetime = false;
                 } else {
                     $duetime = optional_param_array('duetime', false, PARAM_INT);
                 }
                 $this->additem($displaytext, 0, $indent, $position, $duetime, 0, CHECKLIST_OPTIONAL_NO, CHECKLIST_HIDDEN_NO,
-                               $linkcourseid, $linkurl, $grouping);
+                               $linkcourseid, $linkurl, $groupingid, $openlinkinnewwindow);
                 if ($position) {
                     $additemafter = false;
                 }
@@ -1538,13 +1672,14 @@ class checklist_class {
                 $displaytext = optional_param('displaytext', '', PARAM_TEXT);
                 $linkcourseid = optional_param('linkcourseid', null, PARAM_INT);
                 $linkurl = optional_param('linkurl', null, PARAM_URL);
-                $grouping = optional_param('grouping', 0, PARAM_INT);
+                $groupingid = optional_param('groupingid', 0, PARAM_INT);
                 if (optional_param('duetimedisable', false, PARAM_BOOL)) {
                     $duetime = false;
                 } else {
                     $duetime = optional_param_array('duetime', false, PARAM_INT);
                 }
-                $this->updateitem($itemid, $displaytext, $duetime, $linkcourseid, $linkurl, $grouping);
+                $openlinkinnewwindow = optional_param('openlinkinnewwindow', false, PARAM_BOOL);
+                $this->updateitem($itemid, $displaytext, $duetime, $linkcourseid, $linkurl, $groupingid, $openlinkinnewwindow);
                 break;
             case 'deleteitem':
                 if (($this->checklist->autopopulate) && (isset($this->items[$itemid])) && ($this->items[$itemid]->moduleid)) {
@@ -1594,6 +1729,10 @@ class checklist_class {
         }
     }
 
+    /**
+     * Get the report settings, stored in the session.
+     * @return stdClass
+     */
     protected function get_report_settings() {
         global $SESSION;
 
@@ -1608,17 +1747,21 @@ class checklist_class {
         return clone $SESSION->checklist_report; // We want changes to settings to be explicit.
     }
 
+    /**
+     * Store the current report settings into the session.
+     * @param object $settings
+     */
     protected function set_report_settings($settings) {
         global $SESSION, $CFG;
 
         $currsettings = $this->get_report_settings();
-        foreach ($currsettings as $key => $currval) {
+        foreach (array_keys((array)$currsettings) as $key) {
             if (isset($settings->$key)) {
                 $currsettings->$key = $settings->$key; // Only set values if they already exist.
             }
         }
         if ($CFG->debug == DEBUG_DEVELOPER) { // Show dev error if attempting to set non-existent setting.
-            foreach ($settings as $key => $val) {
+            foreach ((array)$settings as $key => $val) {
                 if (!isset($currsettings->$key)) {
                     debugging("Attempting to set invalid setting '$key'", DEBUG_DEVELOPER);
                 }
@@ -1628,6 +1771,9 @@ class checklist_class {
         $SESSION->checklist_report = $currsettings;
     }
 
+    /**
+     * Process the actions available on the report page.
+     */
     protected function process_report_actions() {
         $settings = $this->get_report_settings();
 
@@ -1683,7 +1829,13 @@ class checklist_class {
         }
     }
 
-    protected function validate_links(&$linkcourseid, &$linkurl, &$grouping) {
+    /**
+     * Validate the submitted link information, before saving it.
+     * @param int|null $linkcourseid
+     * @param string|null $linkurl
+     * @param int|null $groupingid
+     */
+    protected function validate_links(&$linkcourseid, &$linkurl, &$groupingid) {
         if ($linkcourseid && $this->can_link_courses()) {
             $courses = self::get_linkable_courses();
             if (!array_key_exists($linkcourseid, $courses)) {
@@ -1702,16 +1854,32 @@ class checklist_class {
             }
         }
 
-        if ($grouping !== null) {
-            if (!$grouping || !array_key_exists($grouping, self::get_course_groupings($this->course->id))) {
-                $grouping = 0;
+        if ($groupingid !== null) {
+            if (!$groupingid || !array_key_exists($groupingid, self::get_course_groupings($this->course->id))) {
+                $groupingid = 0;
             }
         }
     }
 
+    /**
+     * Add a new checklist item
+     * @param string $displaytext
+     * @param int $userid set if this is a private item for this user
+     * @param int $indent
+     * @param int|false $position
+     * @param int|false $duetime
+     * @param int $moduleid
+     * @param int $optional
+     * @param int $hidden
+     * @param int|null $linkcourseid
+     * @param string|null $linkurl
+     * @param int $groupingid
+     * @param bool $openlinkinnewwindow
+     * @return false|int
+     */
     public function additem($displaytext, $userid = 0, $indent = 0, $position = false, $duetime = false, $moduleid = 0,
                             $optional = CHECKLIST_OPTIONAL_NO, $hidden = CHECKLIST_HIDDEN_NO, $linkcourseid = null,
-                            $linkurl = null, $grouping = 0) {
+                            $linkurl = null, $groupingid = 0, $openlinkinnewwindow = false) {
         $displaytext = trim($displaytext);
         if ($displaytext == '') {
             return false;
@@ -1728,7 +1896,7 @@ class checklist_class {
             }
         }
 
-        $this->validate_links($linkcourseid, $linkurl, $grouping);
+        $this->validate_links($linkcourseid, $linkurl, $groupingid);
 
         $item = new checklist_item();
         $item->checklist = $this->checklist->id;
@@ -1751,7 +1919,8 @@ class checklist_class {
         $item->moduleid = $moduleid;
         $item->linkcourseid = $linkcourseid;
         $item->linkurl = $linkurl;
-        $item->grouping = $grouping;
+        $item->groupingid = $groupingid;
+        $item->openlinkinnewwindow = $openlinkinnewwindow;
 
         $item->insert();
         if ($item->id) {
@@ -1780,6 +1949,11 @@ class checklist_class {
         return $item->id;
     }
 
+    /**
+     * Create/update/delete the calendar event associated with this item.
+     * @param checklist_item $item
+     * @param bool $add adding or deleting item
+     */
     protected function setevent(checklist_item $item, $add) {
         global $CFG;
         require_once($CFG->dirroot.'/calendar/lib.php');
@@ -1797,10 +1971,7 @@ class checklist_class {
                 $event = null; // Do something here to stop codechecker complaining.
             }
             $item->eventid = 0;
-            if ($add) {
-                // Don't bother updating the record if we are deleting.
-                $item->update();
-            }
+            $item->update();
 
         } else {  // Add/update event.
             $eventdata = new stdClass();
@@ -1828,7 +1999,12 @@ class checklist_class {
         }
     }
 
+    /**
+     * Update all calendar events
+     */
     public function setallevents() {
+        $this->clear_orphaned_events();
+
         if (!$this->items) {
             return;
         }
@@ -1839,8 +2015,44 @@ class checklist_class {
         }
     }
 
+    /**
+     * Delete any orphaned calendar events
+     * @throws dml_exception
+     */
+    protected function clear_orphaned_events() {
+        global $DB, $CFG;
+        require_once($CFG->dirroot.'/calendar/lib.php');
+        $sql = "
+            SELECT e.id
+              FROM {event} e
+             WHERE e.modulename = 'checklist' AND e.instance = :checklistid
+               AND NOT EXISTS (
+                   SELECT 1
+                     FROM {checklist_item} i
+                    WHERE i.checklist = e.instance AND i.eventid = e.id
+               )
+        ";
+        $params = ['checklistid' => $this->checklist->id];
+        $eventids = $DB->get_fieldset_sql($sql, $params);
+        foreach ($eventids as $eventid) {
+            $event = calendar_event::load($eventid);
+            $event->delete();
+        }
+    }
+
+    /**
+     * Update the checklist item details
+     * @param int $itemid
+     * @param string $displaytext
+     * @param int|false $duetime
+     * @param int|null $linkcourseid
+     * @param string|null $linkurl
+     * @param int|null $groupingid
+     * @param bool $openlinkinnewwindow
+     * @throws coding_exception
+     */
     protected function updateitem($itemid, $displaytext, $duetime = false, $linkcourseid = null, $linkurl = null,
-                                  $grouping = null) {
+                                  $groupingid = null, $openlinkinnewwindow = false) {
         $displaytext = trim($displaytext);
         if ($displaytext == '') {
             return;
@@ -1848,7 +2060,7 @@ class checklist_class {
 
         if (isset($this->items[$itemid])) {
             if ($this->canedit()) {
-                $this->validate_links($linkcourseid, $linkurl, $grouping);
+                $this->validate_links($linkcourseid, $linkurl, $groupingid);
 
                 $item = $this->items[$itemid];
                 $oldlinkcourseid = $item->linkcourseid;
@@ -1859,10 +2071,11 @@ class checklist_class {
                         $item->duetime = make_timestamp($duetime['year'], $duetime['month'], $duetime['day']);
                     }
                 }
+                $item->openlinkinnewwindow = $openlinkinnewwindow;
                 $item->linkcourseid = $linkcourseid;
                 $item->linkurl = $linkurl;
-                if ($grouping !== null) {
-                    $item->grouping = $grouping;
+                if ($groupingid !== null) {
+                    $item->groupingid = $groupingid;
                 }
                 $item->update();
                 if ($this->checklist->duedatesoncalendar) {
@@ -1887,6 +2100,10 @@ class checklist_class {
         }
     }
 
+    /**
+     * Show/hide the given item
+     * @param int $itemid
+     */
     protected function toggledisableitem($itemid) {
         if (isset($this->items[$itemid])) {
             if (!$this->canedit()) {
@@ -1916,6 +2133,12 @@ class checklist_class {
         }
     }
 
+    /**
+     * Delete the item
+     * @param int $itemid
+     * @param bool $forcedelete
+     * @throws dml_exception
+     */
     protected function deleteitem($itemid, $forcedelete = false) {
         global $DB;
 
@@ -1943,9 +2166,13 @@ class checklist_class {
         $this->update_item_positions();
     }
 
+    /**
+     * Move an item to a new position
+     * @param int $itemid
+     * @param int $newposition
+     * @param bool $forceupdate
+     */
     protected function moveitemto($itemid, $newposition, $forceupdate = false) {
-        global $DB;
-
         if (!isset($this->items[$itemid])) {
             if (isset($this->useritems[$itemid])) {
                 if ($this->canupdateown()) {
@@ -1985,6 +2212,10 @@ class checklist_class {
         checklist_item::sort_items($this->items);
     }
 
+    /**
+     * Move an item up
+     * @param int $itemid
+     */
     protected function moveitemup($itemid) {
         // TODO If indented, only allow move if suitable space for 'reparenting'.
 
@@ -1997,6 +2228,10 @@ class checklist_class {
         $this->moveitemto($itemid, $this->items[$itemid]->position - 1);
     }
 
+    /**
+     * Move an item down
+     * @param int $itemid
+     */
     protected function moveitemdown($itemid) {
         // TODO If indented, only allow move if suitable space for 'reparenting'.
 
@@ -2009,6 +2244,11 @@ class checklist_class {
         $this->moveitemto($itemid, $this->items[$itemid]->position + 1);
     }
 
+    /**
+     * Adjust the item indent
+     * @param int $itemid
+     * @param int $indent
+     */
     protected function indentitemto($itemid, $indent) {
         if (!isset($this->items[$itemid])) {
             // Not able to indent useritems, as they are always parent + 1.
@@ -2047,6 +2287,10 @@ class checklist_class {
         }
     }
 
+    /**
+     * Indent an item by 1 space
+     * @param int $itemid
+     */
     protected function indentitem($itemid) {
         if (!isset($this->items[$itemid])) {
             // Not able to indent useritems, as they are always parent + 1.
@@ -2055,6 +2299,10 @@ class checklist_class {
         $this->indentitemto($itemid, $this->items[$itemid]->indent + 1);
     }
 
+    /**
+     * Unindent an item by 1 space
+     * @param int $itemid
+     */
     protected function unindentitem($itemid) {
         if (!isset($this->items[$itemid])) {
             // Not able to indent useritems, as they are always parent + 1.
@@ -2063,9 +2311,13 @@ class checklist_class {
         $this->indentitemto($itemid, $this->items[$itemid]->indent - 1);
     }
 
+    /**
+     * Update an item's "optional" status
+     * @param int $itemid
+     * @param bool|int $optional
+     * @param bool $heading
+     */
     protected function makeoptional($itemid, $optional, $heading = false) {
-        global $DB;
-
         if (!isset($this->items[$itemid])) {
             return;
         }
@@ -2093,6 +2345,10 @@ class checklist_class {
         $item->update();
     }
 
+    /**
+     * Set the item to the next colour in the list
+     * @param int $itemid
+     */
     protected function nextcolour($itemid) {
         if (!isset($this->items[$itemid])) {
             return;
@@ -2120,6 +2376,10 @@ class checklist_class {
         $item->update();
     }
 
+    /**
+     * Update the item checks via AJAX
+     * @param array $changechecks
+     */
     public function ajaxupdatechecks($changechecks) {
         // Convert array of itemid=>true/false, into array of all 'checked' itemids.
         $newchecks = array();
@@ -2155,6 +2415,12 @@ class checklist_class {
         $this->updatechecks($newchecks);
     }
 
+    /**
+     * Update the checkmarks for the items
+     * @param array $newchecks
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     protected function updatechecks($newchecks) {
         if (!is_array($newchecks)) {
             // Something has gone wrong, so update nothing.
@@ -2230,6 +2496,11 @@ class checklist_class {
         return $disableitems;
     }
 
+    /**
+     * Update the teacher marks for the checklist
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     protected function updateteachermarks() {
         global $USER, $DB;
 
@@ -2333,6 +2604,10 @@ class checklist_class {
         }
     }
 
+    /**
+     * Update the teacher marks for all users
+     * @throws coding_exception
+     */
     protected function updateallteachermarks() {
         global $USER;
 
@@ -2589,6 +2864,12 @@ class checklist_class {
     }
 
     // Update the userid to point to the next user to view.
+
+    /**
+     * Set the id of the next user to view
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     protected function getnextuserid() {
         global $DB;
 
@@ -2612,19 +2893,19 @@ class checklist_class {
                 break;
         }
 
-        $ausers = false;
+        $ausers = [];
         if (get_config('mod_checklist', 'onlyenrolled')) {
             $users = get_enrolled_users($this->context, 'mod/checklist:updateown', $activegroup, 'u.id', null, 0, 0, true);
         } else {
             $users = get_users_by_capability($this->context, 'mod/checklist:updateown', 'u.id', '', '', '',
                                              $activegroup, '', false);
         }
-        if (!$users) {
+        if ($users) {
             $users = array_keys($users);
             if ($this->only_view_mentee_reports()) {
                 $users = $this->filter_mentee_users($users);
             }
-            if (!empty($users)) {
+            if ($users) {
                 list($usql, $uparams) = $DB->get_in_or_equal($users);
                 $ausers = $DB->get_records_sql('SELECT u.id FROM {user} u WHERE u.id '.$usql.$orderby, $uparams);
             }
@@ -2643,6 +2924,16 @@ class checklist_class {
         $this->userid = false;
     }
 
+    /**
+     * Output the progress bar for the user
+     * @param int $checklistid
+     * @param int $userid
+     * @param string $width
+     * @param bool $showpercent
+     * @param bool $return
+     * @param bool $hidecomplete
+     * @return string
+     */
     public static function print_user_progressbar($checklistid, $userid, $width = '300px', $showpercent = true,
                                                   $return = false, $hidecomplete = false) {
         list($ticked, $total) = self::get_user_progress($checklistid, $userid);
@@ -2664,6 +2955,14 @@ class checklist_class {
         return '';
     }
 
+    /**
+     * Get the user's current progress
+     * @param int $checklistid
+     * @param int $userid
+     * @return array[]|false[]
+     * @throws coding_exception
+     * @throws dml_exception
+     */
     public static function get_user_progress($checklistid, $userid) {
         global $DB;
 
@@ -2696,6 +2995,13 @@ class checklist_class {
         return array($ticked, $total);
     }
 
+    /**
+     * Get the groupings for the user on the course
+     * @param int $userid
+     * @param int $courseid
+     * @return array
+     * @throws dml_exception
+     */
     public static function get_user_groupings($userid, $courseid) {
         global $DB;
         $sql = "SELECT DISTINCT gg.groupingid
@@ -2758,13 +3064,18 @@ class checklist_class {
         $groupings = self::get_user_groupings($userid, $courseid);
         if ($groupings) {
             $groupings[] = 0;
-            $groupingsql = " {$prefix}grouping IN (".implode(',', $groupings).') ';
+            $groupingsql = " {$prefix}groupingid IN (".implode(',', $groupings).') ';
         } else {
-            $groupingsql = " {$prefix}grouping = 0 ";
+            $groupingsql = " {$prefix}groupingid = 0 ";
         }
         return $groupingsql;
     }
 
+    /**
+     * Get the groupings for the course
+     * @param int $courseid
+     * @return array
+     */
     public static function get_course_groupings($courseid) {
         static $allgroupings = [];
 
