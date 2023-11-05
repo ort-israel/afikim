@@ -455,6 +455,13 @@ $definitions = array(
         'simpledata' => true,
     ],
 
+    // File cache for H5P Library files.
+    'h5p_library_files' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'canuselocalstore' => true
+    ],
+
     // Cache the grade letters for faster retrival.
     'grade_letters' => [
         'mode'                   => cache_store::MODE_REQUEST,
@@ -476,5 +483,14 @@ $definitions = array(
         'simplekeys'             => true,
         'staticacceleration'     => true,
         'staticaccelerationsize' => 100
+    ],
+
+    // Course image cache.
+    'course_image' => [
+        'mode' => cache_store::MODE_APPLICATION,
+        'simplekeys' => true,
+        'simpledata' => true,
+        'staticacceleration' => true,
+        'datasource' => '\core_course\cache\course_image',
     ],
 );

@@ -198,6 +198,7 @@ $string['errorupdatinggradecategoryaggregation'] = 'Error updating the aggregati
 $string['errorupdatinggradeitemaggregationcoef'] = 'Error updating the aggregation coefficient (weight or extra credit) of grade item ID {$a->id}';
 $string['eventgradedeleted'] = 'Grade deleted';
 $string['eventgradeitemcreated'] = 'Grade item created';
+$string['eventgradeitemdeleted'] = 'Grade item deleted';
 $string['eventgradeitemupdated'] = 'Grade item updated';
 $string['eventgradelettercreated'] = 'Grade letter created';
 $string['eventgradeletterdeleted'] = 'Grade letter deleted';
@@ -225,6 +226,7 @@ $string['externalurl'] = 'External URL';
 $string['externalurl_desc'] = 'If an external gradebook is used, the URL should be specified here.';
 $string['extracreditvalue'] = 'Extra credit value for {$a}';
 $string['extracreditwarning'] = 'Note: Setting all items for a category to extra credit will effectively remove them from the grade calculation. Since there will be no point total';
+$string['fail'] = 'Fail';
 $string['feedback'] = 'Feedback';
 $string['feedback_help'] = 'This box enables any comments about the grade to be added.';
 $string['feedbackadd'] = 'Add feedback';
@@ -403,13 +405,22 @@ $string['importcsv'] = 'Import CSV';
 $string['importcsv_help'] = 'Grades can be imported via a CSV file with format as follows:
 
 * Each line of the file contains one record
-* Each record is a series of data separated by commas or an alternative separator
+* Each record is a series of data separated by the selected separator
 * The first record contains a list of fieldnames defining the format of the rest of the file
 * A fieldname containing user identity data is required - either username or ID number or email address
 
 A file of the correct format can be obtained by first exporting some grades. The file can then be edited and saved as a CSV file.';
 $string['importcsv_link'] = 'grade/import/csv/index';
 $string['importcustom'] = 'Import as custom outcomes (only this course)';
+$string['importdata'] = 'Data';
+$string['importdata_help'] = 'Grades may be pasted directly from an OpenDocument or Excel spreadsheet with format as follows:
+
+* At least one column should contain user identity data - username, email address or ID number.
+* Other columns should have headings as for existing activities or grade items.
+
+A correctly formatted spreadsheet can be obtained by first exporting some grades. The spreadsheet can then be edited to add more grades and saved.
+
+Select and copy the columns you want to import from the spreadsheet and then paste them into this field.';
 $string['importerror'] = 'An error occurred, this script wasn\'t called with the right parameters.';
 $string['importfailed'] = 'Import failed. No data was imported.';
 $string['importfeedback'] = 'Import feedback';
@@ -588,6 +599,7 @@ $string['outcomescoursecustom'] = 'Custom used (no remove)';
 $string['outcomescoursenotused'] = 'Standard not used';
 $string['outcomescourseused'] = 'Standard used (no remove)';
 $string['outcomescustom'] = 'Custom outcomes';
+$string['outcomesdisabled'] = 'Outcomes are not enabled';
 $string['outcomeshortname'] = 'Short name';
 $string['outcomesstandard'] = 'Standard outcomes';
 $string['outcomesstandardavailable'] = 'Available standard outcomes';
@@ -606,6 +618,7 @@ $string['overridesitedefaultgradedisplaytype_help'] = 'If ticked, grade letters 
 $string['overrideweightofa'] = 'Override weight of {$a}';
 $string['parentcategory'] = 'Parent category';
 $string['pctoftotalgrade'] = '% of total grade';
+$string['pass'] = 'Pass';
 $string['percent'] = 'Percent';
 $string['percentage'] = 'Percentage';
 $string['percentageletter'] = 'Percentage (letter)';
@@ -691,7 +704,7 @@ $string['recovergradesdefault_help'] = 'By default recover old grades when re-en
 $string['refreshpreview'] = 'Refresh preview';
 $string['regradeanyway'] = 'Regrade anyway';
 $string['removeallcoursegrades'] = 'Delete all grades';
-$string['removeallcoursegrades_help'] = 'If ticked, all grade items which were manually added to the gradebook will be deleted, together with grades and data on overridden, excluded, hidden and locked grades. Only grade items associated with activities will remain.';
+$string['removeallcoursegrades_help'] = 'If ticked, all grade items and grades that were manually added to the gradebook will be deleted, as well as data on overridden, excluded, hidden and locked grades. Only grade items and grades associated with activities will remain.';
 $string['removeallcourseitems'] = 'Delete all items and categories';
 $string['removeallcourseitems_help'] = 'If ticked, all categories and grade items which were manually added to the gradebook will be deleted, together with grades and data on overridden, excluded, hidden and locked grades. Only grade items associated with activities will remain.';
 $string['report'] = 'Report';

@@ -135,6 +135,8 @@ $string['effectiveretentionperioduser'] = '{$a} (since the last time the user ac
 $string['emailsalutation'] = 'Dear {$a},';
 $string['errorcannotrequestdeleteforself'] = 'You don\'t have permission to create deletion request for yourself.';
 $string['errorcannotrequestdeleteforother'] = 'You don\'t have permission to create deletion request for this user.';
+$string['errorcannotrequestexportforself'] = 'You don\'t have permission to create export request for yourself.';
+$string['errorcontactdpodisabled'] = 'The option to contact the privacy officer is disabled.';
 $string['errorinvalidrequestcomments'] = 'The comments field may contain plain text only.';
 $string['errorinvalidrequestcreationmethod'] = 'Invalid request creation method!';
 $string['errorinvalidrequeststatus'] = 'Invalid request status!';
@@ -344,6 +346,3 @@ $string['role_help'] = 'The role which the override should apply to.';
 $string['duplicaterole'] = 'Role already specified';
 $string['purposeoverview'] = 'A purpose describes the intended use and retention policy for stored data. The basis for storing and retaining that data is also described in the purpose.';
 $string['roleoverrideoverview'] = 'The default retention policy can be overridden for specific user roles, allowing you to specify a longer, or a shorter, retention policy. A user is only expired when all of their roles have expired.';
-
-// Deprecated since Moodle 3.6.
-$string['statuspreprocessing'] = 'Pre-processing';

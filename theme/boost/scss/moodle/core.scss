@@ -5,6 +5,8 @@
 // want white default colour.
 $bg-inverse-link-color: #fff !default;
 
+$font-size-xs: ($font-size-base * .75) !default;
+
 #region-main {
     overflow-x: auto;
     overflow-y: visible;
@@ -156,7 +158,7 @@ a:not([class]),
 .aabtn,
 .btn-link,
 .nav-link,
-.atto_link_button,
+.editor_atto_toolbar button,
 [role="button"],
 .list-group-item-action,
 input[type="checkbox"],
@@ -168,11 +170,27 @@ a.dropdown-toggle,
 .modal-dialog[tabindex="0"],
 .moodle-dialogue-base .closebutton,
 button.close,
-.form-autocomplete-selection {
+.form-autocomplete-selection,
+[role="treeitem"]:not([aria-expanded="true"]) {
     &.focus,
     &:focus {
         outline: 0;
         box-shadow: $input-btn-focus-box-shadow;
+    }
+    &:focus:hover {
+        text-decoration: none;
+    }
+}
+
+// We don't want to highlight the whole li when it's expanded. Only the first child is highlighted.
+[role="treeitem"][aria-expanded="true"] {
+    outline: 0;
+    &.focus,
+    &:focus {
+        > *:first-child {
+            outline: 0;
+            box-shadow: $input-btn-focus-box-shadow;
+        }
     }
     &:focus:hover {
         text-decoration: none;
@@ -208,6 +226,18 @@ button.close,
     list-style: none;
     margin: 0;
     padding: 0;
+}
+
+.section li.movehere a {
+    display: block;
+    width: 100%;
+    height: 2rem;
+    border: 2px dashed $gray-800;
+}
+
+.editing .course-content .hidden.sectionname {
+    visibility: hidden;
+    display: initial;
 }
 
 .inline,
@@ -246,8 +276,11 @@ button.close,
     text-align: right;
 }
 
-a.autolink.glossary:hover {
-    cursor: help;
+a.autolink {
+    @extend .aalink;
+    &.glossary:hover {
+        cursor: help;
+    }
 }
 /* Block which is hidden if javascript enabled, prevents fickering visible when JS from footer used! */
 .collapsibleregioncaption {
@@ -416,12 +449,10 @@ form.popupform div {
     overflow: auto;
 }
 
-// Minimum height required for a menu in a table inside a scrollable div.
 // Position required for table sizing inside a flex container.
 .no-overflow > .generaltable {
     position: relative;
     margin-bottom: 0;
-    min-height: 10em;
 }
 // Accessibility features
 
@@ -570,7 +601,7 @@ a.skip:active {
 
 // My Moodle
 .path-my .coursebox {
-    margin: $spacer-y 0;
+    margin: $spacer 0;
     padding: 0;
 
     .overview {
@@ -1107,6 +1138,14 @@ tr.flagged-tag a {
     margin-left: 3px;
 }
 
+#page-enrol-otherusers .userenrolment .col_role {
+    .role {
+        float: none;
+        margin: 3px 3px 3px 0;
+        padding: 3px 3px 3px 0;
+    }
+}
+
 .corelightbox {
     background-color: #ccc;
     position: absolute;
@@ -1208,7 +1247,7 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 
 /* Moodle Dialogue Settings (moodle-core-dialogue)  */
 .moodle-dialogue-base .moodle-dialogue-lightbox {
-    background-color: $gray;
+    background-color: $gray-700;
 }
 
 // Prevent adding backdrops to popups in popups.
@@ -1270,8 +1309,11 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     line-height: 1.5;
 }
 
-.moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd h1 {
+.moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd h5 {
     font-size: 1.5rem;
+    font-weight: $font-weight-base;
+    margin-bottom: 0;
+    line-height: 1.5;
 }
 
 .moodle-dialogue-base .moodle-dialogue-wrap .moodle-dialogue-hd .yui3-widget-buttons {
@@ -1627,6 +1669,9 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
     .carousel-item .loading-icon .icon {
         margin: 1em auto;
     }
+    .searchbar {
+        width: 100%;
+    }
 }
 
 .modchooser .modal-footer {
@@ -1643,19 +1688,6 @@ body#page-lib-editor-tinymce-plugins-moodlemedia-preview {
 
 .modchoosercontainer.noscroll {
     overflow-y: hidden;
-}
-
-.modchooser .searchcontainer .searchbar .input-group-append {
-    align-items: center;
-
-    i {
-        color: #868e96;
-        margin: 0;
-        vertical-align: middle;
-        font-size: 20px;
-        height: 20px;
-        width: 20px;
-    }
 }
 
 .modchoosercontainer .optionscontainer,
@@ -1941,6 +1973,14 @@ ul.badges {
     }
 }
 
+#badge-criteria li li {
+    list-style-type: none;
+}
+
+#badge-image-col {
+    flex: 0 0 400px;
+}
+
 .badge-profile {
     vertical-align: top;
 }
@@ -2031,6 +2071,15 @@ img#persona_signin {
 /** Navbar logo. */
 nav.navbar .logo img {
     max-height: 35px;
+}
+
+.nav.usernav {
+    .nav-item {
+        display: flex;
+    }
+    .usermenu .dropdown-toggle {
+        padding: 0 0.5rem;
+    }
 }
 
 /** Header-bar styles **/
@@ -2325,13 +2374,17 @@ $footer-link-color: $bg-inverse-link-color !default;
         display: block;
         width: 100%;
         color: $body-color;
+        &:focus-visible {
+            outline: 0;
+        }
     }
     &:active,
     &:hover,
     &:focus,
     &:focus-within {
         outline: 0;
-        background-color: $dropdown-link-hover-bg;
+        background-color: $dropdown-link-active-bg;
+        color: $dropdown-link-active-color;
         a {
             color: $dropdown-link-active-color;
         }
@@ -2359,7 +2412,7 @@ $footer-link-color: $bg-inverse-link-color !default;
 .sr-only-focusable {
     &:active,
     &:focus {
-        z-index: $zindex-navbar-fixed + 1;
+        z-index: 1031;
         position: fixed;
         background: #fff;
         padding: 7px;
@@ -2453,6 +2506,10 @@ body.h5p-embed {
     }
 }
 
+#h5pcontenttypes td {
+    vertical-align: middle;
+}
+
 .text-decoration-none {
     text-decoration: none !important; /* stylelint-disable-line declaration-no-important */
 }
@@ -2489,8 +2546,25 @@ body.h5p-embed {
 .float-left {
     float: left !important; /* stylelint-disable-line declaration-no-important */
 }
+
 .float-right {
     float: right !important; /* stylelint-disable-line declaration-no-important */
+}
+
+.img-responsive {
+    @include img-fluid();
+}
+
+input[disabled] {
+    cursor: not-allowed;
+}
+
+.custom-select {
+    width: auto;
+}
+
+.fade.in {
+    opacity: 1;
 }
 
 .clamp-2 {
@@ -2612,8 +2686,15 @@ $picker-emojis-per-row: 7 !default;
 }
 
 @each $color, $value in $theme-colors {
-    .alert-#{$color} a {
-        color: darken(theme-color-level($color, $alert-color-level), 10%);
+    .alert-#{$color} {
+        a {
+            color: darken(theme-color-level($color, $alert-color-level), 10%);
+        }
+        // Darken the close button text colour inside notification alerts for better contrast.
+        .close {
+            color: darken(theme-color-level($color, $alert-color-level), 20%);
+            opacity: 0.6;
+        }
     }
 }
 .alert a {
@@ -2700,12 +2781,76 @@ $picker-emojis-per-row: 7 !default;
 }
 
 .alert.cta {
-    .icon {
-        padding: 0.3rem;
-        &.fa {
-            border-radius: 50%;
-            border-style: solid;
-            border-width: 0.125rem;
+    .cta-icon {
+        .icon {
+            padding: 0.3rem;
+            &.fa {
+                border-radius: 50%;
+                border-style: solid;
+                border-width: 0.125rem;
+            }
+        }
+    }
+}
+.core_payment_gateways_modal .custom-control-label::before,
+.core_payment_gateways_modal .custom-control-label::after {
+    top: 45%;
+}
+
+$scrollbar-thumb: $primary;
+$scrollbar-track: lighten($primary, 40%);
+// simple scrollbars
+.visual-scroll-x {
+    scrollbar-width: thin;
+    scrollbar-color: $scrollbar-thumb $scrollbar-track;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    &::-webkit-scrollbar {
+        height: 8px; // for horizontal scrollbars
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: $scrollbar-thumb;
+        border-right: $border-width solid $white;
+    }
+    &::-webkit-scrollbar-track {
+        background-color: $scrollbar-track;
+        border-right: $border-width solid $white;
+    }
+}
+
+.initialbargroups ul {
+    -webkit-margin-start: 0; /* stylelint-disable-line */
+    margin-right: -1px;
+}
+
+.page-item {
+    &:first-child {
+        .page-link {
+            .initialbargroups & {
+                @include border-left-radius(0);
+                @include border-right-radius(0);
+            }
+            .initialbargroups .pagination-lg:first-child & {
+                @include border-left-radius($pagination-border-radius-lg);
+            }
+            .initialbargroups .pagination-sm:first-child & {
+                @include border-left-radius($pagination-border-radius-sm);
+            }
+        }
+    }
+    &:last-child {
+        .page-link {
+            .initialbargroups & {
+                @include border-left-radius(0);
+                @include border-right-radius(0);
+            }
+            .initialbargroups .pagination-lg:last-child & {
+                @include border-right-radius($pagination-border-radius-lg);
+            }
+            .initialbargroups .pagination-sm:last-child & {
+                @include border-right-radius($pagination-border-radius-sm);
+            }
         }
     }
 }

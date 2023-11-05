@@ -381,7 +381,7 @@ M.core_availability.List = function(json, root, parentRoot) {
             '<option value="|">' + M.util.get_string('listheader_multi_or', 'availability') + '</option></select></label> ' +
             M.util.get_string('listheader_multi_after', 'availability') + '</span></div>' +
             '<div class="availability-children"></div>' +
-            '<div class="availability-none"><span class="p-x-1">' + M.util.get_string('none', 'moodle') + '</span></div>' +
+            '<div class="availability-none"><span class="px-3">' + M.util.get_string('none', 'moodle') + '</span></div>' +
             '<div class="clearfix mt-1"></div>' +
             '<div class="availability-button"></div></div><div class="clearfix"></div></div>');
     if (!root) {
@@ -969,7 +969,21 @@ M.core_availability.Item.prototype.fillErrors = function(errors) {
     // If any errors were added, add the marker to this item.
     var errorLabel = this.node.one('> .badge-warning');
     if (errors.length !== before && !errorLabel.get('firstChild')) {
-        errorLabel.appendChild(document.createTextNode(M.util.get_string('invalid', 'availability')));
+        var errorString = '';
+        // Fetch the last error code from the array of errors and split using the ':' delimiter.
+        var langString = errors[errors.length - 1].split(':');
+        var component = langString[0];
+        var identifier = langString[1];
+        // If get_string can't find the string, it will return the string in this format.
+        var undefinedString = '[[' + identifier + ',' + component + ']]';
+        // Get the lang string.
+        errorString = M.util.get_string(identifier, component);
+        if (errorString === undefinedString) {
+            // Use a generic invalid input message when the error lang string cannot be loaded.
+            errorString = M.util.get_string('invalid', 'availability');
+        }
+        // Show the error string.
+        errorLabel.appendChild(document.createTextNode(errorString));
     } else if (errors.length === before && errorLabel.get('firstChild')) {
         errorLabel.get('firstChild').remove();
     }
@@ -1139,7 +1153,7 @@ M.core_availability.EyeIcon.prototype.isHidden = function() {
  * @param {M.core_availability.Item|M.core_availability.List} toDelete Thing to delete
  */
 M.core_availability.DeleteIcon = function(toDelete) {
-    this.span = Y.Node.create('<a class="d-inline-block col-form-label availability-delete p-x-1" href="#" title="' +
+    this.span = Y.Node.create('<a class="d-inline-block col-form-label availability-delete px-3" href="#" title="' +
             M.util.get_string('delete', 'moodle') + '" role="button">');
     var img = Y.Node.create('<img src="' + M.util.image_url('t/delete', 'core') +
             '" alt="' + M.util.get_string('delete', 'moodle') + '" />');

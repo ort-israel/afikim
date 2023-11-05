@@ -23,6 +23,8 @@
  */
 
 $string['alphabet'] = 'A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z';
+$string['am'] = 'am';
+$string['amcaps'] = 'AM';
 $string['backupnameformat'] = '%Y%m%d-%H%M';
 $string['dateintervaldayshoursmins'] = '%ad %hh %im'; // See https://www.php.net/manual/en/dateinterval.format.php for format.
 $string['decsep'] = '.';
@@ -32,10 +34,13 @@ $string['iso6392'] = 'eng';
 $string['labelsep'] = ': ';
 $string['listsep'] = ',';
 $string['locale'] = 'en_AU.UTF-8';
+$string['localecldr'] = 'en-AU';
 $string['localewin'] = 'English_Australia.1252';
 $string['localewincharset'] = '';
 $string['oldcharset'] = 'ISO-8859-1';
 $string['parentlanguage'] = '';
+$string['pm'] = 'pm';
+$string['pmcaps'] = 'PM';
 $string['strftimedate'] = '%d %B %Y';
 $string['strftimedatemonthabbr'] = '%d %b %Y';
 $string['strftimedatefullshort'] = '%d/%m/%y';

@@ -247,8 +247,8 @@ class behat_mod_quiz extends behat_question_base {
             if (!array_key_exists('maxmark', $questiondata) || $questiondata['maxmark'] === '') {
                 $maxmark = null;
             } else {
-                $maxmark = clean_param($questiondata['maxmark'], PARAM_FLOAT);
-                if (!is_numeric($questiondata['maxmark']) || $maxmark < 0) {
+                $maxmark = clean_param($questiondata['maxmark'], PARAM_LOCALISEDFLOAT);
+                if (!is_numeric($maxmark) || $maxmark < 0) {
                     throw new ExpectationException('The max mark for question "' .
                             $questiondata['question'] . '" must be a positive number.',
                             $this->getSession());
@@ -542,6 +542,8 @@ class behat_mod_quiz extends behat_question_base {
 
     /**
      * Check the add or remove page-break link after a particular question contains the given parameters in its url.
+     *
+     * @When /^the "(Add|Remove)" page break link after question "(?P<question_name>(?:[^"]|\\")*) should contain:$/
      * @When /^the "(Add|Remove)" page break link after question "(?P<question_name>(?:[^"]|\\")*) should contain:"$/
      * @param string $addorremoves 'Add' or 'Remove'.
      * @param string $questionname the name of the question before the icon to click.

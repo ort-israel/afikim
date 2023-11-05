@@ -37,7 +37,6 @@ Feature: In an assignment, students start a new attempt based on their previous 
     And I set the following fields to these values:
       | Allow another attempt | 1 |
     And I press "Save changes"
-    And I press "OK"
     And I click on "Edit settings" "link"
     And I log out
 
@@ -134,7 +133,6 @@ Feature: In an assignment, students start a new attempt based on their previous 
     And I set the following fields to these values:
       | Allow another attempt | 1 |
     And I press "Save changes"
-    And I press "OK"
     And I follow "Assignment: Test assignment name"
     And I log out
 

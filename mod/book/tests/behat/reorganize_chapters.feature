@@ -15,8 +15,8 @@ Feature: In a book, chapters and subchapters can be rearranged
       | user | course | role |
       | teacher1 | C1 | editingteacher |
     And the following "activities" exist:
-      | activity | course | name      |
-      | book     | C1     | Test book |
+      | activity | name      | course | idnumber |
+      | book     | Test book | C1     | book1    |
     And the following "mod_book > chapters" exist:
       | book      | title                        | content                | pagenum |subchapter |
       | Test book | Originally first chapter     | #1 chapter content     | 1       | 0         |

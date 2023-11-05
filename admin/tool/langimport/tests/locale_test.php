@@ -14,24 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace tool_langimport;
+
 /**
  * Tests for \tool_langimport\locale class.
  *
  * @package    tool_langimport
- * @copyright  2018 Université Rennes 2 {@link https://www.univ-rennes2.fr}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
-defined('MOODLE_INTERNAL') || die();
-
-/**
- * Tests for \tool_langimport\locale class.
- *
+ * @category   test
  * @coversDefaultClass \tool_langimport\locale
  * @copyright  2018 Université Rennes 2 {@link https://www.univ-rennes2.fr}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class locale_testcase extends \advanced_testcase {
+class locale_test extends \advanced_testcase {
     /**
      * Test that \tool_langimport\locale::check_locale_availability() works as expected.
      *
@@ -43,8 +37,8 @@ class locale_testcase extends \advanced_testcase {
         // - first setlocale() call which backup current locale
         // - second setlocale() call which try to set new 'es' locale
         // - third setlocale() call which restore locale.
-        $mock = $this->getMockBuilder(\tool_langimport\locale::class)
-            ->setMethods(['set_locale'])
+        $mock = $this->getMockBuilder(locale::class)
+            ->onlyMethods(['set_locale'])
             ->getMock();
         $mock->method('set_locale')->will($this->onConsecutiveCalls('en', 'es', 'en'));
 
@@ -56,8 +50,8 @@ class locale_testcase extends \advanced_testcase {
         // - first setlocale() call which backup current locale
         // - second setlocale() call which fail to set new locale
         // - third setlocale() call which restore locale.
-        $mock = $this->getMockBuilder(\tool_langimport\locale::class)
-            ->setMethods(['set_locale'])
+        $mock = $this->getMockBuilder(locale::class)
+            ->onlyMethods(['set_locale'])
             ->getMock();
         $mock->method('set_locale')->will($this->onConsecutiveCalls('en', false, 'en'));
 
@@ -66,8 +60,8 @@ class locale_testcase extends \advanced_testcase {
         $this->assertFalse($result);
 
         // Test an invalid parameter.
-        $locale = new \tool_langimport\locale();
-        $this->expectException(coding_exception::class);
+        $locale = new locale();
+        $this->expectException(\coding_exception::class);
         $locale->check_locale_availability('');
     }
 
@@ -87,8 +81,8 @@ class locale_testcase extends \advanced_testcase {
      */
     public function test_set_locale(string $set, string $ret) {
         // Make set_locale() public.
-        $loc = new \tool_langimport\locale();
-        $rc = new \ReflectionClass(\tool_langimport\locale::class);
+        $loc = new locale();
+        $rc = new \ReflectionClass(locale::class);
         $rm = $rc->getMethod('set_locale');
         $rm->setAccessible(true);
 

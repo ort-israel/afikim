@@ -156,6 +156,7 @@ XPATH
 XPATH
         , 'dialogue' => <<<XPATH
 .//div[contains(concat(' ', normalize-space(@class), ' '), ' moodle-dialogue ') and
+    not(contains(concat(' ', normalize-space(@class), ' '), ' moodle-dialogue-hidden ')) and
     normalize-space(descendant::div[
         contains(concat(' ', normalize-space(@class), ' '), ' moodle-dialogue-hd ')
         ]) = %locator%] |

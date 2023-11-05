@@ -1,6 +1,13 @@
 This files describes API changes in /calendar/* ,
 information provided here is intended especially for developers.
 
+=== 3.11 ===
+* Updated calendar_can_manage_user_event() function to check permissions to user events.
+
+=== 3.10 ===
+* The core_calendar\local\event\value_objects\times_interface class now has new method get_usermidnight_time() which
+  returns the user midnight time for a given event.
+
 === 3.9 ===
 * Plugins can now create their own calendar events, both standard and action ones. To do it they need to specify
   $event->component when creating an event. Component events can not be edited or deleted manually.
@@ -8,7 +15,6 @@ information provided here is intended especially for developers.
 * The following functions have been deprecated because they were no longer used:
   - calendar_add_event_metadata()
   - core_calendar_renderer::event()
-* Updated calendar_can_manage_user_event() function to check permissions to user events.
 
 === 3.8 ===
 * The following functions have been finally deprecated and can not be used anymore:

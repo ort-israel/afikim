@@ -129,12 +129,21 @@ class managesubscriptions extends \moodleform {
         } else if (($data['importfrom'] == CALENDAR_IMPORT_FROM_URL)) {
             // Clean input calendar url.
             $url = clean_param($data['url'], PARAM_URL);
-            if (empty($url) || ($url !== $data['url'])) {
-                $errors['url']  = get_string('invalidurl', 'error');
+            try {
+                calendar_get_icalendar($url);
+            } catch (\moodle_exception $e) {
+                $errors['url']  = get_string('errorinvalidicalurl', 'calendar');
             }
         } else {
             // Shouldn't happen.
             $errors['url'] = get_string('errorrequiredurlorfile', 'calendar');
+        }
+
+        // Validate course/category event types (ensure appropriate field is also filled in).
+        if ($eventtype === 'course' && empty($data['courseid'])) {
+            $errors['courseid'] = get_string('selectacourse');
+        } else if ($eventtype === 'category' && empty($data['categoryid'])) {
+            $errors['categoryid'] = get_string('required');
         }
 
         return $errors;

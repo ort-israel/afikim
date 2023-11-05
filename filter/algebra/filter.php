@@ -227,7 +227,8 @@ class filter_algebra extends moodle_text_filter {
                   $texexp = preg_replace('/\\\int\\\left\((.+?),(.+?),(.+?)\\\right\)/s','\int_'. "{\$2}^{\$3}\$1 ",$texexp);
                   $texexp = preg_replace('/\\\int\\\left\((.+?d[a-z])\\\right\)/s','\int '. "\$1 ",$texexp);
                   $texexp = preg_replace('/\\\lim\\\left\((.+?),(.+?),(.+?)\\\right\)/s','\lim_'. "{\$2\\to \$3}\$1 ",$texexp);
-                  $texexp = str_replace('\mbox', '', $texexp); // now blacklisted in tex, sorry
+                  // Remove a forbidden keyword.
+                  $texexp = str_replace('\mbox', '', $texexp);
                   $texcache = new stdClass();
                   $texcache->filter = 'algebra';
                   $texcache->version = 1;
@@ -237,7 +238,7 @@ class filter_algebra extends moodle_text_filter {
                   $DB->insert_record("cache_filters", $texcache, false);
                   $text = str_replace( $matches[0][$i], filter_algebra_image($filename, $texexp, '', '', $align), $text);
                } else {
-                  $text = str_replace( $matches[0][$i],"<b>Undetermined error:</b> ",$text);
+                  $text = str_replace( $matches[0][$i],"<b>Undetermined error:</b> " . $matches[0][$i], $text);
                }
             } else {
                $text = str_replace( $matches[0][$i], filter_algebra_image($filename, $texcache->rawtext), $text);

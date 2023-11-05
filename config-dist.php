@@ -38,7 +38,11 @@ $CFG = new stdClass();
 // will be stored.  This database must already have been created         //
 // and a username/password created to access it.                         //
 
+<<<<<<< Updated upstream
 $CFG->dbtype    = 'pgsql';      // 'pgsql', 'mariadb', 'mysqli', 'sqlsrv' or 'oci'
+=======
+$CFG->dbtype    = 'pgsql';      // 'pgsql', 'mariadb', 'mysqli', 'auroramysql', 'sqlsrv' or 'oci'
+>>>>>>> Stashed changes
 $CFG->dblibrary = 'native';     // 'native' only at the moment
 $CFG->dbhost    = 'localhost';  // eg 'localhost' or 'db.isp.com' or IP
 $CFG->dbname    = 'moodle';     // database name, eg moodle
@@ -70,6 +74,13 @@ $CFG->dboptions = array(
                                 // can be removed for MySQL (by default it will
                                 // use 'utf8mb4_unicode_ci'. This option should
                                 // be removed for all other databases.
+<<<<<<< Updated upstream
+=======
+    // 'extrainfo' => [],       // Extra information for the DB driver, e.g. SQL Server,
+                                // has additional configuration according to its environment,
+                                // which the administrator can specify to alter and
+                                // override any connection options.
+>>>>>>> Stashed changes
     // 'fetchbuffersize' => 100000, // On PostgreSQL, this option sets a limit
                                 // on the number of rows that are fetched into
                                 // memory when doing a large recordset query
@@ -324,6 +335,12 @@ $CFG->admin = 'admin';
 //      Use the igbinary serializer instead of the php default one. Note that phpredis must be compiled with
 //      igbinary support to make the setting to work. Also, if you change the serializer you have to flush the database!
 //      $CFG->session_redis_serializer_use_igbinary = false; // Optional, default is PHP builtin serializer.
+<<<<<<< Updated upstream
+=======
+//      $CFG->session_redis_compressor = 'none'; // Optional, possible values are:
+//                                               // 'gzip' - PHP GZip compression
+//                                               // 'zstd' - PHP Zstandard compression
+>>>>>>> Stashed changes
 //
 // Please be aware that when selecting Memcached for sessions that it is advised to use a dedicated
 // memcache server. The memcached extension does not provide isolated environments for individual uses.
@@ -406,6 +423,12 @@ $CFG->admin = 'admin';
 //   Print to footer (works with the default theme)
 //   define('MDL_PERFTOFOOT', true);
 //
+<<<<<<< Updated upstream
+=======
+//   Print additional data to log of included files
+//   define('MDL_PERFINC', true);
+//
+>>>>>>> Stashed changes
 //   Enable earlier profiling that causes more code to be covered
 //   on every request (db connections, config load, other inits...).
 //   Requires extra configuration to be defined in config.php like:
@@ -476,6 +499,10 @@ $CFG->admin = 'admin';
 //     $CFG->tempdir = '/var/www/moodle/temp';        // Directory MUST BE SHARED by all cluster nodes.
 //     $CFG->cachedir = '/var/www/moodle/cache';      // Directory MUST BE SHARED by all cluster nodes, locking required.
 //     $CFG->localcachedir = '/var/local/cache';      // Intended for local node caching.
+<<<<<<< Updated upstream
+=======
+//     $CFG->localrequestdir = '/tmp';                // Intended for local only temporary files. The defaults uses sys_get_temp_dir().
+>>>>>>> Stashed changes
 //
 // It is possible to specify a different backup temp directory, use local fast filesystem
 // for normal web servers. Server clusters MUST use shared filesystem for backuptempdir!
@@ -676,6 +703,14 @@ $CFG->admin = 'admin';
 //
 //      $CFG->enable_read_only_sessions = true;
 //
+<<<<<<< Updated upstream
+=======
+// To help expose all the edge cases bugs a debug mode is available which shows the same
+// runtime write during readonly errors without actually turning on the readonly sessions:
+//
+//      $CFG->enable_read_only_sessions_debug = true;
+//
+>>>>>>> Stashed changes
 // Uninstall plugins from CLI only. This stops admins from uninstalling plugins from the graphical admin
 // user interface, and forces plugins to be uninstalled from the Command Line tool only, found at
 // admin/cli/plugin_uninstall.php.
@@ -709,6 +744,39 @@ $CFG->admin = 'admin';
 //
 //      $CFG->forumpostcountchunksize = 5000;
 //
+<<<<<<< Updated upstream
+=======
+// Course and category sorting
+//
+// If the number of courses in a category exceeds $CFG->maxcoursesincategory (10000 by default), it may lead to duplicate
+// sort orders of courses in separated categories. For example:
+// - Category A has the sort order of 10000, and has 10000 courses. The last course will have the sort order of 20000.
+// - Category B has the sort order of 20000, and has a course with the sort order of 20001.
+// - If we add another course in category A, it will have a sort order of 20001,
+// which is the same as the course in category B
+// The duplicate will cause sorting issue and hence we need to increase $CFG->maxcoursesincategory
+// to fix the duplicate sort order
+// Please also make sure $CFG->maxcoursesincategory * MAX_COURSE_CATEGORIES less than max integer.
+//
+// $CFG->maxcoursesincategory = 10000;
+//
+// Admin setting encryption
+//
+//      $CFG->secretdataroot = '/var/www/my_secret_folder';
+//
+// Location to store encryption keys. By default this is $CFG->dataroot/secret; set this if
+// you want to use a different location for increased security (e.g. if too many people have access
+// to the main dataroot, or if you want to avoid using shared storage). Your web server user needs
+// read access to this location, and write access unless you manually create the keys.
+//
+//      $CFG->nokeygeneration = false;
+//
+// If you change this to true then the server will give an error if keys don't exist, instead of
+// automatically generating them. This is only needed if you want to ensure that keys are consistent
+// across a cluster when not using shared storage. If you stop the server generating keys, you will
+// need to manually generate them by running 'php admin/cli/generate_key.php'.
+
+>>>>>>> Stashed changes
 //=========================================================================
 // 7. SETTINGS FOR DEVELOPMENT SERVERS - not intended for production use!!!
 //=========================================================================
@@ -1063,6 +1131,61 @@ $CFG->admin = 'admin';
 //      $CFG->showcampaigncontent = true;
 //
 //=========================================================================
+<<<<<<< Updated upstream
+=======
+// 16. ALTERNATIVE CACHE CONFIG SETTINGS
+//=========================================================================
+//
+// Alternative cache config.
+// Since 3.10 it is possible to override the cache_factory class with an alternative caching factory.
+// This overridden factory can provide alternative classes for caching such as cache_config,
+// cache_config_writer and core_cache\local\administration_display_helper.
+// The autoloaded factory class name can be specified to use.
+//
+//      $CFG->alternative_cache_factory_class = 'tool_alternativecache_cache_factory';
+//
+//=========================================================================
+// 17. SCHEDULED TASK OVERRIDES
+//=========================================================================
+//
+// It is now possible to define scheduled tasks directly within config.
+// The overridden value will take precedence over the values that have been set VIA the UI from the
+// next time the task is run.
+//
+// Tasks are configured as an array of tasks that can override a task's schedule, as well as setting
+// the task as disabled. I.e:
+//
+//      $CFG->scheduled_tasks = [
+//          '\local_plugin\task\my_task' => [
+//              'schedule' => '*/15 0 0 0 0',
+//              'disabled' => 0,
+//          ],
+//      ];
+//
+// The format for the schedule definition is: '{minute} {hour} {day} {month} {dayofweek}'.
+//
+// The classname of the task also supports wildcards:
+//
+//      $CFG->scheduled_tasks = [
+//          '\local_plugin\*' => [
+//              'schedule' => '*/15 0 0 0 0',
+//              'disabled' => 0,
+//          ],
+//          '*' => [
+//              'schedule' => '0 0 0 0 0',
+//              'disabled' => 0,
+//          ],
+//      ];
+//
+// In this example, any task classnames matching '\local_plugin\*' would match the first rule and
+// use that schedule the next time the task runs. Note that even though the 'local_plugin' tasks match
+// the second rule as well, the highest rule takes precedence. Therefore, the second rule would be
+// applied to all tasks, except for tasks within '\local_plugin\'.
+//
+// When the full classname is used, this rule always takes priority over any wildcard rules.
+//
+//=========================================================================
+>>>>>>> Stashed changes
 // ALL DONE!  To continue installation, visit your main page with a browser
 //=========================================================================
 

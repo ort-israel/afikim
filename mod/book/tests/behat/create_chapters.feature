@@ -15,8 +15,8 @@ Feature: In a book, create chapters and sub chapters
       | user | course | role |
       | teacher1 | C1 | editingteacher |
     And the following "activities" exist:
-      | activity | course | name      | section |
-      | book     | C1     | Test book | 1       |
+      | activity | name      | course | idnumber | section |
+      | book     | Test book | C1     | book1    | 1       |
     And the following "mod_book > chapter" exists:
       | book    | Test book                       |
       | title   | Dummy first chapter             |

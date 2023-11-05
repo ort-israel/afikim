@@ -72,12 +72,17 @@ class mod_qpractice_mod_form extends moodleform_mod {
         }
 
         $behaviours = question_engine::get_behaviour_options($currentbehaviour);
+        $config = get_config('mod_qpractice');
 
         foreach ($behaviours as $key => $langstring) {
             if (!in_array('correctness', question_engine::get_behaviour_unused_display_options($key))) {
                 $behaviour = 'behaviour[' . $key . ']';
                 $mform->addElement('checkbox', $behaviour, null, $langstring);
-                $mform->setDefault($behaviour, true);
+                if ((property_exists($config,$key)) && ($config->$key === '1')) {
+                    $mform->setDefault($behaviour, true);
+                } else {
+                    $mform->setDefault($behaviour, false);
+                }
             }
         }
         // Add standard elements, common to all modules.

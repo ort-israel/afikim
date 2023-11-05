@@ -2081,7 +2081,7 @@ class mod_assign_external extends external_api {
      * @return null
      * @since Moodle 2.7
      */
-    public static function save_grades($assignmentid, $applytoall = false, $grades) {
+    public static function save_grades($assignmentid, $applytoall, $grades) {
         global $CFG, $USER;
 
         $params = self::validate_parameters(self::save_grades_parameters(),
@@ -2316,7 +2316,7 @@ class mod_assign_external extends external_api {
                 'assignid' => new external_value(PARAM_INT, 'assignment instance id'),
                 'userid' => new external_value(PARAM_INT, 'user id (empty for current user)', VALUE_DEFAULT, 0),
                 'groupid' => new external_value(PARAM_INT, 'filter by users in group (used for generating the grading summary).
-                    Empty or 0 for all groups information.', VALUE_DEFAULT, 0),
+                    0 for all groups information, any other empty value will calculate currrent group.', VALUE_DEFAULT, 0),
             )
         );
     }
@@ -2368,8 +2368,9 @@ class mod_assign_external extends external_api {
                 throw new moodle_exception('notingroup');
             }
         } else {
-            // A null gorups means that following functions will calculate the current group.
-            $groupid = null;
+            // A null group means that following functions will calculate the current group.
+            // A groupid set to 0 means all groups.
+            $groupid = ($params['groupid'] == 0) ? 0 : null;
         }
         if ($assign->can_view_grades($groupid)) {
             $gradingsummary = $assign->get_assign_grading_summary_renderable($groupid);
@@ -2765,7 +2766,7 @@ class mod_assign_external extends external_api {
             'requiregrading' => new external_value(PARAM_BOOL, 'is their submission waiting for grading'),
             'grantedextension' => new external_value(PARAM_BOOL, 'have they been granted an extension'),
             'groupid' => new external_value(PARAM_INT, 'for group assignments this is the group id', VALUE_OPTIONAL),
-            'groupname' => new external_value(PARAM_NOTAGS, 'for group assignments this is the group name', VALUE_OPTIONAL),
+            'groupname' => new external_value(PARAM_TEXT, 'for group assignments this is the group name', VALUE_OPTIONAL),
         ];
 
         // Merge keys.
@@ -2878,7 +2879,7 @@ class mod_assign_external extends external_api {
             'cutoffdate' => new external_value(PARAM_INT, 'cutoffdate for the user'),
             'duedatestr' => new external_value(PARAM_TEXT, 'duedate for the user'),
             'groupid' => new external_value(PARAM_INT, 'for group assignments this is the group id', VALUE_OPTIONAL),
-            'groupname' => new external_value(PARAM_NOTAGS, 'for group assignments this is the group name', VALUE_OPTIONAL),
+            'groupname' => new external_value(PARAM_TEXT, 'for group assignments this is the group name', VALUE_OPTIONAL),
             'user' => $userdescription,
         ));
     }

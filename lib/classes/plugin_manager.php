@@ -1794,7 +1794,7 @@ class core_plugin_manager {
             ),
 
             'block' => array(
-                'activity_modules', 'activity_results', 'admin_bookmarks', 'badges',
+                'accessreview', 'activity_modules', 'activity_results', 'admin_bookmarks', 'badges',
                 'blog_menu', 'blog_recent', 'blog_tags', 'calendar_month',
                 'calendar_upcoming', 'comments',
                 'completionstatus', 'course_list', 'course_summary',
@@ -1859,7 +1859,7 @@ class core_plugin_manager {
             'enrol' => array(
                 'category', 'cohort', 'database', 'flatfile',
                 'guest', 'imsenterprise', 'ldap', 'lti', 'manual', 'meta', 'mnet',
-                'paypal', 'self'
+                'paypal', 'self', 'fee',
             ),
 
             'filter' => array(
@@ -1929,6 +1929,10 @@ class core_plugin_manager {
                 'quiz', 'resource', 'scorm', 'survey', 'url', 'wiki', 'workshop'
             ),
 
+            'paygw' => [
+                'paypal',
+            ],
+
             'plagiarism' => array(
             ),
 
@@ -1937,7 +1941,7 @@ class core_plugin_manager {
             ),
 
             'profilefield' => array(
-                'checkbox', 'datetime', 'menu', 'text', 'textarea'
+                'checkbox', 'datetime', 'menu', 'social', 'text', 'textarea'
             ),
 
             'qbehaviour' => array(
@@ -1972,8 +1976,8 @@ class core_plugin_manager {
 
             'report' => array(
                 'backups', 'competency', 'completion', 'configlog', 'courseoverview', 'eventlist',
-                'insights', 'log', 'loglive', 'outline', 'participation', 'progress', 'questioninstances',
-                'security', 'stats', 'status', 'performance', 'usersessions'
+                'infectedfiles', 'insights', 'log', 'loglive', 'outline', 'participation', 'progress',
+                'questioninstances', 'security', 'stats', 'status', 'performance', 'usersessions'
             ),
 
             'repository' => array(
@@ -2004,7 +2008,7 @@ class core_plugin_manager {
             ),
 
             'tool' => array(
-                'analytics', 'availabilityconditions', 'behat', 'capability', 'cohortroles', 'customlang',
+                'analytics', 'availabilityconditions', 'behat', 'brickfield', 'capability', 'cohortroles', 'customlang',
                 'dataprivacy', 'dbtransfer', 'filetypes', 'generator', 'health', 'httpsreplace', 'innodb',
                 'installaddon', 'langimport', 'licensemanager', 'log', 'lp', 'lpimportcsv', 'lpmigrate', 'messageinbound',
                 'mobile', 'moodlenet', 'multilangupgrade', 'monitor', 'oauth2', 'phpunit', 'policy', 'profiling', 'recyclebin',

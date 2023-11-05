@@ -178,6 +178,7 @@ define('CALENDAR_EVENT_TYPE_ACTION', 1);
  * @property string $eventtype The event type
  * @property int $timestart The start time as a timestamp
  * @property int $timeduration The duration of the event in seconds
+ * @property int $timeusermidnight User midnight for the event
  * @property int $visible 1 if the event is visible
  * @property int $uuid ?
  * @property int $sequence ?
@@ -2147,11 +2148,7 @@ function calendar_set_filters(array $courseeventsfrom, $ignorefilters = false, s
             } else if ($isvaliduser) {
                 $groupids = array();
                 foreach ($courseeventsfrom as $courseid => $course) {
-                    // If the user is an editing teacher in there.
-                    if (!empty($user->groupmember[$course->id])) {
-                        // We've already cached the users groups for this course so we can just use that.
-                        $groupids = array_merge($groupids, $user->groupmember[$course->id]);
-                    } else if ($course->groupmode != NOGROUPS || !$course->groupmodeforce) {
+                    if ($course->groupmode != NOGROUPS || !$course->groupmodeforce) {
                         // If this course has groups, show events from all of those related to the current user.
                         $coursegroups = groups_get_user_groups($course->id, $user->id);
                         $groupids = array_merge($groupids, $coursegroups['0']);
@@ -2863,7 +2860,7 @@ function calendar_add_subscription($sub) {
  * @throws dml_exception A DML specific exception is thrown for invalid subscriptionids.
  * @return int Code: CALENDAR_IMPORT_EVENT_UPDATED = updated,  CALENDAR_IMPORT_EVENT_INSERTED = inserted, 0 = error
  */
-function calendar_add_icalendar_event($event, $unused = null, $subscriptionid, $timezone='UTC') {
+function calendar_add_icalendar_event($event, $unused, $subscriptionid, $timezone='UTC') {
     global $DB;
 
     // Probably an unsupported X-MICROSOFT-CDO-BUSYSTATUS event.
@@ -3304,7 +3301,7 @@ function calendar_get_calendar_context($subscription) {
 }
 
 /**
- * Implements callback user_preferences, whitelists preferences that users are allowed to update directly
+ * Implements callback user_preferences, lists preferences that users are allowed to update directly
  *
  * Used in {@see core_user::fill_preferences_cache()}, see also {@see useredit_update_user_preference()}
  *
@@ -3714,11 +3711,10 @@ function calendar_get_timestamp($d, $m, $y, $time = 0) {
  * @return array The data for template and template name.
  */
 function calendar_get_footer_options($calendar) {
-    global $CFG, $USER, $DB, $PAGE;
+    global $CFG, $USER, $PAGE;
 
     // Generate hash for iCal link.
-    $rawhash = $USER->id . $DB->get_field('user', 'password', ['id' => $USER->id]) . $CFG->calendar_exportsalt;
-    $authtoken = sha1($rawhash);
+    $authtoken = calendar_get_export_token($USER);
 
     $renderer = $PAGE->get_renderer('core_calendar');
     $footer = new \core_calendar\external\footer_options_exporter($calendar, $USER->id, $authtoken);
@@ -3951,4 +3947,16 @@ function calendar_internal_update_course_and_group_permission(int $courseid, con
             }
         }
     }
+}
+
+/**
+ * Get the auth token for exporting the given user calendar.
+ * @param stdClass $user The user to export the calendar for
+ *
+ * @return string The export token.
+ */
+function calendar_get_export_token(stdClass $user): string {
+    global $CFG, $DB;
+
+    return sha1($user->id . $DB->get_field('user', 'password', ['id' => $user->id]) . $CFG->calendar_exportsalt);
 }

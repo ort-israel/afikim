@@ -16,7 +16,6 @@
 /**
  * Manage the courses view for the overview block.
  *
- * @package    block_myoverview
  * @copyright  2018 Bas Brands <bas@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -33,6 +32,7 @@ define(
     'core_course/events',
     'block_myoverview/selectors',
     'core/paged_content_events',
+    'core/aria',
 ],
 function(
     $,
@@ -44,7 +44,8 @@ function(
     Templates,
     CourseEvents,
     Selectors,
-    PagedContentEvents
+    PagedContentEvents,
+    Aria
 ) {
 
     var SELECTORS = {
@@ -174,12 +175,14 @@ function(
      */
     var hideFavouriteIcon = function(root, courseId) {
         var iconContainer = getFavouriteIconContainer(root, courseId);
+
         var isFavouriteIcon = iconContainer.find(SELECTORS.ICON_IS_FAVOURITE);
         isFavouriteIcon.addClass('hidden');
-        isFavouriteIcon.attr('aria-hidden', true);
+        Aria.hide(isFavouriteIcon);
+
         var notFavourteIcon = iconContainer.find(SELECTORS.ICON_NOT_FAVOURITE);
         notFavourteIcon.removeClass('hidden');
-        notFavourteIcon.attr('aria-hidden', false);
+        Aria.unhide(notFavourteIcon);
     };
 
     /**
@@ -190,12 +193,14 @@ function(
      */
     var showFavouriteIcon = function(root, courseId) {
         var iconContainer = getFavouriteIconContainer(root, courseId);
+
         var isFavouriteIcon = iconContainer.find(SELECTORS.ICON_IS_FAVOURITE);
         isFavouriteIcon.removeClass('hidden');
-        isFavouriteIcon.attr('aria-hidden', false);
+        Aria.unhide(isFavouriteIcon);
+
         var notFavourteIcon = iconContainer.find(SELECTORS.ICON_NOT_FAVOURITE);
         notFavourteIcon.addClass('hidden');
-        notFavourteIcon.attr('aria-hidden', true);
+        Aria.hide(notFavourteIcon);
     };
 
     /**
@@ -517,7 +522,6 @@ function(
      * Intialise the courses list and cards views on page load.
      *
      * @param {object} root The root element for the courses view.
-     * @param {object} content The content element for the courses view.
      */
     var initializePagedContent = function(root) {
         namespace = "block_myoverview_" + root.attr('id') + "_" + Math.random();
@@ -703,8 +707,8 @@ function(
     };
 
     /**
-
      * Reset the courses views to their original
+     *
      * state on first page load.courseOffset
      *
      * This is called when configuration has changed for the event lists
