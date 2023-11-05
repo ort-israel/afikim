@@ -8,20 +8,20 @@ Feature: Check for minimum or maximimum version of Moodle
     Given the site is running Moodle version 99.0 or higher
     # The following steps should not be executed. If they are, the test will fail.
     When I log in as "admin"
-    Then I should not see "Moodle"
+    Then I should not see "Home"
 
   Scenario: Maximum version too high
     Given the site is running Moodle version 3.0 or lower
     # The following steps should not be executed. If they are, the test will fail.
     When I log in as "admin"
-    Then I should not see "Moodle"
+    Then I should not see "Home"
 
   Scenario: Minimum version OK
     Given the site is running Moodle version 3.0 or higher
     When I log in as "admin"
-    Then I should see "Moodle"
+    Then I should see "Home"
 
   Scenario: Maximum version OK
     Given the site is running Moodle version 99.0 or lower
     When I log in as "admin"
-    Then I should see "Moodle"
+    Then I should see "Home"

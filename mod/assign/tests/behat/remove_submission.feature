@@ -5,11 +5,8 @@ Feature: Remove a submission
   I need to remove a student submission at any time
 
   Background:
-    Given I log in as "admin"
-    And I set the following system permissions of "Teacher" role:
-      | capability                     | permission |
-      | mod/assign:editothersubmission | Allow      |
-    And I log out
+    Given the following config values are set as admin:
+      | enabletimelimit | 1 | assign |
     And the following "courses" exist:
       | fullname | shortname | category | groupmode |
       | Course 1 | C1 | 0 | 0 |
@@ -23,6 +20,9 @@ Feature: Remove a submission
       | teacher1 | C1 | editingteacher |
       | student1 | C1 | student |
       | student2 | C1 | student |
+    And the following "role capability" exists:
+      | role                           | editingteacher |
+      | mod/assign:editothersubmission | allow          |
     And the following "groups" exist:
       | name    | course | idnumber |
       | Group 1 | C1     | G1       |
@@ -51,10 +51,12 @@ Feature: Remove a submission
     When I follow "Remove submission"
     And I click on "Continue" "button"
     Then I should not see "I'm the student submission"
+    And "Student 1" row "Status" column of "generaltable" table should contain "No submission"
     And I log out
 
     And I am on the "Test assignment name" Activity page logged in as student1
     And I should not see "I'm the student submission"
+    And I should see "No attempt" in the "Submission status" "table_row"
 
   @javascript @skip_chrome_zerosize
   Scenario: Remove a group submission should remove the data from all group members
@@ -77,10 +79,12 @@ Feature: Remove a submission
     When I follow "Remove submission"
     And I click on "Continue" "button"
     Then I should not see "I'm the student submission"
+    And "Student 1" row "Status" column of "generaltable" table should contain "No submission"
     And I log out
 
     And I am on the "Test assignment name" Activity page logged in as student2
     And I should not see "I'm the student submission"
+    And I should see "Nothing has been submitted for this assignment" in the "Submission status" "table_row"
 
   @javascript @skip_chrome_zerosize
   Scenario: A student can remove their own submission
@@ -104,7 +108,9 @@ Feature: Remove a submission
     When I am on the "Test assignment name" Activity page logged in as teacher1
     And I navigate to "View all submissions" in current page administration
     Then I should not see "I'm the student submission"
+    And "Student 1" row "Status" column of "generaltable" table should contain "No submission"
     And I log out
 
     And I am on the "Test assignment name" Activity page logged in as student1
     And I should not see "I'm the student submission"
+    And I should see "No attempt" in the "Submission status" "table_row"

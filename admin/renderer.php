@@ -220,7 +220,7 @@ class core_admin_renderer extends plugin_renderer_base {
             $output .= $this->container_end();
         }
 
-        $button = new single_button($continueurl, get_string('upgradestart', 'admin'), 'get');
+        $button = new single_button($continueurl, get_string('upgradestart', 'admin'), 'get', true);
         $button->class = 'continuebutton';
         $output .= $this->render($button);
         $output .= $this->footer();
@@ -2130,8 +2130,16 @@ class core_admin_renderer extends plugin_renderer_base {
         $output .= $this->container_start('upgradekeyreq');
         $output .= $this->heading(get_string('upgradekeyreq', 'core_admin'));
         $output .= html_writer::start_tag('form', array('method' => 'POST', 'action' => $url));
-        $output .= html_writer::empty_tag('input', array('name' => 'upgradekey', 'type' => 'password'));
-        $output .= html_writer::empty_tag('input', array('value' => get_string('submit'), 'type' => 'submit'));
+        $output .= html_writer::empty_tag('input', [
+            'name' => 'upgradekey',
+            'type' => 'password',
+            'class' => 'form-control w-auto',
+        ]);
+        $output .= html_writer::empty_tag('input', [
+            'type' => 'submit',
+            'value' => get_string('submit'),
+            'class' => 'btn btn-primary mt-3',
+        ]);
         $output .= html_writer::end_tag('form');
         $output .= $this->container_end();
         $output .= $this->footer();

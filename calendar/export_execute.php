@@ -5,6 +5,8 @@ require_once('../config.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
 require_once($CFG->libdir.'/bennu/bennu.inc.php');
 
+raise_memory_limit(MEMORY_HUGE);
+
 $userid = optional_param('userid', 0, PARAM_INT);
 $username = optional_param('username', '', PARAM_TEXT);
 $authtoken = required_param('authtoken', PARAM_ALPHANUM);
@@ -24,12 +26,14 @@ if ((!$checkuserid && !$checkusername) || !$user) {
 }
 
 //Check authentication token
-$authuserid = !empty($userid) && $authtoken == sha1($userid . $user->password . $CFG->calendar_exportsalt);
+$authuserid = !empty($userid) && $authtoken == calendar_get_export_token($user);
 //allowing for fallback check of old url - MDL-27542
 $authusername = !empty($username) && $authtoken == sha1($username . $user->password . $CFG->calendar_exportsalt);
 if (!$authuserid && !$authusername) {
     die('Invalid authentication');
 }
+
+$PAGE->set_context(context_system::instance());
 
 // Get the calendar type we are using.
 $calendartype = \core_calendar\type_factory::get_calendar_instance();
@@ -44,7 +48,7 @@ $allowedwhat = ['all', 'user', 'groups', 'courses', 'categories'];
 $allowedtime = ['weeknow', 'weeknext', 'monthnow', 'monthnext', 'recentupcoming', 'custom'];
 
 if (!empty($generateurl)) {
-    $authtoken = sha1($user->id . $user->password . $CFG->calendar_exportsalt);
+    $authtoken = calendar_get_export_token($user);
     $params = array();
     $params['preset_what'] = $what;
     $params['preset_time'] = $time;

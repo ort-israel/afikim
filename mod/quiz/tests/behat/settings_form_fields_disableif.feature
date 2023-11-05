@@ -119,3 +119,28 @@ Feature: Settings form fields disabled if not required
     And the "id_rightanswerclosed" "checkbox" should be enabled
     And the "id_overallfeedbackclosed" "checkbox" should be enabled
     And I should not see "Repaginate now"
+
+  @javascript
+  Scenario: If there are quiz attempts, there is not option to repaginate.
+    Given the following "activities" exist:
+      | activity   | name   | intro              | course | idnumber |
+      | quiz       | Quiz 1 | Quiz 1 description | C1     | quiz1    |
+    And the following "question categories" exist:
+      | contextlevel | reference | name           |
+      | Course       | C1        | Test questions |
+    And the following "questions" exist:
+      | questioncategory | qtype       | name  | questiontext    |
+      | Test questions   | truefalse   | TF1   | First question  |
+      | Test questions   | truefalse   | TF2   | Second question |
+    And quiz "Quiz 1" contains the following questions:
+      | question | page | maxmark |
+      | TF1      | 1    |         |
+    When I am on the "Quiz 1" "quiz activity editing" page logged in as teacher
+    And I expand all fieldsets
+    Then I should see "Repaginate now"
+    And user "student1" has attempted "Quiz 1" with responses:
+      | slot | response |
+      |   1  | True     |
+    And I am on the "Quiz 1" "quiz activity editing" page
+    And I expand all fieldsets
+    And I should not see "Repaginate now"

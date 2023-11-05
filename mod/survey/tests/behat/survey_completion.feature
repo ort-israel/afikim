@@ -17,25 +17,49 @@ Feature: A teacher can use activity completion to track a student progress
       | teacher1 | C1 | editingteacher |
       | student1 | C1 | student |
     And I log in as "teacher1"
-    And I am on "Course 1" course homepage with editing mode on
 
   Scenario: Require survey view
     Given the following "activities" exist:
-      | activity | course | name             | template | completion | completionview | completionsubmit |
-      | survey   | C1     | Test survey name | 5        | 2          | 1              | 0                |
+      | activity   | name                   | course | idnumber    | template | completion | completionview | completionsubmit |
+      | survey     | Test survey name       | C1     | survey1     |  5       | 2          | 1              | 0                |
+    And I am on the "Test survey name" "survey activity" page
+    # Teacher view.
+    And "Test survey name" should have the "View" completion condition
+    # Student view.
     When I am on the "Course 1" course page logged in as student1
-    And the "Test survey name" "survey" activity with "auto" completion should be marked as not complete
+    And the "View" completion condition of "Test survey name" is displayed as "todo"
     And I follow "Test survey name"
     And I am on "Course 1" course homepage
-    Then the "Test survey name" "survey" activity with "auto" completion should be marked as complete
+    Then the "View" completion condition of "Test survey name" is displayed as "done"
 
   Scenario: Require survey submission
     Given the following "activities" exist:
-      | activity | course | name             | template | completion | completionsubmit |
-      | survey   | C1     | Test survey name | 5        | 2          | 1                |
+      | activity   | name                   | course | idnumber    | template | completion | completionview | completionsubmit |
+      | survey     | Test survey name       | C1     | survey1     | 5        | 2          | 1              | 1                |
+    And I am on the "Test survey name" "survey activity" page
+    # Teacher view.
+    And "Test survey name" should have the "Submit answers" completion condition
+    # Student view.
     When I am on the "Course 1" course page logged in as student1
-    And the "Test survey name" "survey" activity with "auto" completion should be marked as not complete
+    And the "Submit answers" completion condition of "Test survey name" is displayed as "todo"
     And I follow "Test survey name"
+    And the "Submit answers" completion condition of "Test survey name" is displayed as "todo"
     And I press "Click here to continue"
     And I am on "Course 1" course homepage
-    Then the "Test survey name" "survey" activity with "auto" completion should be marked as complete
+    And the "Submit answers" completion condition of "Test survey name" is displayed as "done"
+    And I follow "Test survey name"
+    And the "Submit answers" completion condition of "Test survey name" is displayed as "done"
+
+  @javascript
+  Scenario: Use manual completion
+    Given the following "activities" exist:
+      | activity   | name                   | course | idnumber    | completion |
+      | survey     | Test survey name       | C1     | survey1     | 1          |
+    And I am on "Course 1" course homepage
+    # Teacher view.
+    And the manual completion button for "Test survey name" should be disabled
+    # Student view.
+    When I am on the "Test survey name" "survey activity" page logged in as student1
+    Then the manual completion button of "Test survey name" is displayed as "Mark as done"
+    And I toggle the manual completion state of "Test survey name"
+    And the manual completion button of "Test survey name" is displayed as "Done"

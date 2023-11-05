@@ -27,7 +27,7 @@ Feature: Check label visibility works
     When I am on "Test" course homepage with editing mode on
     Then "Swanky label 2" activity should be hidden
     And I turn editing mode off
-    Then "Swanky label 2" activity should be hidden
+    And "Swanky label 2" activity should be hidden
     And I log out
     And I log in as "student"
     And I am on "Test" course homepage

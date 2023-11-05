@@ -62,7 +62,6 @@ Feature: Outcome grading
     And I set the following fields to these values:
       | Outcome Test: | Excellent |
     And I press "Save changes"
-    And I press "OK"
     And I click on "Edit settings" "link"
     When I am on the "Test assignment name" "assign activity" page
     And I navigate to "View all submissions" in current page administration

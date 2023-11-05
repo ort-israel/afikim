@@ -456,6 +456,17 @@ function upgrade_stale_php_files_present() {
     global $CFG;
 
     $someexamplesofremovedfiles = array(
+        // Removed in 3.11.
+        '/customfield/edit.php',
+        '/lib/phpunit/classes/autoloader.php',
+        '/lib/xhprof/README',
+        '/message/defaultoutputs.php',
+        '/user/files_form.php',
+        // Removed in 3.10.
+        '/grade/grading/classes/privacy/gradingform_provider.php',
+        '/lib/coursecatlib.php',
+        '/lib/form/htmleditor.php',
+        '/message/classes/output/messagearea/contact.php',
         // Removed in 3.9.
         '/course/classes/output/modchooser_item.php',
         '/course/yui/build/moodle-course-modchooser/moodle-course-modchooser-min.js',
@@ -614,7 +625,7 @@ function upgrade_plugins($type, $startcallback, $endcallback, $verbose) {
 
         // Throw exception if plugin is incompatible with moodle version.
         if (!empty($plugin->incompatible)) {
-            if ($CFG->branch <= $plugin->incompatible) {
+            if ($CFG->branch >= $plugin->incompatible) {
                 throw new plugin_incompatible_exception($component, $plugin->version);
             }
         }
@@ -1206,6 +1217,7 @@ function external_update_descriptions($component) {
         $function = $functions[$dbfunction->name];
         unset($functions[$dbfunction->name]);
         $function['classpath'] = empty($function['classpath']) ? null : $function['classpath'];
+        $function['methodname'] = $function['methodname'] ?? 'execute';
 
         $update = false;
         if ($dbfunction->classname != $function['classname']) {
@@ -1255,7 +1267,7 @@ function external_update_descriptions($component) {
         $dbfunction = new stdClass();
         $dbfunction->name       = $fname;
         $dbfunction->classname  = $function['classname'];
-        $dbfunction->methodname = $function['methodname'];
+        $dbfunction->methodname = $function['methodname'] ?? 'execute';
         $dbfunction->classpath  = empty($function['classpath']) ? null : $function['classpath'];
         $dbfunction->component  = $component;
         $dbfunction->capabilities = array_key_exists('capabilities', $function)?$function['capabilities']:'';
@@ -2762,6 +2774,32 @@ function check_xmlrpc_usage(environment_results $result): ?environment_results {
             $result->setFeedbackStr('xmlrpcmaharaenabled');
             return $result;
         }
+    }
+
+    return null;
+}
+
+/**
+ * Check whether the mod_assignment is currently being used.
+ *
+ * @param environment_results $result
+ * @return environment_results|null
+ */
+function check_mod_assignment(environment_results $result): ?environment_results {
+    global $DB, $CFG;
+
+    // Check the number of records.
+    if ($DB->get_manager()->table_exists('assignment') && $DB->count_records('assignment') > 0) {
+        $result->setInfo('Assignment 2.2 is in use');
+        $result->setFeedbackStr('modassignmentinuse');
+        return $result;
+    }
+
+    // Check for mod_assignment subplugins.
+    if (is_dir($CFG->dirroot . '/mod/assignment/type')) {
+        $result->setInfo('Assignment 2.2 subplugins present');
+        $result->setFeedbackStr('modassignmentsubpluginsexist');
+        return $result;
     }
 
     return null;

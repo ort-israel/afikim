@@ -87,10 +87,18 @@ EOD;
      * @return void
      */
     public function reset() {
+        $this->gradecategorycounter = 0;
+        $this->gradeitemcounter = 0;
+        $this->gradeoutcomecounter = 0;
         $this->usercounter = 0;
         $this->categorycount = 0;
+        $this->cohortcount = 0;
         $this->coursecount = 0;
         $this->scalecount = 0;
+        $this->groupcount = 0;
+        $this->groupingcount = 0;
+        $this->rolecount = 0;
+        $this->tagcount = 0;
 
         foreach ($this->generators as $generator) {
             $generator->reset();
@@ -781,7 +789,20 @@ EOD;
         // If no archetype was specified we allow it to be added to all contexts,
         // otherwise we allow it in the archetype contexts.
         if (!$record['archetype']) {
-            $contextlevels = array_keys(context_helper::get_all_levels());
+            $contextlevels = [];
+            $usefallback = true;
+            foreach (context_helper::get_all_levels() as $level => $title) {
+                if (array_key_exists($title, $record)) {
+                    $usefallback = false;
+                    if (!empty($record[$title])) {
+                        $contextlevels[] = $level;
+                    }
+                }
+            }
+
+            if ($usefallback) {
+                $contextlevels = array_keys(context_helper::get_all_levels());
+            }
         } else {
             // Copying from the archetype default rol.
             $archetyperoleid = $DB->get_field(
@@ -794,7 +815,6 @@ EOD;
         set_role_contextlevels($newroleid, $contextlevels);
 
         if ($record['archetype']) {
-
             // We copy all the roles the archetype can assign, override, switch to and view.
             if ($record['archetype']) {
                 $types = array('assign', 'override', 'switch', 'view');
@@ -812,7 +832,74 @@ EOD;
             role_cap_duplicate($sourcerole, $newroleid);
         }
 
+        $allcapabilities = get_all_capabilities();
+        $foundcapabilities = array_intersect(array_keys($allcapabilities), array_keys($record));
+        $systemcontext = \context_system::instance();
+
+        $allpermissions = [
+            'inherit' => CAP_INHERIT,
+            'allow' => CAP_ALLOW,
+            'prevent' => CAP_PREVENT,
+            'prohibit' => CAP_PROHIBIT,
+        ];
+
+        foreach ($foundcapabilities as $capability) {
+            $permission = $record[$capability];
+            if (!array_key_exists($permission, $allpermissions)) {
+                throw new \coding_exception("Unknown capability permissions '{$permission}'");
+            }
+            assign_capability(
+                $capability,
+                $allpermissions[$permission],
+                $newroleid,
+                $systemcontext->id,
+                true
+            );
+        }
+
         return $newroleid;
+    }
+
+    /**
+     * Set role capabilities for the specified role.
+     *
+     * @param int $roleid The Role to set capabilities for
+     * @param array $rolecapabilities The list of capability =>permission to set for this role
+     * @param null|context $context The context to apply this capability to
+     */
+    public function create_role_capability(int $roleid, array $rolecapabilities, context $context = null): void {
+        // Map the capabilities into human-readable names.
+        $allpermissions = [
+            'inherit' => CAP_INHERIT,
+            'allow' => CAP_ALLOW,
+            'prevent' => CAP_PREVENT,
+            'prohibit' => CAP_PROHIBIT,
+        ];
+
+        // Fetch all capabilities to check that they exist.
+        $allcapabilities = get_all_capabilities();
+        foreach ($rolecapabilities as $capability => $permission) {
+            if ($permission === '') {
+                // Allow items to be skipped.
+                continue;
+            }
+
+            if (!array_key_exists($capability, $allcapabilities)) {
+                throw new \coding_exception("Unknown capability '{$capability}'");
+            }
+
+            if (!array_key_exists($permission, $allpermissions)) {
+                throw new \coding_exception("Unknown capability permissions '{$permission}'");
+            }
+
+            assign_capability(
+                $capability,
+                $allpermissions[$permission],
+                $roleid,
+                $context->id,
+                true
+            );
+        }
     }
 
     /**
@@ -1242,72 +1329,6 @@ EOD;
     }
 
     /**
-     * Create a new user, and enrol them in the specified course as the supplied role.
-     *
-     * @param   \stdClass   $course The course to enrol in
-     * @param   string      $role The role to give within the course
-     * @param   \stdClass   $userparams User parameters
-     * @return  \stdClass   The created user
-     */
-    public function create_and_enrol($course, $role = 'student', $userparams = null, $enrol = 'manual',
-            $timestart = 0, $timeend = 0, $status = null) {
-        global $DB;
-
-        $user = $this->create_user($userparams);
-        $roleid = $DB->get_field('role', 'id', ['shortname' => $role ]);
-
-        $this->enrol_user($user->id, $course->id, $roleid, $enrol, $timestart, $timeend, $status);
-
-        return $user;
-    }
-
-    /**
-     * Create a new last access record for a given user in a course.
-     *
-     * @param   \stdClass   $user The user
-     * @param   \stdClass   $course The course the user accessed
-     * @param   int         $timestamp The timestamp for when the user last accessed the course
-     * @return  \stdClass   The user_lastaccess record
-     */
-    public function create_user_course_lastaccess(\stdClass $user, \stdClass $course, int $timestamp): \stdClass {
-        global $DB;
-
-        $record = [
-            'userid' => $user->id,
-            'courseid' => $course->id,
-            'timeaccess' => $timestamp,
-        ];
-
-        $recordid = $DB->insert_record('user_lastaccess', $record);
-
-        return $DB->get_record('user_lastaccess', ['id' => $recordid], '*', MUST_EXIST);
-    }
-
-    /**
-     * Gets a default generator for a given component.
-     *
-     * @param string $component The component name, e.g. 'mod_forum' or 'core_question'.
-     * @param string $classname The name of the class missing from the generators file.
-     * @return component_generator_base The generator.
-     */
-    protected function get_default_plugin_generator(string $component, ?string $classname = null) {
-        [$type, $plugin] = core_component::normalize_component($component);
-
-        switch ($type) {
-            case 'block':
-                return new default_block_generator($this, $plugin);
-        }
-
-        if (is_null($classname)) {
-            throw new coding_exception("Component {$component} does not support " .
-                "generators yet. Missing tests/generator/lib.php.");
-        }
-
-        throw new coding_exception("Component {$component} does not support " .
-            "data generators yet. Class {$classname} not found.");
-    }
-
-    /**
      * Create a new category for custom profile fields.
      *
      * @param array $data Array with 'name' and optionally 'sortorder'
@@ -1373,6 +1394,11 @@ EOD;
                     [$data['categoryid']]) + 1;
         }
 
+        if ($data['datatype'] === 'menu' && isset($data['param1'])) {
+            // Convert new lines to the proper character.
+            $data['param1'] = str_replace('\n', "\n", $data['param1']);
+        }
+
         // Defaults for other values.
         $defaults = [
             'description' => '',
@@ -1423,4 +1449,71 @@ EOD;
         $data['id'] = $DB->insert_record('user_info_field', $data);
         return (object)$data;
     }
+
+    /**
+     * Create a new user, and enrol them in the specified course as the supplied role.
+     *
+     * @param   \stdClass   $course The course to enrol in
+     * @param   string      $role The role to give within the course
+     * @param   \stdClass   $userparams User parameters
+     * @return  \stdClass   The created user
+     */
+    public function create_and_enrol($course, $role = 'student', $userparams = null, $enrol = 'manual',
+            $timestart = 0, $timeend = 0, $status = null) {
+        global $DB;
+
+        $user = $this->create_user($userparams);
+        $roleid = $DB->get_field('role', 'id', ['shortname' => $role ]);
+
+        $this->enrol_user($user->id, $course->id, $roleid, $enrol, $timestart, $timeend, $status);
+
+        return $user;
+    }
+
+    /**
+     * Create a new last access record for a given user in a course.
+     *
+     * @param   \stdClass   $user The user
+     * @param   \stdClass   $course The course the user accessed
+     * @param   int         $timestamp The timestamp for when the user last accessed the course
+     * @return  \stdClass   The user_lastaccess record
+     */
+    public function create_user_course_lastaccess(\stdClass $user, \stdClass $course, int $timestamp): \stdClass {
+        global $DB;
+
+        $record = [
+            'userid' => $user->id,
+            'courseid' => $course->id,
+            'timeaccess' => $timestamp,
+        ];
+
+        $recordid = $DB->insert_record('user_lastaccess', $record);
+
+        return $DB->get_record('user_lastaccess', ['id' => $recordid], '*', MUST_EXIST);
+    }
+
+    /**
+     * Gets a default generator for a given component.
+     *
+     * @param string $component The component name, e.g. 'mod_forum' or 'core_question'.
+     * @param string $classname The name of the class missing from the generators file.
+     * @return component_generator_base The generator.
+     */
+    protected function get_default_plugin_generator(string $component, ?string $classname = null) {
+        [$type, $plugin] = core_component::normalize_component($component);
+
+        switch ($type) {
+            case 'block':
+                return new default_block_generator($this, $plugin);
+        }
+
+        if (is_null($classname)) {
+            throw new coding_exception("Component {$component} does not support " .
+                "generators yet. Missing tests/generator/lib.php.");
+        }
+
+        throw new coding_exception("Component {$component} does not support " .
+            "data generators yet. Class {$classname} not found.");
+    }
+
 }

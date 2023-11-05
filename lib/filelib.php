@@ -2499,6 +2499,9 @@ function file_safe_save_content($content, $destination) {
  * @param array $options An array of options, currently accepts:
  *                       - (string) cacheability: public, or private.
  *                       - (string|null) immutable
+ *                       - (bool) dontforcesvgdownload: true if force download should be disabled on SVGs.
+ *                                Note: This overrides a security feature, so should only be applied to "trusted" content
+ *                                (eg module content that is created using an XSS risk flagged capability, such as SCORM).
  * @return null script execution stopped unless $dontdie is true
  */
 function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring=false, $forcedownload=false, $mimetype='',
@@ -2527,6 +2530,12 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
     // if user is using IE, urlencode the filename so that multibyte file name will show up correctly on popup
     if (core_useragent::is_ie() || core_useragent::is_edge()) {
         $filename = rawurlencode($filename);
+    }
+
+    // Make sure we force download of SVG files, unless the module explicitly allows them (eg within SCORM content).
+    // This is for security reasons (https://digi.ninja/blog/svg_xss.php).
+    if (file_is_svg_image_from_mimetype($mimetype) && empty($options['dontforcesvgdownload'])) {
+        $forcedownload = true;
     }
 
     if ($forcedownload) {
@@ -2589,7 +2598,7 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
 
     } else {
         // Try to put the file through filters
-        if ($mimetype == 'text/html' || $mimetype == 'application/xhtml+xml') {
+        if ($mimetype == 'text/html' || $mimetype == 'application/xhtml+xml' || file_is_svg_image_from_mimetype($mimetype)) {
             $options = new stdClass();
             $options->noclean = true;
             $options->nocache = true; // temporary workaround for MDL-5136
@@ -2663,6 +2672,8 @@ function send_file($path, $filename, $lifetime = null , $filter=0, $pathisstring
 function send_stored_file($stored_file, $lifetime=null, $filter=0, $forcedownload=false, array $options=array()) {
     global $CFG, $COURSE;
 
+    static $recursion = 0;
+
     if (empty($options['filename'])) {
         $filename = null;
     } else {
@@ -2706,6 +2717,13 @@ function send_stored_file($stored_file, $lifetime=null, $filter=0, $forcedownloa
 
     // handle external resource
     if ($stored_file && $stored_file->is_external_file() && !isset($options['sendcachedexternalfile'])) {
+
+        // Have we been here before?
+        $recursion++;
+        if ($recursion > 10) {
+            throw new coding_exception('Recursive file serving detected');
+        }
+
         $stored_file->send_file($lifetime, $filter, $forcedownload, $options);
         die;
     }
@@ -3019,6 +3037,16 @@ function file_merge_draft_area_into_draft_area($getfromdraftid, $mergeintodrafti
 }
 
 /**
+ * Attempt to determine whether the specified mime-type is an SVG image or not.
+ *
+ * @param string $mimetype Mime-type
+ * @return bool True if it is an SVG file
+ */
+function file_is_svg_image_from_mimetype(string $mimetype): bool {
+    return preg_match('|^image/svg|', $mimetype);
+}
+
+/**
  * RESTful cURL class
  *
  * This is a wrapper class for curl, it is quite easy to use:
@@ -3081,7 +3109,7 @@ class curl {
     private $cookie   = false;
     /** @var bool tracks multiple headers in response - redirect detection */
     private $responsefinished = false;
-    /** @var security helper class, responsible for checking host/ports against blacklist/whitelist entries.*/
+    /** @var security helper class, responsible for checking host/ports against allowed/blocked entries.*/
     private $securityhelper;
     /** @var bool ignoresecurity a flag which can be supplied to the constructor, allowing security to be bypassed. */
     private $ignoresecurity;
@@ -3635,6 +3663,51 @@ class curl {
     }
 
     /**
+     * check_securityhelper_blocklist.
+     * Checks whether the given URL is blocked by checking both plugin's security helpers
+     * and core curl security helper or any curl security helper that passed to curl class constructor.
+     * If ignoresecurity is set to true, skip checking and consider the url is not blocked.
+     * This augments all installed plugin's security helpers if there is any.
+     *
+     * @param string $url the url to check.
+     * @return string - an error message if URL is blocked or null if URL is not blocked.
+     */
+    protected function check_securityhelper_blocklist(string $url): ?string {
+
+        // If curl security is not enabled, do not proceed.
+        if ($this->ignoresecurity) {
+            return null;
+        }
+
+        // Augment all installed plugin's security helpers if there is any.
+        // The plugin's function has to be defined as plugintype_pluginname_security_helper in pluginname/lib.php file.
+        $plugintypes = get_plugins_with_function('curl_security_helper');
+
+        // If any of the security helper's function returns true, treat as URL is blocked.
+        foreach ($plugintypes as $plugins) {
+            foreach ($plugins as $pluginfunction) {
+                // Get curl security helper object from plugin lib.php.
+                $pluginsecurityhelper = $pluginfunction();
+                if ($pluginsecurityhelper instanceof \core\files\curl_security_helper_base) {
+                    if ($pluginsecurityhelper->url_is_blocked($url)) {
+                        $this->error = $pluginsecurityhelper->get_blocked_url_string();
+                        return $this->error;
+                    }
+                }
+            }
+        }
+
+        // Check if the URL is blocked in core curl_security_helper or
+        // curl security helper that passed to curl class constructor.
+        if ($this->securityhelper->url_is_blocked($url)) {
+            $this->error = $this->securityhelper->get_blocked_url_string();
+            return $this->error;
+        }
+
+        return null;
+    }
+
+    /**
      * Single HTTP Request
      *
      * @param string $url The URL to request
@@ -3642,11 +3715,12 @@ class curl {
      * @return bool
      */
     protected function request($url, $options = array()) {
-        // Reset here so that the data is valid when result returned from cache, or if we return due to a blacklist hit.
+        // Reset here so that the data is valid when result returned from cache, or if we return due to a blocked URL hit.
         $this->reset_request_state_vars();
 
         if ((defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
-            if ($mockresponse = array_pop(self::$mockresponses)) {
+            $mockresponse = array_pop(self::$mockresponses);
+            if ($mockresponse !== null) {
                 $this->info = [ 'http_code' => 200 ];
                 return $mockresponse;
             }
@@ -3657,10 +3731,9 @@ class curl {
             debugging('Attempting to disable emulated redirects has no effect any more!', DEBUG_DEVELOPER);
         }
 
-        // If curl security is enabled, check the URL against the list of blocked URLs before calling the first curl_exec.
-        if (!$this->ignoresecurity && $this->securityhelper->url_is_blocked($url)) {
-            $this->error = $this->securityhelper->get_blocked_url_string();
-            return $this->error;
+        $urlisblocked = $this->check_securityhelper_blocklist($url);
+        if (!is_null($urlisblocked)) {
+            return $urlisblocked;
         }
 
         // Set the URL as a curl option.
@@ -3756,11 +3829,11 @@ class curl {
                     }
                 }
 
-                if (!$this->ignoresecurity && $this->securityhelper->url_is_blocked($redirecturl)) {
+                $urlisblocked = $this->check_securityhelper_blocklist($redirecturl);
+                if (!is_null($urlisblocked)) {
                     $this->reset_request_state_vars();
-                    $this->error = $this->securityhelper->get_blocked_url_string();
                     curl_close($curl);
-                    return $this->error;
+                    return $urlisblocked;
                 }
 
                 // If the response body is written to a seekable stream resource, reset the stream pointer to avoid
@@ -4093,14 +4166,14 @@ class curl {
         $crlf = "\r\n";
         return preg_replace(
                 // HTTP version and status code (ignore value of code).
-                '~^HTTP/1\..*' . $crlf .
+                '~^HTTP/[1-9](\.[0-9])?.*' . $crlf .
                 // Header name: character between 33 and 126 decimal, except colon.
                 // Colon. Header value: any character except \r and \n. CRLF.
                 '(?:[\x21-\x39\x3b-\x7e]+:[^' . $crlf . ']+' . $crlf . ')*' .
                 // Headers are terminated by another CRLF (blank line).
                 $crlf .
                 // Second HTTP status code, this time must be 200.
-                '(HTTP/1.[01] 200 )~', '$1', $input);
+                '(HTTP/[1-9](\.[0-9])? 200)~', '$2', $input);
     }
 }
 
@@ -4486,6 +4559,37 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             \core\session\manager::write_close(); // Unlock session during file serving.
             send_stored_file($file, 0, 0, true, $sendfileoptions);
 
+        } else if ($filearea === 'event_description' and $context->contextlevel == CONTEXT_COURSECAT) {
+            if ($CFG->forcelogin) {
+                require_login();
+            }
+
+            // Get category, this will also validate access.
+            $category = core_course_category::get($context->instanceid);
+
+            // Get the event ID from the args array, load event.
+            $eventid = array_shift($args);
+            $event = $DB->get_record('event', [
+                'id' => (int) $eventid,
+                'eventtype' => 'category',
+                'categoryid' => $category->id,
+            ]);
+
+            if (!$event) {
+                send_file_not_found();
+            }
+
+            // Retrieve file from storage, and serve.
+            $filename = array_pop($args);
+            $filepath = $args ? '/' . implode('/', $args) .'/' : '/';
+            $file = $fs->get_file($context->id, $component, $filearea, $eventid, $filepath, $filename);
+            if (!$file || $file->is_directory()) {
+                send_file_not_found();
+            }
+
+            // Unlock session during file serving.
+            \core\session\manager::write_close();
+            send_stored_file($file, HOURSECS, 0, $forcedownload, $sendfileoptions);
         } else if ($filearea === 'event_description' and $context->contextlevel == CONTEXT_COURSE) {
 
             // Respect forcelogin and require login unless this is the site.... it probably
@@ -4621,33 +4725,15 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
 
             $userid = $context->instanceid;
 
-            if ($USER->id == $userid) {
-                // always can access own
+            if (!empty($CFG->forceloginforprofiles)) {
+                require_once("{$CFG->dirroot}/user/lib.php");
 
-            } else if (!empty($CFG->forceloginforprofiles)) {
                 require_login();
 
-                if (isguestuser()) {
+                // Verify the current user is able to view the profile of the supplied user anywhere.
+                $user = core_user::get_user($userid);
+                if (!user_can_view_profile($user, null, $context)) {
                     send_file_not_found();
-                }
-
-                // we allow access to site profile of all course contacts (usually teachers)
-                if (!has_coursecontact_role($userid) && !has_capability('moodle/user:viewdetails', $context)) {
-                    send_file_not_found();
-                }
-
-                $canview = false;
-                if (has_capability('moodle/user:viewdetails', $context)) {
-                    $canview = true;
-                } else {
-                    $courses = enrol_get_my_courses();
-                }
-
-                while (!$canview && count($courses) > 0) {
-                    $course = array_shift($courses);
-                    if (has_capability('moodle/user:viewdetails', context_course::instance($course->id))) {
-                        $canview = true;
-                    }
                 }
             }
 
@@ -4669,23 +4755,14 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $offlin
             }
 
             if (!empty($CFG->forceloginforprofiles)) {
-                require_login();
-                if (isguestuser()) {
-                    print_error('noguest');
-                }
+                require_once("{$CFG->dirroot}/user/lib.php");
 
-                //TODO: review this logic of user profile access prevention
-                if (!has_coursecontact_role($userid) and !has_capability('moodle/user:viewdetails', $usercontext)) {
-                    print_error('usernotavailable');
-                }
-                if (!has_capability('moodle/user:viewdetails', $context) && !has_capability('moodle/user:viewdetails', $usercontext)) {
-                    print_error('cannotviewprofile');
-                }
-                if (!is_enrolled($context, $userid)) {
-                    print_error('notenrolledprofile');
-                }
-                if (groups_get_course_groupmode($course) == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $context)) {
-                    print_error('groupnotamember');
+                require_login();
+
+                // Verify the current user is able to view the profile of the supplied user in current course.
+                $user = core_user::get_user($userid);
+                if (!user_can_view_profile($user, $course, $usercontext)) {
+                    send_file_not_found();
                 }
             }
 

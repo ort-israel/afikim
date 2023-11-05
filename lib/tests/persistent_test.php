@@ -34,7 +34,7 @@ global $CFG;
  */
 class core_persistent_testcase extends advanced_testcase {
 
-    public function setUp() {
+    public function setUp(): void {
         $this->make_persistent_table();
         $this->resetAfterTest();
     }
@@ -174,16 +174,29 @@ class core_persistent_testcase extends advanced_testcase {
         $this->assertEquals($data, $p->to_record());
     }
 
-    /**
-     * @expectedException coding_exception
-     */
     public function test_from_record_invalid_param() {
         $p = new core_testable_persistent();
         $data = (object) array(
+            'shortname' => 'ddd',
+            'idnumber' => 'abc',
+            'description' => 'xyz',
+            'descriptionformat' => FORMAT_PLAIN,
+            'parentid' => 999,
+            'path' => '/a/b/c',
+            'sortorder' => 12,
+            'id' => 1,
+            'timecreated' => 2,
+            'timemodified' => 3,
+            'usermodified' => 4,
+            'scaleid' => null,
             'invalidparam' => 'abc'
         );
 
         $p->from_record($data);
+
+        // Previous call should succeed, assert we get back all data except invalid param.
+        unset($data->invalidparam);
+        $this->assertEquals($data, $p->to_record());
     }
 
     public function test_validate() {
@@ -439,11 +452,9 @@ class core_persistent_testcase extends advanced_testcase {
         $this->assertEquals($expected, core_testable_persistent::get_sql_fields('c', 'prefix_'));
     }
 
-    /**
-     * @expectedException               coding_exception
-     * @expectedExceptionMessageRegExp  /The alias .+ exceeds 30 characters/
-     */
     public function test_get_sql_fields_too_long() {
+        $this->expectException(coding_exception::class);
+        $this->expectExceptionMessageMatches('/The alias .+ exceeds 30 characters/');
         core_testable_persistent::get_sql_fields('c');
     }
 }

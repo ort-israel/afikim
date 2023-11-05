@@ -17,7 +17,6 @@
  * Events for the message drawer.
  *
  * @module     core_message/message_drawer_events
- * @package    message
  * @copyright  2018 Ryan Wyllie <ryan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -39,6 +38,7 @@ define([], function() {
         CONVERSATION_UNSET_FAVOURITE: 'message-drawer-conversation-unset-favourite',
         CONVERSATION_UNSET_MUTED: 'message-drawer-conversation-unset-muted',
         PREFERENCES_UPDATED: 'message-drawer-preferences-updated',
+        READY: 'message-drawer-ready',
         ROUTE_CHANGED: 'message-drawer-route-change',
         SHOW: 'message-drawer-show',
         HIDE: 'message-drawer-hide',

@@ -18,16 +18,19 @@ Feature: A teacher can set three types of survey activity
 
   Scenario: Switching between the three survey types
     Given the following "activities" exist:
-      | activity | course | name             |
-      | survey   | C1     | Test survey name |
-    When I am on the "Test survey name" "survey activity" page
+      | activity | name             | course | idnumber  |
+      | survey   | Test survey name | C1     | survey1   |
+    And I am on the "Test survey name" "survey activity editing" page
+    And I set the following fields to these values:
+      | Survey type | ATTLS (20 item version) |
+    And I press "Save and display"
     Then I should see "Attitudes Towards Thinking and Learning"
-    And I follow "Edit settings"
+    And I navigate to "Edit settings" in current page administration
     And I set the following fields to these values:
       | Survey type | Critical incidents |
     And I press "Save and display"
     And I should see "At what moment in class were you most engaged as a learner?"
-    And I follow "Edit settings"
+    And I navigate to "Edit settings" in current page administration
     And I set the following fields to these values:
       | Survey type | COLLES (Preferred and Actual) |
     And I press "Save and display"
@@ -35,13 +38,13 @@ Feature: A teacher can set three types of survey activity
     And I should see "my learning focuses on issues that interest me."
 
   @javascript
-  Scenario: Survey activity is created via UI
+  Scenario: Survey activity is create via UI
     Given I am on the "Course 1" course page
     And I turn editing mode on
     And I add a "Survey" to section "1"
     And I set the following fields to these values:
       | Name        | Test survey name        |
       | Description | Test survey description |
-      | Survey type | Critical incidents      |
+      | Survey type | ATTLS (20 item version) |
     When I press "Save and return to course"
     Then I should see "Test survey name"

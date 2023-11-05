@@ -78,7 +78,7 @@ class manager {
             foreach ($plugins as $plugin => $pluginfunction) {
                 $result = $pluginfunction();
                 foreach ($result as $check) {
-                    $check->component = $plugintype .  '_' . $plugin;
+                    $check->set_component($plugintype . '_' . $plugin);
                     $checks[] = $check;
                 }
             }
@@ -121,8 +121,7 @@ class manager {
         $checks = [
             new environment\displayerrors(),
             new environment\unsecuredataroot(),
-            new environment\vendordir(),
-            new environment\nodemodules(),
+            new environment\publicpaths(),
             new environment\configrw(),
             new environment\preventexecpath(),
             new security\mediafilterswf(),

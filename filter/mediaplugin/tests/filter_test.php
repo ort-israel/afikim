@@ -23,13 +23,17 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace filter_mediaplugin;
+
+use filter_mediaplugin;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/filter/mediaplugin/filter.php'); // Include the code to test
 
 
-class filter_mediaplugin_testcase extends advanced_testcase {
+class filter_test extends \advanced_testcase {
 
     function test_filter_mediaplugin_link() {
         $this->resetAfterTest(true);
@@ -129,7 +133,7 @@ class filter_mediaplugin_testcase extends advanced_testcase {
         $precededlongurl = '<a href="http://moodle.org/testfile/test.mp3">test.mp3</a>'. $longurl;
         $filter = $filterplugin->filter($precededlongurl);
         $this->assertEquals(1, substr_count($filter, '</audio>'));
-        $this->assertContains($longurl, $filter);
+        $this->assertStringContainsString($longurl, $filter);
 
         // Testing for cases where: to be filtered content has 6+ text afterwards.
         $filter = $filterplugin->filter($paddedurl);

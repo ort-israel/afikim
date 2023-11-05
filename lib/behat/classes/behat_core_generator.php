@@ -87,6 +87,18 @@ class behat_core_generator extends behat_generator_base {
                 'required' => ['name', 'category', 'type', 'shortname'],
                 'switchids' => [],
             ],
+            'custom profile field categories' => [
+                'singular' => 'custom profile field category',
+                'datagenerator' => 'custom_profile_field_category',
+                'required' => ['name'],
+                'switchids' => [],
+            ],
+            'custom profile fields' => [
+                'singular' => 'custom profile field',
+                'datagenerator' => 'custom_profile_field',
+                'required' => ['datatype', 'shortname', 'name'],
+                'switchids' => [],
+            ],
             'permission overrides' => [
                 'singular' => 'permission override',
                 'datagenerator' => 'permission_override',
@@ -143,6 +155,12 @@ class behat_core_generator extends behat_generator_base {
                 'singular' => 'role',
                 'datagenerator' => 'role',
                 'required' => ['shortname'],
+            ],
+            'role capabilities' => [
+                'singular' => 'role capability',
+                'datagenerator' => 'role_capability',
+                'required' => ['role'],
+                'switchids' => ['role' => 'roleid'],
             ],
             'grade categories' => [
                 'singular' => 'grade category',
@@ -378,6 +396,22 @@ class behat_core_generator extends behat_generator_base {
             $data['categoryid'] = $cat->id;
         }
 
+        // We need to ensure that all these attributes coming from data are not-localised floats.
+        $attrs = [
+            'grademax',
+            'grademin',
+            'gradepass',
+            'multfactor',
+            'plusfactor',
+            'aggregationcoef',
+            'aggregationcoef2',
+        ];
+        foreach ($attrs as $attr) {
+            if (array_key_exists($attr, $data)) {
+                $data[$attr] = unformat_float($data[$attr]);
+            }
+        }
+
         return $data;
     }
 
@@ -558,6 +592,16 @@ class behat_core_generator extends behat_generator_base {
 
         if (!isset($data['status'])) {
             $data['status'] = null;
+        } else {
+            $status = strtolower($data['status']);
+            switch ($status) {
+                case 'active':
+                    $data['status'] = ENROL_USER_ACTIVE;
+                    break;
+                case 'suspended':
+                    $data['status'] = ENROL_USER_SUSPENDED;
+                    break;
+            }
         }
 
         // If the provided course shortname is the site shortname we consider it a system role assign.
@@ -679,6 +723,23 @@ class behat_core_generator extends behat_generator_base {
         }
 
         $this->datagenerator->create_role($data);
+    }
+
+    /**
+     * Assign capabilities to a role.
+     *
+     * @param array $data
+     */
+    protected function process_role_capability($data): void {
+        // We require the user to fill the role shortname.
+        if (empty($data['roleid'])) {
+            throw new Exception('\'role capability\' requires the field \'roleid\' to be specified');
+        }
+
+        $roleid = $data['roleid'];
+        unset($data['roleid']);
+
+        $this->datagenerator->create_role_capability($roleid, $data, \context_system::instance());
     }
 
     /**
@@ -964,6 +1025,9 @@ class behat_core_generator extends behat_generator_base {
             $record = new stdClass();
             $record->usercreated = $data['userid'];
             $record->name = $data['contentname'];
+            if (isset($data['visibility'])) {
+                $record->visibility = $data['visibility'];
+            }
             $content = $contenttype->create_content($record);
 
             if (!empty($data['filepath'])) {

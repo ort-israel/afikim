@@ -23,6 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+$string['activitydate:due'] = 'Due:';
 $string['activityoverview'] = 'There are new forum posts';
 $string['actionsforgraderinterface'] = 'Actions for the grader interface';
 $string['actionsforpost'] = 'Actions for post';
@@ -104,6 +105,9 @@ $string['clicktounfavourite'] = 'You have starred this discussion. Click to unst
 $string['clicktofavourite'] = 'You have not starred this discussion. Click to star.';
 $string['close'] = 'Close';
 $string['closegrader'] = 'Close grader';
+$string['completiondetail:discussions'] = 'Start discussions: {$a}';
+$string['completiondetail:replies'] = 'Post replies: {$a}';
+$string['completiondetail:posts'] = 'Make forum posts: {$a}';
 $string['completiondiscussions'] = 'Student must create discussions:';
 $string['completiondiscussionsdesc'] = 'Student must create at least {$a} discussion(s)';
 $string['completiondiscussionsgroup'] = 'Require discussions';
@@ -254,11 +258,13 @@ $string['emaildigesttype_help'] = 'The type of notification that you will receiv
 * Digest - subjects only - you will receive one digest e-mail per day containing just the subject of each forum post.
 ';
 $string['emptymessage'] = 'Something was wrong with your post. Perhaps you left it blank, or the attachment was too big. Your changes have NOT been saved.';
+$string['errorcannotlock'] = 'You do not have the permission to lock discussions.';
+$string['errordiscussionnotfound'] = 'The discussion was not found';
 $string['erroremptymessage'] = 'Post message cannot be empty';
 $string['erroremptysubject'] = 'Post subject cannot be empty.';
 $string['errorenrolmentrequired'] = 'You must be enrolled in this course to access this content';
+$string['errorforumnotfound'] = 'The forum that this discussion belongs to was not found';
 $string['errorwhiledelete'] = 'An error occurred while deleting record.';
-$string['errorcannotlock'] = 'You do not have the permission to lock discussions.';
 $string['eventassessableuploaded'] = 'Some content has been posted.';
 $string['everyonecanchoose'] = 'Everyone can choose to be subscribed';
 $string['everyonecannowchoose'] = 'Everyone can now choose to be subscribed';
@@ -291,7 +297,7 @@ $string['forum:cantogglefavourite'] = 'Star discussions';
 $string['forum:grade'] = 'Grade forum';
 $string['forumauthorhidden'] = 'Author (hidden)';
 $string['forumblockingalmosttoomanyposts'] = 'You are approaching the posting threshold. You have posted {$a->numposts} times in the last {$a->blockperiod} and the limit is {$a->blockafter} posts.';
-$string['forumbodyhidden'] = 'This post cannot be viewed by you, probably because you have not posted in the discussion, the maximum editing time hasn\'t passed yet, the discussion has not started or the discussion has expired.';
+$string['forumbodyhidden'] = 'This post is currently hidden, most likely because you need to post in the discussion first and forum post notifications must be sent. Another possibility is that the current time is not within the display period set for the post.';
 $string['forum:canposttomygroups'] = 'Post to all groups you have access to';
 $string['forum:createattachment'] = 'Create attachments';
 $string['forum:deleteanypost'] = 'Delete any posts (anytime)';
@@ -495,7 +501,7 @@ $string['parentofthispost'] = 'Parent of this post';
 $string['permalink'] = 'Permalink';
 $string['permanentlinktopost'] = 'Permanent link to this post';
 $string['permanentlinktoparentpost'] = 'Permanent link to the parent of this post';
-$string['postisprivatereply'] = 'This is a private reply. It is not visible to other participants.';
+$string['postisprivatereply'] = 'This is a private reply. It is only visible to you and anyone with the capability to view private replies, such as teachers or managers.';
 $string['pindiscussion'] = 'Pin this discussion';
 $string['pinupdated'] = 'The pin option has been updated.';
 $string['posttomygroups'] = 'Post a copy to all groups';
@@ -510,10 +516,12 @@ $string['postbymailsuccess'] = 'Your reply "{$a->subject}" was successfully post
 $string['postbymailsuccess_html'] = 'Your reply <a href="{$a->discussionurl}">{$a->subject}</a> was successfully posted.';
 $string['postbyuser'] = '{$a->post} by {$a->user}';
 $string['postincontext'] = 'See this post in context';
+$string['postmailinfo'] = 'This is a copy of a message posted in {$a}.';
 $string['postmailinfolink'] = 'This is a copy of a message posted in {$a->coursename}.
 
 To reply click on this link: {$a->replylink}';
 $string['postmailnow'] = '<p>This post will be mailed out immediately to all forum subscribers.</p>';
+$string['postmailreply'] = 'To reply click on this link: {$a}';
 $string['postmailsubject'] = '{$a->courseshortname}: {$a->subject}';
 $string['postrating1'] = 'Mostly separate knowing';
 $string['postrating2'] = 'Separate and connected';
@@ -707,11 +715,11 @@ $string['trackingoff'] = 'Off';
 $string['trackingon'] = 'Forced';
 $string['trackingoptional'] = 'Optional';
 $string['trackingtype'] = 'Read tracking';
-$string['trackingtype_help'] = 'Read tracking enables participants to easily check which posts they have not yet seen by highlighting any new posts.
+$string['trackingtype_help'] = 'Read tracking enables participants to check which posts they have not yet seen by highlighting any new posts.
 
-If set to optional, participants can choose whether to turn tracking on or off via a link in the actions menu or administration block, depending on the theme. (Users must also enable forum tracking in their forum preferences.)
+If set to optional, participants can choose whether to turn tracking on or off for the forum. (Users must also enable forum tracking in their forum preferences.)
 
-If \'Allow forced read tracking\' is enabled in the site administration, then a further option is available - forced. This means that tracking is always on, regardless of users\' forum preferences.';
+If \'Allow forced read tracking\' is enabled by a site administrator, then a further option is available - forced. This means that tracking is always on, regardless of users\' forum preferences.';
 $string['unlockdiscussion'] = 'Unlock this discussion';
 $string['unread'] = 'Unread';
 $string['unreadpost'] = 'Unread post';

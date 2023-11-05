@@ -56,7 +56,6 @@ Feature: In a group assignment, teacher can annotate PDF files for all users
     Given I set the field "applytoall" to "0"
     And I press "Save changes"
     And I should see "The changes to the grade and feedback were saved"
-    And I press "OK"
     And I click on "Edit settings" "link"
     And I log out
     And I am on the "Test assignment name" Activity page logged in as student1

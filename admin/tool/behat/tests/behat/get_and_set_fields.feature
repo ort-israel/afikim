@@ -113,14 +113,21 @@ Feature: Verify that all form fields values can be get and set
       | idnumber         | choice1                      |
       | intro            | Test choice description      |
       | name             | Test choice name             |
-      | option           | Option 1, Option 2, Option 3 |
+      | choice1          | Option 1, Option 2, Option 3 |
       | section          | 1                            |
       | allowupdate      | 1                            |
+    And I am on "Course 1" course homepage
+    And I am on the "Test choice name" "choice activity editing" page
+    And I set the field "Option 1" to "one"
+    And I set the field "Option 2" to "two"
+    And I set the field "Option 3" to "three"
+    And I press "Save and return to course"
+    And I am on "Course 1" course homepage
     And I am on the "Test choice name" "choice activity" page
-    And I set the field "Option 1" to "1"
+    And I set the field "one" to "1"
     And I press "Save my choice"
-    And the field "Option 1" matches value "1"
-    And the field "Option 2" matches value ""
+    And the field "one" matches value "1"
+    And the field "two" matches value ""
     # Check if field xpath set/match works.
     And I am on "Course 1" course homepage
     And I navigate to "Edit settings" in current page administration
@@ -133,6 +140,9 @@ Feature: Verify that all form fields values can be get and set
 
   @javascript
   Scenario: with JS enabled all form fields getters and setters works as expected
+    Given the following "activities" exist:
+      | activity | course | name        |
+      | lesson   | C1     | Test lesson |
     Then I am on "Course 1" course homepage
     And I navigate to "Users > Groups" in current page administration
     # Select (multi-select & AJAX) - Checking "I set the field" and "select box should contain".
@@ -145,11 +155,8 @@ Feature: Verify that all form fields values can be get and set
     And the "members" select box should contain "Student 2 (s2@example.com)"
     And the "members" select box should not contain "Student 3 (s3@example.com)"
     # Checkbox (AJAX) - Checking "I set the field" and "I set the following fields to these values".
-    And I am on "Course 1" course homepage
-    And I add a "Lesson" to section "1"
+    And I am on the "Test lesson" "lesson activity editing" page
     And I set the following fields to these values:
-      | Name | Test lesson |
-      | Description | Test lesson description |
       | available[enabled] | 1 |
     And I set the field "deadline[enabled]" to "1"
     # Checkbox (AJAX) - Checking "the field matches value" before saving.

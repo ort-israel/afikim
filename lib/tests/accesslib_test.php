@@ -676,13 +676,13 @@ class core_accesslib_testcase extends advanced_testcase {
         assign_capability('moodle/backup:backupcourse', CAP_PREVENT, $teacher->id, $frontcontext->id);
 
         $roles = get_roles_with_capability('moodle/backup:backupcourse');
-        $this->assertEquals(array($teacher->id, $manager->id), array_keys($roles), '', 0, 10, true);
+        $this->assertEqualsCanonicalizing(array($teacher->id, $manager->id), array_keys($roles), true);
 
         $roles = get_roles_with_capability('moodle/backup:backupcourse', CAP_ALLOW);
-        $this->assertEquals(array($manager->id), array_keys($roles), '', 0, 10, true);
+        $this->assertEqualsCanonicalizing(array($manager->id), array_keys($roles), true);
 
         $roles = get_roles_with_capability('moodle/backup:backupcourse', null, $syscontext);
-        $this->assertEquals(array($manager->id), array_keys($roles), '', 0, 10, true);
+        $this->assertEqualsCanonicalizing(array($manager->id), array_keys($roles), true);
     }
 
     /**
@@ -762,7 +762,8 @@ class core_accesslib_testcase extends advanced_testcase {
         $role = reset($allroles);
         $role = (array)$role;
 
-        $this->assertEquals(array('id', 'name', 'shortname', 'description', 'sortorder', 'archetype'), array_keys($role), '', 0, 10, true);
+        $this->assertEqualsCanonicalizing(array('id', 'name', 'shortname', 'description', 'sortorder', 'archetype'),
+            array_keys($role));
 
         foreach ($allroles as $roleid => $role) {
             $this->assertEquals($role->id, $roleid);
@@ -784,7 +785,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $role = reset($allroles);
         $role = (array)$role;
 
-        $this->assertEquals(array('id', 'name', 'shortname', 'description', 'sortorder', 'archetype', 'coursealias'), array_keys($role), '', 0, 10, true);
+        $this->assertEqualsCanonicalizing(array('id', 'name', 'shortname', 'description', 'sortorder', 'archetype', 'coursealias'), array_keys($role));
 
         foreach ($allroles as $roleid => $role) {
             $this->assertEquals($role->id, $roleid);
@@ -942,16 +943,16 @@ class core_accesslib_testcase extends advanced_testcase {
         foreach ($archetypes as $archetype) {
 
             $result = get_default_role_archetype_allows('assign', $archetype);
-            $this->assertInternalType('array', $result);
+            $this->assertIsArray($result);
 
             $result = get_default_role_archetype_allows('override', $archetype);
-            $this->assertInternalType('array', $result);
+            $this->assertIsArray($result);
 
             $result = get_default_role_archetype_allows('switch', $archetype);
-            $this->assertInternalType('array', $result);
+            $this->assertIsArray($result);
 
             $result = get_default_role_archetype_allows('view', $archetype);
-            $this->assertInternalType('array', $result);
+            $this->assertIsArray($result);
         }
 
         $result = get_default_role_archetype_allows('assign', '');
@@ -1482,7 +1483,7 @@ class core_accesslib_testcase extends advanced_testcase {
         $alllevels = context_helper::get_all_levels();
         foreach ($archetypes as $archetype) {
             $defaults = get_default_contextlevels($archetype);
-            $this->assertInternalType('array', $defaults);
+            $this->assertIsArray($defaults);
             foreach ($defaults as $level) {
                 $this->assertTrue(isset($alllevels[$level]));
             }
@@ -3570,9 +3571,12 @@ class core_accesslib_testcase extends advanced_testcase {
     protected function assert_capability_list_contains($expected, $actual) {
         $actualnames = [];
         foreach ($actual as $cap) {
-            $actualnames[$cap->name] = $cap->name;
+            $actualnames[] = $cap->name;
         }
-        $this->assertArraySubset(array_combine($expected, $expected), $actualnames);
+        // Verify each expected element exists.
+        foreach ($expected as $key => $value) {
+            $this->assertContains($value, $actualnames);
+        }
     }
 
     /**
@@ -3640,6 +3644,58 @@ class core_accesslib_testcase extends advanced_testcase {
                 'repository/upload:view', 'atto/recordrtc:recordaudio'];
 
         $this->assert_capability_list_contains($expectedcapabilities, $actual);
+    }
+
+    /**
+     * Test that {@see context_block::get_capabilities} returns capabilities relevant to blocks
+     */
+    public function test_context_block_caps_returned_by_get_capabilities_block_context(): void {
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $block = $this->getDataGenerator()->create_block('online_users', [
+            'parentcontextid' => context_course::instance($course->id)->id,
+        ]);
+
+        $capabilities = context_block::instance($block->id)->get_capabilities();
+
+        // Just test a few representative capabilities.
+        $expected = ['block/online_users:addinstance', 'moodle/block:edit', 'moodle/block:view'];
+        $this->assert_capability_list_contains($expected, $capabilities);
+
+        // Now test with different sorting.
+        $capabilitiesbyname = context_block::instance($block->id)->get_capabilities('riskbitmask');
+
+        $capabilitynames = array_column($capabilities, 'name');
+        $capabilitynamesordered = array_column($capabilitiesbyname, 'name');
+
+        // Each array should contain the same data, ordered differently.
+        $this->assertEqualsCanonicalizing($capabilitynames, $capabilitynamesordered);
+        $this->assertNotSame($capabilitynames, $capabilitynamesordered);
+    }
+
+    /**
+     * Test that {@see context_user::get_capabilities} returns capabilities relevant to users
+     */
+    public function test_context_user_caps_returned_by_get_capabilities_user_context(): void {
+        $this->resetAfterTest();
+
+        $user = $this->getDataGenerator()->create_user();
+        $capabilities = context_user::instance($user->id)->get_capabilities();
+
+        // Just test a few representative capabilities.
+        $expected = ['moodle/user:editmessageprofile', 'moodle/user:editprofile', 'moodle/user:viewalldetails'];
+        $this->assert_capability_list_contains($expected, $capabilities);
+
+        // Now test with different sorting.
+        $capabilitiesbyname = context_user::instance($user->id)->get_capabilities('name');
+
+        $capabilitynames = array_column($capabilities, 'name');
+        $capabilitynamesordered = array_column($capabilitiesbyname, 'name');
+
+        // Each array should contain the same data, ordered differently.
+        $this->assertEqualsCanonicalizing($capabilitynames, $capabilitynamesordered);
+        $this->assertNotSame($capabilitynames, $capabilitynamesordered);
     }
 
     /**
@@ -4177,7 +4233,7 @@ class core_accesslib_testcase extends advanced_testcase {
     public function test_is_parent_of(string $contextpath, string $testpath, bool $testself, bool $expected): void {
         $context = $this->getMockBuilder(\context::class)
             ->disableOriginalConstructor()
-            ->setMethods([
+            ->onlyMethods([
                 'get_url',
                 'get_capabilities',
             ])
@@ -4189,7 +4245,7 @@ class core_accesslib_testcase extends advanced_testcase {
 
         $comparisoncontext = $this->getMockBuilder(\context::class)
             ->disableOriginalConstructor()
-            ->setMethods([
+            ->onlyMethods([
                 'get_url',
                 'get_capabilities',
             ])
@@ -4279,7 +4335,7 @@ class core_accesslib_testcase extends advanced_testcase {
     public function test_is_child_of(string $contextpath, string $testpath, bool $testself, bool $expected): void {
         $context = $this->getMockBuilder(\context::class)
             ->disableOriginalConstructor()
-            ->setMethods([
+            ->onlyMethods([
                 'get_url',
                 'get_capabilities',
             ])
@@ -4291,7 +4347,7 @@ class core_accesslib_testcase extends advanced_testcase {
 
         $comparisoncontext = $this->getMockBuilder(\context::class)
             ->disableOriginalConstructor()
-            ->setMethods([
+            ->onlyMethods([
                 'get_url',
                 'get_capabilities',
             ])
@@ -4538,6 +4594,29 @@ class core_accesslib_testcase extends advanced_testcase {
         $this->setUser(0);
         $this->expectException(\required_capability_exception::class);
         require_all_capabilities($sca, $coursecontext);
+    }
+
+    /**
+     * Test get_navigation_filter_context.
+     *
+     * @covers ::get_navigation_filter_context
+     */
+    public function test_get_navigation_filter_context() {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        set_config('filternavigationwithsystemcontext', 0);
+        // First test passed values are returned if disabled.
+        $this->assertNull(context_helper::get_navigation_filter_context(null));
+        $coursecontext = context_course::instance($course->id);
+        $filtercontext = context_helper::get_navigation_filter_context($coursecontext);
+        $this->assertEquals($coursecontext->id, $filtercontext->id);
+
+        // Now test that any input returns system context if enabled.
+        set_config('filternavigationwithsystemcontext', 1);
+        $filtercontext = context_helper::get_navigation_filter_context(null);
+        $this->assertInstanceOf('\context_system', $filtercontext);
+        $filtercontext = context_helper::get_navigation_filter_context($coursecontext);
+        $this->assertInstanceOf('\context_system', $filtercontext);
     }
 }
 

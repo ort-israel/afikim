@@ -25,8 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version  = 2020061500;
-$plugin->requires = 2020060900;  // Requires this Moodle version.
+$plugin->version  = 2021051700;
+$plugin->requires = 2021051100;  // Requires this Moodle version.
 $plugin->component= 'filter_glossary';
 
-$plugin->dependencies = array('mod_glossary' => 2020060900);
+$plugin->dependencies = array('mod_glossary' => 2021051100);

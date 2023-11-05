@@ -720,6 +720,15 @@ class quiz_attempt {
     }
 
     /**
+     * Preload all attempt step users to show in Response history.
+     *
+     * @throws dml_exception
+     */
+    public function preload_all_attempt_step_users(): void {
+        $this->quba->preload_all_step_users();
+    }
+
+    /**
      * Let each slot know which section it is part of.
      */
     protected function link_sections_and_slots() {
@@ -1828,7 +1837,7 @@ class quiz_attempt {
      */
     public function render_question_for_commenting($slot) {
         $options = $this->get_display_options(true);
-        $options->hide_all_feedback();
+        $options->generalfeedback = question_display_options::HIDDEN;
         $options->manualcomment = question_display_options::EDITABLE;
         return $this->quba->render_question($slot, $options,
                 $this->get_question_number($slot));
@@ -1880,8 +1889,7 @@ class quiz_attempt {
         $bc = new block_contents();
         $bc->attributes['id'] = 'mod_quiz_navblock';
         $bc->attributes['role'] = 'navigation';
-        $bc->attributes['aria-labelledby'] = 'mod_quiz_navblock_title';
-        $bc->title = html_writer::span(get_string('quiznavigation', 'quiz'), '', array('id' => 'mod_quiz_navblock_title'));
+        $bc->title = get_string('quiznavigation', 'quiz');
         $bc->content = $output->navigation_panel($panel);
         return $bc;
     }
@@ -2368,22 +2376,31 @@ class quiz_attempt {
 
         $transaction = $DB->start_delegated_transaction();
 
-        // If there is only a very small amount of time left, there is no point trying
-        // to show the student another page of the quiz. Just finish now.
-        $graceperiodmin = null;
+        // Get key times.
         $accessmanager = $this->get_access_manager($timenow);
         $timeclose = $accessmanager->get_end_time($this->get_attempt());
+        $graceperiodmin = get_config('quiz', 'graceperiodmin');
 
         // Don't enforce timeclose for previews.
         if ($this->is_preview()) {
             $timeclose = false;
         }
+
+        // Check where we are in relation to the end time, if there is one.
         $toolate = false;
-        if ($timeclose !== false && $timenow > $timeclose - QUIZ_MIN_TIME_TO_CONTINUE) {
-            $timeup = true;
-            $graceperiodmin = get_config('quiz', 'graceperiodmin');
-            if ($timenow > $timeclose + $graceperiodmin) {
-                $toolate = true;
+        if ($timeclose !== false) {
+            if ($timenow > $timeclose - QUIZ_MIN_TIME_TO_CONTINUE) {
+                // If there is only a very small amount of time left, there is no point trying
+                // to show the student another page of the quiz. Just finish now.
+                $timeup = true;
+                if ($timenow > $timeclose + $graceperiodmin) {
+                    $toolate = true;
+                }
+            } else {
+                // If time is not close to expiring, then ignore the client-side timer's opinion
+                // about whether time has expired. This can happen if the time limit has changed
+                // since the student's previous interaction.
+                $timeup = false;
             }
         }
 
@@ -2391,10 +2408,7 @@ class quiz_attempt {
         $becomingoverdue = false;
         $becomingabandoned = false;
         if ($timeup) {
-            if ($this->get_quiz()->overduehandling == 'graceperiod') {
-                if (is_null($graceperiodmin)) {
-                    $graceperiodmin = get_config('quiz', 'graceperiodmin');
-                }
+            if ($this->get_quiz()->overduehandling === 'graceperiod') {
                 if ($timenow > $timeclose + $this->get_quiz()->graceperiod + $graceperiodmin) {
                     // Grace period has run out.
                     $finishattempt = true;
@@ -2453,7 +2467,15 @@ class quiz_attempt {
             if ($becomingabandoned) {
                 $this->process_abandon($timenow, true);
             } else {
-                $this->process_finish($timenow, !$toolate, $toolate ? $timeclose : $timenow);
+                if (!$toolate || $this->get_quiz()->overduehandling == 'graceperiod') {
+                    // Normally, we record the accurate finish time when the student is online.
+                    $finishtime = $timenow;
+                } else {
+                    // But, if there is no grade period, and the final responses were too
+                    // late to be processed, record the close time, to reduce confusion.
+                    $finishtime = $timeclose;
+                }
+                $this->process_finish($timenow, !$toolate, $finishtime);
             }
 
         } catch (question_out_of_sequence_exception $e) {
@@ -2683,8 +2705,12 @@ abstract class quiz_nav_panel_base {
     public function get_question_buttons() {
         $buttons = array();
         foreach ($this->attemptobj->get_slots() as $slot) {
-            if ($heading = $this->attemptobj->get_heading_before_slot($slot)) {
-                $buttons[] = new quiz_nav_section_heading(format_string($heading));
+            $heading = $this->attemptobj->get_heading_before_slot($slot);
+            if (!is_null($heading)) {
+                $sections = $this->attemptobj->get_quizobj()->get_sections();
+                if (!(empty($heading) && count($sections) == 1)) {
+                    $buttons[] = new quiz_nav_section_heading(format_string($heading));
+                }
             }
 
             $qa = $this->attemptobj->get_question_attempt($slot);
@@ -2814,7 +2840,6 @@ class quiz_attempt_nav_panel extends quiz_nav_panel_base {
         }
         return html_writer::link($this->attemptobj->summary_url(),
                 get_string('endtest', 'quiz'), array('class' => 'endtestlink aalink')) .
-                $output->countdown_timer($this->attemptobj, time()) .
                 $this->render_restart_preview_link($output);
     }
 }

@@ -499,6 +499,11 @@ define('HOMEPAGE_USER', 2);
 defined('HUB_MOODLEORGHUBURL') || define('HUB_MOODLEORGHUBURL', 'https://stats.moodle.org');
 
 /**
+ * URL of the statistic server public key.
+ */
+defined('HUB_STATSPUBLICKEY') || define('HUB_STATSPUBLICKEY', 'https://moodle.org/static/statspubkey.pem');
+
+/**
  * Moodle mobile app service name
  */
 define('MOODLE_OFFICIAL_MOBILE_SERVICE', 'moodle_mobile_app');
@@ -760,13 +765,13 @@ function validate_param($param, $type, $allownull=NULL_NOT_ALLOWED, $debuginfo='
  * $options = clean_param($options, PARAM_INT);
  * </code>
  *
- * @param array $param the variable array we are cleaning
+ * @param array|null $param the variable array we are cleaning
  * @param string $type expected format of param after cleaning.
  * @param bool $recursive clean recursive arrays
  * @return array
  * @throws coding_exception
  */
-function clean_param_array(array $param = null, $type, $recursive = false) {
+function clean_param_array(?array $param, $type, $recursive = false) {
     // Convert null to empty array.
     $param = (array)$param;
     foreach ($param as $key => $value) {
@@ -1288,7 +1293,7 @@ function fix_utf8($value) {
         if ($buggyiconv) {
             if (function_exists('mb_convert_encoding')) {
                 $subst = mb_substitute_character();
-                mb_substitute_character('');
+                mb_substitute_character('none');
                 $result = mb_convert_encoding($value, 'utf-8', 'utf-8');
                 mb_substitute_character($subst);
 
@@ -2337,6 +2342,18 @@ function date_format_string($date, $format, $tz = 99) {
     }
 
     date_default_timezone_set(core_date::get_user_timezone($tz));
+
+    if (strftime('%p', 0) === strftime('%p', HOURSECS * 18)) {
+        $datearray = getdate($date);
+        $format = str_replace([
+            '%P',
+            '%p',
+        ], [
+            $datearray['hours'] < 12 ? get_string('am', 'langconfig') : get_string('pm', 'langconfig'),
+            $datearray['hours'] < 12 ? get_string('amcaps', 'langconfig') : get_string('pmcaps', 'langconfig'),
+        ], $format);
+    }
+
     $datestring = strftime($format, $date);
     core_date::set_default_server_timezone();
 
@@ -2358,6 +2375,14 @@ function date_format_string($date, $format, $tz = 99) {
  * @return array An array that represents the date in user time
  */
 function usergetdate($time, $timezone=99) {
+    if ($time === null) {
+        // PHP8 and PHP7 return different results when getdate(null) is called.
+        // Display warning and cast to 0 to make sure the usergetdate() behaves consistently on all versions of PHP.
+        // In the future versions of Moodle we may consider adding a strict typehint.
+        debugging('usergetdate() expects parameter $time to be int, null given', DEBUG_DEVELOPER);
+        $time = 0;
+    }
+
     date_default_timezone_set(core_date::get_user_timezone($timezone));
     $result = getdate($time);
     core_date::set_default_server_timezone();
@@ -2721,11 +2746,6 @@ function require_login($courseorid = null, $autologinguest = true, $cm = null, $
 
             if ($setwantsurltome) {
                 $SESSION->wantsurl = qualified_me();
-            }
-
-            $referer = get_local_referer(false);
-            if (!empty($referer)) {
-                $SESSION->fromurl = $referer;
             }
 
             // Give auth plugins an opportunity to authenticate or redirect to an external login page
@@ -3360,6 +3380,11 @@ function update_user_login_times() {
         return true;
     }
 
+    if (defined('USER_KEY_LOGIN') && USER_KEY_LOGIN === true) {
+        // Do not update user login time when using user key login.
+        return true;
+    }
+
     $now = time();
 
     $user = new stdClass();
@@ -3544,7 +3569,7 @@ function fullname($user, $override=false) {
     }
 
     // Get all of the name fields.
-    $allnames = get_all_user_name_fields();
+    $allnames = \core_user\fields::get_name_fields();
     if ($CFG->debugdeveloper) {
         foreach ($allnames as $allname) {
             if (!property_exists($user, $allname)) {
@@ -3637,64 +3662,6 @@ function fullname($user, $override=false) {
 }
 
 /**
- * A centralised location for the all name fields. Returns an array / sql string snippet.
- *
- * @param bool $returnsql True for an sql select field snippet.
- * @param string $tableprefix table query prefix to use in front of each field.
- * @param string $prefix prefix added to the name fields e.g. authorfirstname.
- * @param string $fieldprefix sql field prefix e.g. id AS userid.
- * @param bool $order moves firstname and lastname to the top of the array / start of the string.
- * @return array|string All name fields.
- */
-function get_all_user_name_fields($returnsql = false, $tableprefix = null, $prefix = null, $fieldprefix = null, $order = false) {
-    // This array is provided in this order because when called by fullname() (above) if firstname is before
-    // firstnamephonetic str_replace() will change the wrong placeholder.
-    $alternatenames = array('firstnamephonetic' => 'firstnamephonetic',
-                            'lastnamephonetic' => 'lastnamephonetic',
-                            'middlename' => 'middlename',
-                            'alternatename' => 'alternatename',
-                            'firstname' => 'firstname',
-                            'lastname' => 'lastname');
-
-    // Let's add a prefix to the array of user name fields if provided.
-    if ($prefix) {
-        foreach ($alternatenames as $key => $altname) {
-            $alternatenames[$key] = $prefix . $altname;
-        }
-    }
-
-    // If we want the end result to have firstname and lastname at the front / top of the result.
-    if ($order) {
-        // Move the last two elements (firstname, lastname) off the array and put them at the top.
-        for ($i = 0; $i < 2; $i++) {
-            // Get the last element.
-            $lastelement = end($alternatenames);
-            // Remove it from the array.
-            unset($alternatenames[$lastelement]);
-            // Put the element back on the top of the array.
-            $alternatenames = array_merge(array($lastelement => $lastelement), $alternatenames);
-        }
-    }
-
-    // Create an sql field snippet if requested.
-    if ($returnsql) {
-        if ($tableprefix) {
-            if ($fieldprefix) {
-                foreach ($alternatenames as $key => $altname) {
-                    $alternatenames[$key] = $tableprefix . '.' . $altname . ' AS ' . $fieldprefix . $altname;
-                }
-            } else {
-                foreach ($alternatenames as $key => $altname) {
-                    $alternatenames[$key] = $tableprefix . '.' . $altname;
-                }
-            }
-        }
-        $alternatenames = implode(',', $alternatenames);
-    }
-    return $alternatenames;
-}
-
-/**
  * Reduces lines of duplicated code for getting user name fields.
  *
  * See also {@link user_picture::unalias()}
@@ -3707,7 +3674,10 @@ function get_all_user_name_fields($returnsql = false, $tableprefix = null, $pref
  * @return object User name fields.
  */
 function username_load_fields_from_object($addtoobject, $secondobject, $prefix = null, $additionalfields = null) {
-    $fields = get_all_user_name_fields(false, null, $prefix);
+    $fields = [];
+    foreach (\core_user\fields::get_name_fields() as $field) {
+        $fields[$field] = $prefix . $field;
+    }
     if ($additionalfields) {
         // Additional fields can specify their own 'alias' such as 'id' => 'userid'. This checks to see if
         // the key is a number and then sets the key to the array value.
@@ -3754,119 +3724,6 @@ function order_in_string($values, $stringformat) {
     }
     ksort($valuearray);
     return $valuearray;
-}
-
-/**
- * Checks if current user is shown any extra fields when listing users.
- *
- * @param object $context Context
- * @param array $already Array of fields that we're going to show anyway
- *   so don't bother listing them
- * @return array Array of field names from user table, not including anything
- *   listed in $already
- */
-function get_extra_user_fields($context, $already = array()) {
-    global $CFG;
-
-    // Only users with permission get the extra fields.
-    if (!has_capability('moodle/site:viewuseridentity', $context)) {
-        return array();
-    }
-
-    // Split showuseridentity on comma (filter needed in case the showuseridentity is empty).
-    $extra = array_filter(explode(',', $CFG->showuseridentity));
-
-    foreach ($extra as $key => $field) {
-        if (in_array($field, $already)) {
-            unset($extra[$key]);
-        }
-    }
-
-    // If the identity fields are also among hidden fields, make sure the user can see them.
-    $hiddenfields = array_filter(explode(',', $CFG->hiddenuserfields));
-    $hiddenidentifiers = array_intersect($extra, $hiddenfields);
-
-    if ($hiddenidentifiers) {
-        if ($context->get_course_context(false)) {
-            // We are somewhere inside a course.
-            $canviewhiddenuserfields = has_capability('moodle/course:viewhiddenuserfields', $context);
-
-        } else {
-            // We are not inside a course.
-            $canviewhiddenuserfields = has_capability('moodle/user:viewhiddendetails', $context);
-        }
-
-        if (!$canviewhiddenuserfields) {
-            // Remove hidden identifiers from the list.
-            $extra = array_diff($extra, $hiddenidentifiers);
-        }
-    }
-
-    // Re-index the entries.
-    $extra = array_values($extra);
-
-    return $extra;
-}
-
-/**
- * If the current user is to be shown extra user fields when listing or
- * selecting users, returns a string suitable for including in an SQL select
- * clause to retrieve those fields.
- *
- * @param context $context Context
- * @param string $alias Alias of user table, e.g. 'u' (default none)
- * @param string $prefix Prefix for field names using AS, e.g. 'u_' (default none)
- * @param array $already Array of fields that we're going to include anyway so don't list them (default none)
- * @return string Partial SQL select clause, beginning with comma, for example ',u.idnumber,u.department' unless it is blank
- */
-function get_extra_user_fields_sql($context, $alias='', $prefix='', $already = array()) {
-    $fields = get_extra_user_fields($context, $already);
-    $result = '';
-    // Add punctuation for alias.
-    if ($alias !== '') {
-        $alias .= '.';
-    }
-    foreach ($fields as $field) {
-        $result .= ', ' . $alias . $field;
-        if ($prefix) {
-            $result .= ' AS ' . $prefix . $field;
-        }
-    }
-    return $result;
-}
-
-/**
- * Returns the display name of a field in the user table. Works for most fields that are commonly displayed to users.
- * @param string $field Field name, e.g. 'phone1'
- * @return string Text description taken from language file, e.g. 'Phone number'
- */
-function get_user_field_name($field) {
-    // Some fields have language strings which are not the same as field name.
-    switch ($field) {
-        case 'url' : {
-            return get_string('webpage');
-        }
-        case 'icq' : {
-            return get_string('icqnumber');
-        }
-        case 'skype' : {
-            return get_string('skypeid');
-        }
-        case 'aim' : {
-            return get_string('aimid');
-        }
-        case 'yahoo' : {
-            return get_string('yahooid');
-        }
-        case 'msn' : {
-            return get_string('msnid');
-        }
-        case 'picture' : {
-            return get_string('pictureofuser');
-        }
-    }
-    // Otherwise just use the same lang string.
-    return get_string($field);
 }
 
 /**
@@ -3954,6 +3811,7 @@ function get_enabled_auth_plugins($fix=false) {
     if ($fix) {
         $newconfig = implode(',', $auths);
         if (!isset($CFG->auth) or $newconfig != $CFG->auth) {
+            add_to_config_log('auth', $oldauthconfig, $newconfig, 'core');
             set_config('auth', $newconfig);
         }
     }
@@ -4004,6 +3862,16 @@ function get_user_fieldnames() {
 }
 
 /**
+ * Returns the string of the language for the new user.
+ *
+ * @return string language for the new user
+ */
+function get_newuser_language() {
+    global $CFG, $SESSION;
+    return (!empty($CFG->autolangusercreation) && !empty($SESSION->lang)) ? $SESSION->lang : $CFG->lang;
+}
+
+/**
  * Creates a bare-bones user record
  *
  * @todo Outline auth types and provide code example
@@ -4014,7 +3882,7 @@ function get_user_fieldnames() {
  * @return stdClass A complete user object
  */
 function create_user_record($username, $password, $auth = 'manual') {
-    global $CFG, $DB;
+    global $CFG, $DB, $SESSION;
     require_once($CFG->dirroot.'/user/profile/lib.php');
     require_once($CFG->dirroot.'/user/lib.php');
 
@@ -4039,10 +3907,6 @@ function create_user_record($username, $password, $auth = 'manual') {
         }
     }
 
-    if (!isset($newuser->city)) {
-        $newuser->city = '';
-    }
-
     $newuser->auth = $auth;
     $newuser->username = $username;
 
@@ -4050,7 +3914,7 @@ function create_user_record($username, $password, $auth = 'manual') {
     // user CFG lang for user if $newuser->lang is empty
     // or $user->lang is not an installed language.
     if (empty($newuser->lang) || !get_string_manager()->translation_exists($newuser->lang)) {
-        $newuser->lang = $CFG->lang;
+        $newuser->lang = get_newuser_language();
     }
     $newuser->confirmed = 1;
     $newuser->lastip = getremoteaddr();
@@ -4172,7 +4036,6 @@ function truncate_userinfo(array $info) {
         'firstname'   => 100,
         'lastname'    => 100,
         'email'       => 100,
-        'icq'         =>  15,
         'phone1'      =>  20,
         'phone2'      =>  20,
         'institution' => 255,
@@ -4180,7 +4043,6 @@ function truncate_userinfo(array $info) {
         'address'     => 255,
         'city'        => 120,
         'country'     =>   2,
-        'url'         => 255,
     );
 
     // Apply where needed.
@@ -4308,6 +4170,9 @@ function delete_user(stdClass $user) {
     // Remove users customised pages.
     $DB->delete_records('my_pages', array('userid' => $user->id, 'private' => 1));
 
+    // Remove user's oauth2 refresh tokens, if present.
+    $DB->delete_records('oauth2_refresh_token', array('userid' => $user->id));
+
     // Delete user from $SESSION->bulk_users.
     if (isset($SESSION->bulk_users[$user->id])) {
         unset($SESSION->bulk_users[$user->id]);
@@ -4390,7 +4255,7 @@ function guest_user() {
 
     if ($newuser = $DB->get_record('user', array('id' => $CFG->siteguest))) {
         $newuser->confirmed = 1;
-        $newuser->lang = $CFG->lang;
+        $newuser->lang = get_newuser_language();
         $newuser->lastip = getremoteaddr();
     }
 
@@ -5038,7 +4903,7 @@ function get_complete_user_data($field, $value, $mnethostid = null, $throwexcept
     }
     if (isguestuser($user)) {
         // Guest language always same as site.
-        $user->lang = $CFG->lang;
+        $user->lang = get_newuser_language();
         // Name always in current language.
         $user->firstname = get_string('guestuser');
         $user->lastname = ' ';
@@ -5292,6 +5157,10 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
                         question_delete_activity($cm);
                         // Notify the competency subsystem.
                         \core_competency\api::hook_course_module_deleted($cm);
+
+                        // Delete all tag instances associated with the instance of this module.
+                        core_tag_tag::delete_instances("mod_{$modname}", null, context_module::instance($cm->id)->id);
+                        core_tag_tag::remove_all_item_tags('core', 'course_modules', $cm->id);
                     }
                     if (function_exists($moddelete)) {
                         // This purges all module data in related tables, extra user prefs, settings, etc.
@@ -5460,8 +5329,7 @@ function remove_course_contents($courseid, $showfeedback = true, array $options 
     fulldelete($CFG->dataroot.'/'.$course->id);
 
     // Delete from cache to reduce the cache size especially makes sense in case of bulk course deletion.
-    $cachemodinfo = cache::make('core', 'coursemodinfo');
-    $cachemodinfo->delete($courseid);
+    course_modinfo::purge_course_cache($courseid);
 
     // Trigger a course content deleted event.
     $event = \core\event\course_content_deleted::create(array(
@@ -5989,7 +5857,7 @@ function email_should_be_diverted($email) {
         return true;
     }
 
-    $patterns = array_map('trim', explode(',', $CFG->divertallemailsexcept));
+    $patterns = array_map('trim', preg_split("/[\s,]+/", $CFG->divertallemailsexcept, -1, PREG_SPLIT_NO_EMPTY));
     foreach ($patterns as $pattern) {
         if (preg_match("/$pattern/", $email)) {
             return false;
@@ -6236,6 +6104,15 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
         $mail->addCustomHeader('X-Moodle-Originating-Script: ' . $originheader);
     }
 
+    if (!empty($CFG->emailheaders)) {
+        $headers = array_map('trim', explode("\n", $CFG->emailheaders));
+        foreach ($headers as $header) {
+            if (!empty($header)) {
+                $mail->addCustomHeader($header);
+            }
+        }
+    }
+
     if (!empty($from->priority)) {
         $mail->Priority = $from->priority;
     }
@@ -6304,27 +6181,29 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
             require_once($CFG->libdir.'/filelib.php');
             $mimetype = mimeinfo('type', $attachname);
 
-            $attachmentpath = $attachment;
-
             // Before doing the comparison, make sure that the paths are correct (Windows uses slashes in the other direction).
-            $attachpath = str_replace('\\', '/', $attachmentpath);
+            // The absolute (real) path is also fetched to ensure that comparisons to allowed paths are compared equally.
+            $attachpath = str_replace('\\', '/', realpath($attachment));
 
-            // Add allowed paths to an array (also check if it's not empty).
-            $allowedpaths = array_filter([
+            // Build an array of all filepaths from which attachments can be added (normalised slashes, absolute/real path).
+            $allowedpaths = array_map(function(string $path): string {
+                return str_replace('\\', '/', realpath($path));
+            }, [
                 $CFG->cachedir,
                 $CFG->dataroot,
                 $CFG->dirroot,
                 $CFG->localcachedir,
-                $CFG->tempdir
+                $CFG->tempdir,
+                $CFG->localrequestdir,
             ]);
+
             // Set addpath to true.
             $addpath = true;
+
             // Check if attachment includes one of the allowed paths.
-            foreach ($allowedpaths as $tmpvar) {
-                // Make sure both variables are normalised before comparing.
-                $temppath = str_replace('\\', '/', realpath($tmpvar));
+            foreach (array_filter($allowedpaths) as $allowedpath) {
                 // Set addpath to false if the attachment includes one of the allowed paths.
-                if (strpos($attachpath, $temppath) === 0) {
+                if (strpos($attachpath, $allowedpath) === 0) {
                     $addpath = false;
                     break;
                 }
@@ -6333,10 +6212,10 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
             // If the attachment is a full path to a file in the multiple allowed paths, use it as is,
             // otherwise assume it is a relative path from the dataroot (for backwards compatibility reasons).
             if ($addpath == true) {
-                $attachmentpath = $CFG->dataroot . '/' . $attachmentpath;
+                $attachment = $CFG->dataroot . '/' . $attachment;
             }
 
-            $mail->addAttachment($attachmentpath, $attachname, 'base64', $mimetype);
+            $mail->addAttachment($attachment, $attachname, 'base64', $mimetype);
         }
     }
 
@@ -6375,6 +6254,19 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     }
     foreach ($tempreplyto as $values) {
         $mail->addReplyTo($values[0], $values[1]);
+    }
+
+    if (!empty($CFG->emaildkimselector)) {
+        $domain = substr(strrchr($mail->From, "@"), 1);
+        $pempath = "{$CFG->dataroot}/dkim/{$domain}/{$CFG->emaildkimselector}.private";
+        if (file_exists($pempath)) {
+            $mail->DKIM_domain      = $domain;
+            $mail->DKIM_private     = $pempath;
+            $mail->DKIM_selector    = $CFG->emaildkimselector;
+            $mail->DKIM_identity    = $mail->From;
+        } else {
+            debugging("Email DKIM selector chosen due to {$mail->From} but no certificate found at $pempath", DEBUG_DEVELOPER);
+        }
     }
 
     if ($mail->send()) {
@@ -6466,7 +6358,7 @@ function setnew_password_and_mail($user, $fasthash = false) {
     // We try to send the mail in language the user understands,
     // unfortunately the filter_string() does not support alternative langs yet
     // so multilang will not work properly for site->fullname.
-    $lang = empty($user->lang) ? $CFG->lang : $user->lang;
+    $lang = empty($user->lang) ? get_newuser_language() : $user->lang;
 
     $site  = get_site();
 
@@ -7099,27 +6991,33 @@ function get_directory_size($rootdir, $excludefile='') {
  */
 function display_size($size) {
 
-    static $gb, $mb, $kb, $b;
+    static $units;
 
     if ($size === USER_CAN_IGNORE_FILE_SIZE_LIMITS) {
         return get_string('unlimited');
     }
 
-    if (empty($gb)) {
-        $gb = get_string('sizegb');
-        $mb = get_string('sizemb');
-        $kb = get_string('sizekb');
-        $b  = get_string('sizeb');
+    if (empty($units)) {
+        $units[] = get_string('sizeb');
+        $units[] = get_string('sizekb');
+        $units[] = get_string('sizemb');
+        $units[] = get_string('sizegb');
+        $units[] = get_string('sizetb');
+        $units[] = get_string('sizepb');
     }
 
-    if ($size >= 1073741824) {
-        $size = round($size / 1073741824 * 10) / 10 . $gb;
-    } else if ($size >= 1048576) {
-        $size = round($size / 1048576 * 10) / 10 . $mb;
-    } else if ($size >= 1024) {
-        $size = round($size / 1024 * 10) / 10 . $kb;
+    if ($size >= 1024 ** 5) {
+        $size = round($size / 1024 ** 5 * 10) / 10 . $units[5];
+    } else if ($size >= 1024 ** 4) {
+        $size = round($size / 1024 ** 4 * 10) / 10 . $units[4];
+    } else if ($size >= 1024 ** 3) {
+        $size = round($size / 1024 ** 3 * 10) / 10 . $units[3];
+    } else if ($size >= 1024 ** 2) {
+        $size = round($size / 1024 ** 2 * 10) / 10 . $units[2];
+    } else if ($size >= 1024 ** 1) {
+        $size = round($size / 1024 ** 1 * 10) / 10 . $units[1];
     } else {
-        $size = intval($size) .' '. $b; // File sizes over 2GB can not work in 32bit PHP anyway.
+        $size = intval($size) .' '. $units[0]; // File sizes over 2GB can not work in 32bit PHP anyway.
     }
     return $size;
 }
@@ -7175,6 +7073,39 @@ function current_language() {
     $return = str_replace('_utf8', '', $return);
 
     return $return;
+}
+
+/**
+ * Fix the current language to the given language code.
+ *
+ * @param string $lang The language code to use.
+ * @return void
+ */
+function fix_current_language(string $lang): void {
+    global $CFG, $COURSE, $SESSION, $USER;
+
+    if (!get_string_manager()->translation_exists($lang)) {
+        throw new coding_exception("The language pack for $lang is not available");
+    }
+
+    $fixglobal = '';
+    $fixlang = 'lang';
+    if (!empty($SESSION->forcelang)) {
+        $fixglobal = $SESSION;
+        $fixlang = 'forcelang';
+    } else if (!empty($COURSE->id) && $COURSE->id != SITEID && !empty($COURSE->lang)) {
+        $fixglobal = $COURSE;
+    } else if (!empty($SESSION->lang)) {
+        $fixglobal = $SESSION;
+    } else if (!empty($USER->lang)) {
+        $fixglobal = $USER;
+    } else if (isset($CFG->lang)) {
+        set_config('lang', $lang);
+    }
+
+    if ($fixglobal) {
+        $fixglobal->$fixlang = $lang;
+    }
 }
 
 /**
@@ -8024,6 +7955,16 @@ function component_callback($component, $function, array $params = array(), $def
 
     $functionname = component_callback_exists($component, $function);
 
+    if ($params && (array_keys($params) !== range(0, count($params) - 1))) {
+        // PHP 8 allows to have associative arrays in the call_user_func_array() parameters but
+        // PHP 7 does not. Using associative arrays can result in different behavior in different PHP versions.
+        // See https://php.watch/versions/8.0/named-parameters#named-params-call_user_func_array
+        // This check can be removed when minimum PHP version for Moodle is raised to 8.
+        debugging('Parameters array can not be an associative array while Moodle supports both PHP 7 and PHP 8.',
+            DEBUG_DEVELOPER);
+        $params = array_values($params);
+    }
+
     if ($functionname) {
         // Function exists, so just return function result.
         $ret = call_user_func_array($functionname, $params);
@@ -8803,8 +8744,9 @@ function format_float($float, $decimalpoints=1, $localized=true, $stripzeros=fal
     }
 
     $result = number_format($float, $decimalpoints, $separator, '');
-    if ($stripzeros) {
+    if ($stripzeros && $decimalpoints > 0) {
         // Remove zeros and final dot if not needed.
+        // However, only do this if there is a decimal point!
         $result = preg_replace('~(' . preg_quote($separator, '~') . ')?0+$~', '', $result);
     }
     return $result;
@@ -9014,11 +8956,12 @@ function make_unique_id_code($extra = '') {
  *
  * @param string $addr    The address you are checking
  * @param string $subnetstr    The string of subnet addresses
+ * @param bool $checkallzeros    The state to whether check for 0.0.0.0
  * @return bool
  */
-function address_in_subnet($addr, $subnetstr) {
+function address_in_subnet($addr, $subnetstr, $checkallzeros = false) {
 
-    if ($addr == '0.0.0.0') {
+    if ($addr == '0.0.0.0' && !$checkallzeros) {
         return false;
     }
     $subnets = explode(',', $subnetstr);
@@ -9832,6 +9775,39 @@ function get_performance_info() {
 }
 
 /**
+ * Renames a file or directory to a unique name within the same directory.
+ *
+ * This function is designed to avoid any potential race conditions, and select an unused name.
+ *
+ * @param string $filepath Original filepath
+ * @param string $prefix Prefix to use for the temporary name
+ * @return string|bool New file path or false if failed
+ * @since Moodle 3.10
+ */
+function rename_to_unused_name(string $filepath, string $prefix = '_temp_') {
+    $dir = dirname($filepath);
+    $basename = $dir . '/' . $prefix;
+    $limit = 0;
+    while ($limit < 100) {
+        // Select a new name based on a random number.
+        $newfilepath = $basename . md5(mt_rand());
+
+        // Attempt a rename to that new name.
+        if (@rename($filepath, $newfilepath)) {
+            return $newfilepath;
+        }
+
+        // The first time, do some sanity checks, maybe it is failing for a good reason and there
+        // is no point trying 100 times if so.
+        if ($limit === 0 && (!file_exists($filepath) || !is_writable($dir))) {
+            return false;
+        }
+        $limit++;
+    }
+    return false;
+}
+
+/**
  * Delete directory or only its content
  *
  * @param string $dir directory path
@@ -9839,10 +9815,23 @@ function get_performance_info() {
  * @return bool success, true also if dir does not exist
  */
 function remove_dir($dir, $contentonly=false) {
-    if (!file_exists($dir)) {
+    if (!is_dir($dir)) {
         // Nothing to do.
         return true;
     }
+
+    if (!$contentonly) {
+        // Start by renaming the directory; this will guarantee that other processes don't write to it
+        // while it is in the process of being deleted.
+        $tempdir = rename_to_unused_name($dir);
+        if ($tempdir) {
+            // If the rename was successful then delete the $tempdir instead.
+            $dir = $tempdir;
+        }
+        // If the rename fails, we will continue through and attempt to delete the directory
+        // without renaming it since that is likely to at least delete most of the files.
+    }
+
     if (!$handle = opendir($dir)) {
         return false;
     }
@@ -10030,23 +10019,12 @@ function is_proxybypass( $url ) {
     // Get the possible bypass hosts into an array.
     $matches = explode( ',', $CFG->proxybypass );
 
-    // Check for a match.
-    // (IPs need to match the left hand side and hosts the right of the url,
-    // but we can recklessly check both as there can't be a false +ve).
-    foreach ($matches as $match) {
-        $match = trim($match);
+    // Check for a exact match on the IP or in the domains.
+    $isdomaininallowedlist = \core\ip_utils::is_domain_in_allowed_list($host, $matches);
+    $isipinsubnetlist = \core\ip_utils::is_ip_in_subnet_list($host, $CFG->proxybypass, ',');
 
-        // Try for IP match (Left side).
-        $lhs = substr($host, 0, strlen($match));
-        if (strcasecmp($match, $lhs)==0) {
-            return true;
-        }
-
-        // Try for host match (Right side).
-        $rhs = substr($host, -strlen($match));
-        if (strcasecmp($match, $rhs)==0) {
-            return true;
-        }
+    if ($isdomaininallowedlist || $isipinsubnetlist) {
+        return true;
     }
 
     // Nothing matched.
@@ -10616,10 +10594,14 @@ class lang_string {
     /**
      * Magic __set_state method used for var_export
      *
-     * @return string
+     * @param array $array
+     * @return self
      */
-    public function __set_state() {
-        return $this->get_string();
+    public static function __set_state(array $array): self {
+        $tmp = new lang_string($array['identifier'], $array['component'], $array['a'], $array['lang']);
+        $tmp->string = $array['string'];
+        $tmp->forcedstring = $array['forcedstring'];
+        return $tmp;
     }
 
     /**

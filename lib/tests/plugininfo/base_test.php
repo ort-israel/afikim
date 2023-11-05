@@ -28,7 +28,7 @@ use testable_plugininfo_base;
  * @copyright 2019 Andrew Nicols
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class base_testcase extends \advanced_testcase {
+class base_test extends \advanced_testcase {
 
     /**
      * Setup to ensure that fixtures are loaded.
@@ -43,7 +43,7 @@ class base_testcase extends \advanced_testcase {
     /**
      * Tear down the testable plugin manager singleton between tests.
      */
-    public function tearDown() {
+    public function tearDown(): void {
         // The caches of the testable singleton must be reset explicitly. It is
         // safer to kill the whole testable singleton at the end of every test.
         testable_core_plugin_manager::reset_caches();

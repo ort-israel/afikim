@@ -64,8 +64,8 @@ class behat_navigation extends behat_base {
         $nodetextliteral = behat_context_helper::escape($text);
         $hasblocktree = "[contains(concat(' ', normalize-space(@class), ' '), ' block_tree ')]";
         $hasbranch = "[contains(concat(' ', normalize-space(@class), ' '), ' branch ')]";
-        $hascollapsed = "p[@aria-expanded='false']";
-        $notcollapsed = "p[@aria-expanded='true']";
+        $hascollapsed = "li[@aria-expanded='false']/p";
+        $notcollapsed = "li[@aria-expanded='true']/p";
         $match = "[normalize-space(.)={$nodetextliteral}]";
 
         // Avoid problems with quotes.
@@ -75,18 +75,18 @@ class behat_navigation extends behat_base {
         } else if ($collapsed === false) {
             $iscollapsed = $notcollapsed;
         } else {
-            $iscollapsed = 'p';
+            $iscollapsed = 'li/p';
         }
 
         // First check root nodes, it can be a span or link.
-        $xpath  = "//ul{$hasblocktree}/li/{$hascollapsed}{$isbranch}/span{$match}|";
-        $xpath  .= "//ul{$hasblocktree}/li/{$hascollapsed}{$isbranch}/a{$match}|";
+        $xpath  = "//ul{$hasblocktree}/{$hascollapsed}{$isbranch}/span{$match}|";
+        $xpath  .= "//ul{$hasblocktree}/{$hascollapsed}{$isbranch}/a{$match}|";
 
         // Next search for the node containing the text within a link.
-        $xpath .= "//ul{$hasblocktree}//ul/li/{$iscollapsed}{$isbranch}/a{$match}|";
+        $xpath .= "//ul{$hasblocktree}//ul/{$iscollapsed}{$isbranch}/a{$match}|";
 
         // Finally search for the node containing the text within a span.
-        $xpath .= "//ul{$hasblocktree}//ul/li/{$iscollapsed}{$isbranch}/span{$match}";
+        $xpath .= "//ul{$hasblocktree}//ul/{$iscollapsed}{$isbranch}/span{$match}";
 
         $node = $this->find('xpath', $xpath, $exception);
         $this->ensure_node_is_visible($node);
@@ -263,16 +263,16 @@ class behat_navigation extends behat_base {
             // The p node contains the aria jazz.
             $pnodexpath = "/p[contains(concat(' ', normalize-space(@class), ' '), ' tree_item ')]";
             $pnode = $node->find('xpath', $pnodexpath);
+            $linode = $pnode->getParent();
 
             // Keep expanding all sub-parents if js enabled.
-            if ($pnode && $this->running_javascript() && $pnode->hasAttribute('aria-expanded') &&
-                ($pnode->getAttribute('aria-expanded') == "false")) {
-
+            if ($pnode && $this->running_javascript() && $linode->hasAttribute('aria-expanded') &&
+                ($linode->getAttribute('aria-expanded') == "false")) {
                 $this->js_trigger_click($pnode);
 
                 // Wait for node to load, if not loaded before.
-                if ($pnode->hasAttribute('data-loaded') && $pnode->getAttribute('data-loaded') == "false") {
-                    $jscondition = '(document.evaluate("' . $pnode->getXpath() . '", document, null, '.
+                if ($linode->hasAttribute('data-loaded') && $linode->getAttribute('data-loaded') == "false") {
+                    $jscondition = '(document.evaluate("' . $linode->getXpath() . '", document, null, '.
                         'XPathResult.ANY_TYPE, null).iterateNext().getAttribute(\'data-loaded\') == "true")';
 
                     $this->getSession()->wait(behat_base::get_extended_timeout() * 1000, $jscondition);
@@ -604,14 +604,14 @@ class behat_navigation extends behat_base {
         $dividercount = substr_count($page, ' > ');
         if ($dividercount === 0) {
             return ['core', $page];
-        } else if ($dividercount === 1) {
-            list($component, $name) = explode(' > ', $page);
+        } else if ($dividercount >= 1) {
+            [$component, $name] = explode(' > ', $page, 2);
             if ($component === 'core') {
                 throw new coding_exception('Do not specify the component "core > ..." for core pages.');
             }
             return [$component, $name];
         } else {
-            throw new coding_exception('The page name most be in the form ' .
+            throw new coding_exception('The page name must be in the form ' .
                     '"{page-name}" for core pages, or "{component} > {page-name}" ' .
                     'for pages belonging to other components. ' .
                     'For example "Admin notifications" or "mod_quiz > View".');
@@ -734,8 +734,6 @@ class behat_navigation extends behat_base {
      * @throws Exception with a meaningful error message if the specified page cannot be found.
      */
     protected function resolve_core_page_instance_url(string $type, string $identifier): moodle_url {
-        global $DB;
-
         $type = strtolower($type);
 
         switch ($type) {
@@ -819,9 +817,8 @@ class behat_navigation extends behat_base {
      * @return void
      */
     public function i_am_on_course_homepage($coursefullname) {
-        global $DB;
-        $course = $DB->get_record("course", array("fullname" => $coursefullname), 'id', MUST_EXIST);
-        $url = new moodle_url('/course/view.php', ['id' => $course->id]);
+        $courseid = $this->get_course_id($coursefullname);
+        $url = new moodle_url('/course/view.php', ['id' => $courseid]);
         $this->execute('behat_general::i_visit', [$url]);
     }
 
@@ -834,10 +831,8 @@ class behat_navigation extends behat_base {
      * @return void
      */
     public function i_am_on_course_homepage_with_editing_mode_on($coursefullname) {
-        global $DB;
-
-        $course = $DB->get_record("course", array("fullname" => $coursefullname), 'id', MUST_EXIST);
-        $url = new moodle_url('/course/view.php', ['id' => $course->id]);
+        $courseid = $this->get_course_id($coursefullname);
+        $url = new moodle_url('/course/view.php', ['id' => $courseid]);
 
         if ($this->running_javascript() && $sesskey = $this->get_sesskey()) {
             // Javascript is running so it is possible to grab the session ket and jump straight to editing mode.

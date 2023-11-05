@@ -43,12 +43,9 @@
 defined('MOODLE_INTERNAL') || die();
 
 function xmldb_forum_upgrade($oldversion) {
-    global $DB;
+    global $CFG, $DB;
 
     $dbman = $DB->get_manager(); // Loads ddl manager and xmldb classes.
-
-    // Automatically generated Moodle v3.5.0 release upgrade line.
-    // Put any upgrade step following this.
 
     // Automatically generated Moodle v3.6.0 release upgrade line.
     // Put any upgrade step following this.
@@ -246,7 +243,7 @@ function xmldb_forum_upgrade($oldversion) {
     // Automatically generated Moodle v3.9.0 release upgrade line.
     // Put any upgrade step following this.
 
-    if ($oldversion < 2020061501) {
+    if ($oldversion < 2020072100) {
         // Add index privatereplyto (not unique) to the forum_posts table.
         $table = new xmldb_table('forum_posts');
         $index = new xmldb_index('privatereplyto', XMLDB_INDEX_NOTUNIQUE, ['privatereplyto']);
@@ -255,7 +252,42 @@ function xmldb_forum_upgrade($oldversion) {
             $dbman->add_index($table, $index);
         }
 
-        upgrade_mod_savepoint(true, 2020061501, 'forum');
+        upgrade_mod_savepoint(true, 2020072100, 'forum');
+    }
+
+    // Automatically generated Moodle v3.10.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    // Automatically generated Moodle v3.11.0 release upgrade line.
+    // Put any upgrade step following this.
+
+    if ($oldversion < 2021051701) {
+        // Add custom data to digest tasks to stop duplicates being created after this patch.
+        $timenow = time();
+
+        $sitetimezone = \core_date::get_server_timezone();
+        $servermidnight = usergetmidnight($timenow, $sitetimezone);
+        $digesttime = $servermidnight + ($CFG->digestmailtime * 3600);
+        if ($digesttime < $timenow) {
+            // Digest time is in the past. set for tomorrow.
+            $servermidnight = usergetmidnight($timenow + DAYSECS, $sitetimezone);
+        }
+
+        $customdata = json_encode(['servermidnight' => $servermidnight]);
+
+        $params = [
+            'component' => 'mod_forum',
+            'classname' => '\mod_forum\task\send_user_digests',
+            'customdata' => '', // We do not want to overwrite any tasks that already have the custom data.
+        ];
+
+        $textfield = $DB->sql_compare_text('customdata', 1);
+
+        $sql = "component = :component AND classname = :classname AND $textfield = :customdata";
+
+        $DB->set_field_select('task_adhoc', 'customdata', $customdata, $sql, $params);
+
+        upgrade_mod_savepoint(true, 2021051701, 'forum');
     }
 
     return true;
