@@ -78,7 +78,7 @@ $THEME->layouts = array(
     // The site home page.
     'frontpage' => array(
         'file' => 'frontpage.php',
-        'regions' => array('side-pre','above-content'), //Tsofiya 2021: add region above-content
+        'regions' => array('side-pre','above-content'), //Tsofiya: add region above-content
         'defaultregion' => 'side-pre',
         'options' => array('nonavbar' => true),
     ),

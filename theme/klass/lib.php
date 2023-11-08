@@ -273,7 +273,7 @@ if (!function_exists('get_logo_url')) {
      * @return image
      */
     function get_logo_url($type = 'header') {
-        global $OUTPUT;
+        global $OUTPUT, $SITE;
         static $theme;
         if ( empty($theme)) {
             $theme = theme_config::load('klass');

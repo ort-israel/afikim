@@ -38,11 +38,7 @@ $CFG = new stdClass();
 // will be stored.  This database must already have been created         //
 // and a username/password created to access it.                         //
 
-<<<<<<< Updated upstream
-$CFG->dbtype    = 'pgsql';      // 'pgsql', 'mariadb', 'mysqli', 'sqlsrv' or 'oci'
-=======
 $CFG->dbtype    = 'pgsql';      // 'pgsql', 'mariadb', 'mysqli', 'auroramysql', 'sqlsrv' or 'oci'
->>>>>>> Stashed changes
 $CFG->dblibrary = 'native';     // 'native' only at the moment
 $CFG->dbhost    = 'localhost';  // eg 'localhost' or 'db.isp.com' or IP
 $CFG->dbname    = 'moodle';     // database name, eg moodle
@@ -74,13 +70,10 @@ $CFG->dboptions = array(
                                 // can be removed for MySQL (by default it will
                                 // use 'utf8mb4_unicode_ci'. This option should
                                 // be removed for all other databases.
-<<<<<<< Updated upstream
-=======
     // 'extrainfo' => [],       // Extra information for the DB driver, e.g. SQL Server,
                                 // has additional configuration according to its environment,
                                 // which the administrator can specify to alter and
                                 // override any connection options.
->>>>>>> Stashed changes
     // 'fetchbuffersize' => 100000, // On PostgreSQL, this option sets a limit
                                 // on the number of rows that are fetched into
                                 // memory when doing a large recordset query
@@ -335,12 +328,9 @@ $CFG->admin = 'admin';
 //      Use the igbinary serializer instead of the php default one. Note that phpredis must be compiled with
 //      igbinary support to make the setting to work. Also, if you change the serializer you have to flush the database!
 //      $CFG->session_redis_serializer_use_igbinary = false; // Optional, default is PHP builtin serializer.
-<<<<<<< Updated upstream
-=======
 //      $CFG->session_redis_compressor = 'none'; // Optional, possible values are:
 //                                               // 'gzip' - PHP GZip compression
 //                                               // 'zstd' - PHP Zstandard compression
->>>>>>> Stashed changes
 //
 // Please be aware that when selecting Memcached for sessions that it is advised to use a dedicated
 // memcache server. The memcached extension does not provide isolated environments for individual uses.
@@ -423,12 +413,9 @@ $CFG->admin = 'admin';
 //   Print to footer (works with the default theme)
 //   define('MDL_PERFTOFOOT', true);
 //
-<<<<<<< Updated upstream
-=======
 //   Print additional data to log of included files
 //   define('MDL_PERFINC', true);
 //
->>>>>>> Stashed changes
 //   Enable earlier profiling that causes more code to be covered
 //   on every request (db connections, config load, other inits...).
 //   Requires extra configuration to be defined in config.php like:
@@ -499,10 +486,7 @@ $CFG->admin = 'admin';
 //     $CFG->tempdir = '/var/www/moodle/temp';        // Directory MUST BE SHARED by all cluster nodes.
 //     $CFG->cachedir = '/var/www/moodle/cache';      // Directory MUST BE SHARED by all cluster nodes, locking required.
 //     $CFG->localcachedir = '/var/local/cache';      // Intended for local node caching.
-<<<<<<< Updated upstream
-=======
 //     $CFG->localrequestdir = '/tmp';                // Intended for local only temporary files. The defaults uses sys_get_temp_dir().
->>>>>>> Stashed changes
 //
 // It is possible to specify a different backup temp directory, use local fast filesystem
 // for normal web servers. Server clusters MUST use shared filesystem for backuptempdir!
@@ -703,14 +687,11 @@ $CFG->admin = 'admin';
 //
 //      $CFG->enable_read_only_sessions = true;
 //
-<<<<<<< Updated upstream
-=======
 // To help expose all the edge cases bugs a debug mode is available which shows the same
 // runtime write during readonly errors without actually turning on the readonly sessions:
 //
 //      $CFG->enable_read_only_sessions_debug = true;
 //
->>>>>>> Stashed changes
 // Uninstall plugins from CLI only. This stops admins from uninstalling plugins from the graphical admin
 // user interface, and forces plugins to be uninstalled from the Command Line tool only, found at
 // admin/cli/plugin_uninstall.php.
@@ -744,8 +725,6 @@ $CFG->admin = 'admin';
 //
 //      $CFG->forumpostcountchunksize = 5000;
 //
-<<<<<<< Updated upstream
-=======
 // Course and category sorting
 //
 // If the number of courses in a category exceeds $CFG->maxcoursesincategory (10000 by default), it may lead to duplicate
@@ -776,7 +755,6 @@ $CFG->admin = 'admin';
 // across a cluster when not using shared storage. If you stop the server generating keys, you will
 // need to manually generate them by running 'php admin/cli/generate_key.php'.
 
->>>>>>> Stashed changes
 //=========================================================================
 // 7. SETTINGS FOR DEVELOPMENT SERVERS - not intended for production use!!!
 //=========================================================================
@@ -1131,8 +1109,6 @@ $CFG->admin = 'admin';
 //      $CFG->showcampaigncontent = true;
 //
 //=========================================================================
-<<<<<<< Updated upstream
-=======
 // 16. ALTERNATIVE CACHE CONFIG SETTINGS
 //=========================================================================
 //
@@ -1185,7 +1161,6 @@ $CFG->admin = 'admin';
 // When the full classname is used, this rule always takes priority over any wildcard rules.
 //
 //=========================================================================
->>>>>>> Stashed changes
 // ALL DONE!  To continue installation, visit your main page with a browser
 //=========================================================================
 

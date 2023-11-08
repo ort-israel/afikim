@@ -103,6 +103,7 @@ $string['pluginname'] = 'Klass';
 $string['readmore'] = 'Read More';
 $string['region-side-post'] = 'Right';
 $string['region-side-pre'] = 'Left';
+$string['region-above-content'] = 'Middle';
 $string['knowmore'] = 'Know More';
 $string['sb1_default_cnt'] = '<p>Lorem Ipsum is simply dummy text of <br class="visible-lg">the printing and typesetting industry.</p>';
 $string['sb1_default_title'] = 'Learn Online Courses';
